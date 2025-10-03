@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  /* CORES PADRÃO - TEXTO SEMPRE ESCURO */
+  color: #0f172a; /* Texto preto/slate-900 */
+  background-color: #ffffff; /* Fundo branco */
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  color: #0f172a; /* Forçar texto escuro */
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Garantir que todo texto seja legível */
+h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, label {
+  color: inherit; /* Herda a cor do pai */
+}
+
+/* Cards com fundo branco = texto escuro */
+.bg-white, .bg-card {
+  color: #0f172a !important;
+}
+
+/* Fundos coloridos = texto branco */
+.bg-primary, .bg-pink-500, .bg-pink-600 {
+  color: #ffffff !important;
+}
