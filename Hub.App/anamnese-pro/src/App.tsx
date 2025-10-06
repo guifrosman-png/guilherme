@@ -7,7 +7,11 @@ import { AnamneseDetails } from './components/anamnese/AnamneseDetails';
 import { TemplateEditor } from './components/anamnese/TemplateEditor';
 import { TemplateSettings } from './components/settings/TemplateSettings';
 import { LinkGenerated } from './components/anamnese/LinkGenerated';
+import { SearchModal } from './components/modals/SearchModal';
+import { NotificationsPanel } from './components/modals/NotificationsPanel';
+import { FiltersModal } from './components/modals/FiltersModal';
 import { generateAnamnesePDF } from './utils/generatePDF';
+import { Filter, Search, Settings, Bell } from 'lucide-react';
 
 function App() {
   const [activeTab, setActiveTab] = useState('anamnese');
@@ -21,6 +25,10 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showLinkGenerated, setShowLinkGenerated] = useState(false);
   const [generatedLink, setGeneratedLink] = useState('');
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState('semanal'); // 7d por padrão
 
   // Mock de anamneses salvas
   const [anamneses, setAnamneses] = useState([
@@ -396,9 +404,78 @@ function App() {
         title="Anamnese Pro"
         onNotificationClick={() => console.log('Notificações')}
         onSettingsClick={() => setShowSettings(true)}
-        onSearchClick={() => console.log('Buscar')}
+        onSearchClick={() => setShowSearchModal(true)}
         hasNotifications={false}
         notificationCount={0}
+        rightContent={
+          <div className="flex items-center gap-3">
+            {/* Filtro de Período (7d, 30d, 3m, 1a) + Botão de Filtros */}
+            <div className="flex items-center gap-1 p-1 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-lg">
+              {[
+                { value: 'semanal', label: '7d' },
+                { value: 'mensal', label: '30d' },
+                { value: 'trimestral', label: '3m' },
+                { value: 'anual', label: '1a' }
+              ].map((period) => (
+                <button
+                  key={period.value}
+                  onClick={() => setSelectedPeriod(period.value)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    selectedPeriod === period.value
+                      ? 'bg-pink-500 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                >
+                  {period.label}
+                </button>
+              ))}
+
+              {/* Botão de Filtro Avançado integrado */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  showFilters
+                    ? 'bg-pink-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+                title="Filtros Avançados"
+              >
+                <Filter className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Botão de Busca */}
+            <button
+              onClick={() => setShowSearchModal(true)}
+              className="p-2.5 rounded-xl bg-white/95 backdrop-blur-xl border border-white/20 text-gray-700 hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all duration-200"
+              title="Buscar"
+            >
+              <Search className="h-5 w-5" />
+            </button>
+
+            {/* Botão de Notificações */}
+            <button
+              onClick={() => setShowNotifications(true)}
+              className="relative p-2.5 rounded-xl bg-white/95 backdrop-blur-xl border border-white/20 text-gray-700 hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all duration-200"
+              title="Notificações"
+            >
+              <Bell className="h-5 w-5" />
+            </button>
+
+            {/* Botão de Configurações */}
+            <button
+              onClick={() => setShowSettings(true)}
+              className={`p-2.5 rounded-xl transition-all duration-200 ${
+                showSettings
+                  ? 'bg-pink-500 text-white shadow-lg'
+                  : 'bg-white/95 backdrop-blur-xl border border-white/20 text-gray-700 hover:bg-gray-50 shadow-lg hover:shadow-xl'
+              }`}
+              title="Configurações"
+            >
+              <Settings className={`h-5 w-5 transition-transform duration-200 ${showSettings ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+        }
       >
         {renderContent()}
       </E4CEODashboardLayout>
@@ -438,6 +515,26 @@ function App() {
           }}
         />
       )}
+
+      {/* Modal de Busca */}
+      <SearchModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        anamneses={anamneses}
+        onSelectAnamnese={(anamnese) => setSelectedAnamnese(anamnese)}
+      />
+
+      {/* Painel de Notificações */}
+      <NotificationsPanel
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
+
+      {/* Modal de Filtros */}
+      <FiltersModal
+        isOpen={showFilters}
+        onClose={() => setShowFilters(false)}
+      />
     </>
   );
 }
