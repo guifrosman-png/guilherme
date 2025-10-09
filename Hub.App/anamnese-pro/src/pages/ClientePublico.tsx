@@ -36,6 +36,7 @@ export function ClientePublico() {
   const [empresaNome, setEmpresaNome] = useState('');
   const [concluido, setConcluido] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [customQuestions, setCustomQuestions] = useState<any[]>([]);
 
   // Quando a página carrega, verifica se o link é válido
   useEffect(() => {
@@ -62,6 +63,7 @@ export function ClientePublico() {
       } else {
         setLinkValido(true); // Link válido!
         setEmpresaNome(linkEncontrado.empresaNome || 'Profissional');
+        setCustomQuestions(linkEncontrado.customQuestions || []); // CARREGAR PERGUNTAS PERSONALIZADAS
       }
     } else {
       setLinkValido(false); // Link não existe
@@ -72,24 +74,31 @@ export function ClientePublico() {
 
   // Quando o cliente completa o quiz
   const handleQuizComplete = (data: QuizData) => {
-    // 1. Salva a anamnese completa
-    const novaAnamnese = {
-      id: Date.now(),
-      linkId: linkId,
-      clienteNome: data.nomeCompleto,
-      data: new Date().toLocaleDateString('pt-BR'),
-      status: 'concluida' as const,
-      preenchidoPor: 'cliente' as const,
-      versao: 1,
-      dadosCompletos: data, // Todos os dados do quiz
-      dataCriacao: new Date().toISOString(),
-    };
-
-    // Busca anamneses existentes
+    // 1. Buscar a anamnese pendente associada a este link
     const anamnesesExistentes = JSON.parse(localStorage.getItem('anamneses') || '[]');
+    const anamneseExistente = anamnesesExistentes.find((a: any) => a.linkId === linkId);
 
-    // Adiciona a nova anamnese
-    anamnesesExistentes.push(novaAnamnese);
+    if (anamneseExistente) {
+      // Atualizar a anamnese pendente para concluída
+      anamneseExistente.status = 'concluida';
+      anamneseExistente.clienteNome = data.nomeCompleto;
+      anamneseExistente.dadosCompletos = data;
+      anamneseExistente.dataPreenchimento = new Date().toISOString();
+    } else {
+      // Se não encontrou, criar nova (fallback)
+      const novaAnamnese = {
+        id: Date.now(),
+        linkId: linkId,
+        clienteNome: data.nomeCompleto,
+        data: new Date().toLocaleDateString('pt-BR'),
+        status: 'concluida' as const,
+        preenchidoPor: 'cliente' as const,
+        versao: 1,
+        dadosCompletos: data,
+        dataCriacao: new Date().toISOString(),
+      };
+      anamnesesExistentes.push(novaAnamnese);
+    }
 
     // Salva de volta
     localStorage.setItem('anamneses', JSON.stringify(anamnesesExistentes));
@@ -98,7 +107,8 @@ export function ClientePublico() {
     const clientesExistentes = JSON.parse(localStorage.getItem('clientes') || '[]');
 
     // Verifica se o cliente já existe (por CPF)
-    const clienteExistente = clientesExistentes.find((c: any) => c.cpf === data.cpf);
+    let clienteExistente = clientesExistentes.find((c: any) => c.cpf === data.cpf);
+    let clienteId: number;
 
     if (clienteExistente) {
       // Cliente já existe, atualiza os dados
@@ -107,12 +117,17 @@ export function ClientePublico() {
       clienteExistente.email = data.email;
       clienteExistente.endereco = data.endereco;
       clienteExistente.dataNascimento = data.dataNascimento;
+      clienteExistente.rg = data.rg;
       clienteExistente.totalAnamneses = (clienteExistente.totalAnamneses || 0) + 1;
+      clienteExistente.totalTatuagens = (clienteExistente.totalAnamneses || 0) + 1; // Total de tatuagens = total de anamneses
+      clienteExistente.totalGasto = (clienteExistente.totalGasto || 0) + (data.valorTatuagem || 0); // Somar valor da tatuagem
       clienteExistente.ultimaAnamnese = new Date().toLocaleDateString('pt-BR');
+      clienteId = clienteExistente.id;
     } else {
       // Cliente novo, cria um novo registro
+      clienteId = Date.now();
       const novoCliente = {
-        id: Date.now(),
+        id: clienteId,
         nome: data.nomeCompleto,
         cpf: data.cpf,
         rg: data.rg,
@@ -123,8 +138,8 @@ export function ClientePublico() {
         fotoUrl: null,
         fotoAutorizada: false,
         totalAnamneses: 1,
-        totalTatuagens: data.temTatuagem ? 1 : 0,
-        totalGasto: 0,
+        totalTatuagens: 1, // Primeira anamnese = primeira tatuagem
+        totalGasto: data.valorTatuagem || 0, // Valor da primeira tatuagem
         primeiraAnamnese: new Date().toLocaleDateString('pt-BR'),
         ultimaAnamnese: new Date().toLocaleDateString('pt-BR'),
       };
@@ -135,6 +150,18 @@ export function ClientePublico() {
     // Salva clientes atualizados
     localStorage.setItem('clientes', JSON.stringify(clientesExistentes));
 
+    // Vincular anamnese ao cliente
+    if (anamneseExistente) {
+      anamneseExistente.clienteId = clienteId;
+    } else {
+      // Atualizar fallback
+      const ultimaAnamnese = anamnesesExistentes[anamnesesExistentes.length - 1];
+      if (ultimaAnamnese) {
+        ultimaAnamnese.clienteId = clienteId;
+      }
+    }
+    localStorage.setItem('anamneses', JSON.stringify(anamnesesExistentes));
+
     // 3. Marca o link como usado
     const linksSalvos = JSON.parse(localStorage.getItem('anamneseLinks') || '[]');
     const linkParaMarcar = linksSalvos.find((l: any) => l.id === linkId);
@@ -144,10 +171,23 @@ export function ClientePublico() {
       localStorage.setItem('anamneseLinks', JSON.stringify(linksSalvos));
     }
 
-    // 4. Mostra mensagem de sucesso
+    // 4. Criar notificação para o profissional
+    const notificacoesExistentes = JSON.parse(localStorage.getItem('notificacoes') || '[]');
+    const novaNotificacao = {
+      id: `notif-${Date.now()}`,
+      type: 'success',
+      title: 'Nova Anamnese Recebida! 🎉',
+      message: `${data.nomeCompleto} acabou de preencher a anamnese remotamente`,
+      timestamp: new Date().toISOString(),
+      lida: false
+    };
+    notificacoesExistentes.unshift(novaNotificacao);
+    localStorage.setItem('notificacoes', JSON.stringify(notificacoesExistentes));
+
+    // 5. Mostra mensagem de sucesso
     setConcluido(true);
 
-    // 5. Simula notificação para a profissional
+    // 6. Simula notificação para a profissional
     console.log('✅ Anamnese concluída! Profissional será notificada.');
   };
 
@@ -265,6 +305,7 @@ export function ClientePublico() {
               // Cliente não pode fechar, apenas completar
               alert('Por favor, complete a anamnese ou entre em contato com o profissional.');
             }}
+            customQuestions={customQuestions}
           />
         </div>
       </main>

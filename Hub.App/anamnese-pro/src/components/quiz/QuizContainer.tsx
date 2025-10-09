@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Progress } from '../ui/progress';
 import { ChevronLeft, ChevronRight, FileText, MapPin, Heart, AlertCircle, Sparkles, Image as ImageIcon, CheckCircle, X } from 'lucide-react';
@@ -24,6 +24,7 @@ interface QuizData {
   localTatuagem: string;
   tamanhoTatuagem: string;
   estiloTatuagem: string;
+  valorTatuagem: number; // NOVO: Valor cobrado pela tatuagem
   aceitaTermo: boolean;
   assinatura: string;
 }
@@ -32,16 +33,198 @@ interface QuizContainerProps {
   mode: 'presencial' | 'remoto';
   onComplete: (data: QuizData) => void;
   onClose: () => void;
+  customQuestions?: any[]; // Perguntas personalizadas do template
+  initialData?: any; // Dados pré-preenchidos (da última anamnese)
 }
 
-export function QuizContainer({ mode, onComplete, onClose }: QuizContainerProps) {
-  const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState<Partial<QuizData>>({});
+export function QuizContainer({ mode, onComplete, onClose, customQuestions = [], initialData = null }: QuizContainerProps) {
+  const [currentStep, setCurrentStep] = useState(initialData ? 7 : 1); // Se tem dados, começa no Step 7 (tatuagem)
+  const [formData, setFormData] = useState<Partial<QuizData>>(initialData || {}); // Iniciar com dados pré-preenchidos
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}); // Erros de validação
+  const [valorFormatado, setValorFormatado] = useState('0,00'); // Valor formatado para exibição
 
-  const totalSteps = 8;
+  // Log para verificar se as perguntas personalizadas chegaram
+  console.log('🎯 Custom Questions recebidas no QuizContainer:', customQuestions);
+
+  // Log e useEffect para dados pré-preenchidos
+  useEffect(() => {
+    if (initialData) {
+      console.log('📋 Dados pré-preenchidos recebidos:', initialData);
+      console.log('⏭️ Pulando para Step 7 (informações da nova tatuagem)');
+      // Limpar dados específicos da tatuagem anterior + assinatura
+      setFormData({
+        ...initialData,
+        localTatuagem: '', // Limpar local da tatuagem anterior
+        tamanhoTatuagem: '', // Limpar tamanho
+        estiloTatuagem: '', // Limpar estilo
+        assinatura: '', // Limpar assinatura
+        aceitaTermo: false, // Limpar termo
+      });
+      setCurrentStep(7); // Ir direto para Step 7
+    }
+  }, [initialData]);
+
+  // Funções de validação
+  const validateEmail = (email: string): string | null => {
+    if (!email) return 'Email é obrigatório';
+    if (!email.includes('@')) return 'Email deve conter @';
+    if (!email.includes('.')) return 'Email inválido';
+    return null; // null = sem erro
+  };
+
+  const validatePhone = (phone: string): string | null => {
+    if (!phone) return 'Telefone é obrigatório';
+    const numbers = phone.replace(/\D/g, ''); // Remove tudo que não é número
+    if (numbers.length < 10 || numbers.length > 11) {
+      return 'Telefone deve ter 10 ou 11 dígitos';
+    }
+    return null;
+  };
+
+  const validateCPF = (cpf: string): string | null => {
+    if (!cpf) return 'CPF é obrigatório';
+    const numbers = cpf.replace(/\D/g, '');
+    if (numbers.length !== 11) return 'CPF deve ter 11 dígitos';
+    return null;
+  };
+
+  // Função para formatar valor como moeda brasileira (estilo banco)
+  const formatarMoeda = (valor: string): { formatado: string; valorNumerico: number } => {
+    // Remove tudo que não é número
+    const apenasNumeros = valor.replace(/\D/g, '');
+
+    // Se vazio, retorna 0,00
+    if (!apenasNumeros || apenasNumeros === '0') {
+      return { formatado: '0,00', valorNumerico: 0 };
+    }
+
+    // Converte para número (centavos)
+    const valorEmCentavos = parseInt(apenasNumeros);
+    const valorEmReais = valorEmCentavos / 100;
+
+    // Formata com vírgula e ponto
+    const formatado = valorEmReais.toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    return { formatado, valorNumerico: valorEmReais };
+  };
+
+  // Handler para mudança de valor
+  const handleValorChange = (input: string) => {
+    const { formatado, valorNumerico } = formatarMoeda(input);
+    setValorFormatado(formatado);
+    updateFormData({ valorTatuagem: valorNumerico });
+  };
+
+  // Se tem perguntas personalizadas, usar elas. Senão, usar quiz padrão
+  const useCustomQuiz = customQuestions.length > 0;
+
+  // Agrupar perguntas por seção (para criar os steps)
+  const groupedQuestions = useCustomQuiz ? customQuestions.reduce((acc: any, question: any) => {
+    if (!acc[question.section]) {
+      acc[question.section] = [];
+    }
+    acc[question.section].push(question);
+    return acc;
+  }, {}) : {};
+
+  const sections = Object.keys(groupedQuestions);
+  const totalSteps = useCustomQuiz ? sections.length : 8;
   const progress = (currentStep / totalSteps) * 100;
 
   const handleNext = () => {
+    const errors: Record<string, string> = {};
+
+    // Se está usando quiz customizado, valida baseado nas perguntas configuradas
+    if (useCustomQuiz) {
+      const currentSection = sections[currentStep - 1];
+      const currentQuestions = groupedQuestions[currentSection];
+
+      currentQuestions.forEach((question: any) => {
+        if (question.required) {
+          const fieldKey = question.label.toLowerCase().replace(/\s+/g, '_');
+          const value = (formData as any)[fieldKey];
+
+          if (!value || value === '') {
+            errors[fieldKey] = `${question.label} é obrigatório`;
+          }
+
+          // Validações específicas por tipo de campo
+          if (question.label.toLowerCase().includes('email') && value) {
+            const emailError = validateEmail(value);
+            if (emailError) errors[fieldKey] = emailError;
+          }
+
+          if (question.label.toLowerCase().includes('telefone') && value) {
+            const phoneError = validatePhone(value);
+            if (phoneError) errors[fieldKey] = phoneError;
+          }
+
+          if (question.label.toLowerCase().includes('cpf') && value) {
+            const cpfError = validateCPF(value);
+            if (cpfError) errors[fieldKey] = cpfError;
+          }
+        }
+      });
+    } else {
+      // Validação do quiz padrão (quando não tem perguntas customizadas)
+      if (currentStep === 1) {
+        // Nome obrigatório
+        if (!formData.nomeCompleto) errors.nomeCompleto = 'Nome é obrigatório';
+
+        // Email obrigatório e válido
+        const emailError = validateEmail(formData.email || '');
+        if (emailError) errors.email = emailError;
+
+        // Telefone obrigatório e válido
+        const phoneError = validatePhone(formData.telefone || '');
+        if (phoneError) errors.telefone = phoneError;
+
+        // CPF obrigatório e válido
+        const cpfError = validateCPF(formData.cpf || '');
+        if (cpfError) errors.cpf = cpfError;
+
+        // Data de nascimento obrigatória
+        if (!formData.dataNascimento) {
+          errors.dataNascimento = 'Data de nascimento é obrigatória';
+        } else {
+          // Validar se é maior de 18 anos
+          const hoje = new Date();
+          const nascimento = new Date(formData.dataNascimento);
+          let idade = hoje.getFullYear() - nascimento.getFullYear();
+          const mes = hoje.getMonth() - nascimento.getMonth();
+          if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+            idade--;
+          }
+
+          if (idade < 18) {
+            errors.dataNascimento = '⚠️ Você precisa ter 18 anos ou mais para fazer tatuagem';
+          }
+        }
+
+        // Endereço obrigatório
+        if (!formData.endereco) errors.endereco = 'Endereço é obrigatório';
+      }
+
+      // Validação do Step 2 - Como conheceu
+      if (currentStep === 2) {
+        if (!formData.comoConheceu) errors.comoConheceu = 'Selecione uma opção';
+        if (formData.comoConheceu === 'Outro' && !formData.outraOrigem) {
+          errors.outraOrigem = 'Especifique como conheceu';
+        }
+      }
+    }
+
+    // Se tem erros, NÃO avança e mostra os erros
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return; // Para aqui, não avança
+    }
+
+    // Se não tem erros, limpa erros anteriores e avança
+    setFieldErrors({});
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
@@ -81,12 +264,141 @@ export function QuizContainer({ mode, onComplete, onClose }: QuizContainerProps)
     8: { icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
   };
 
-  const StepIcon = stepConfig[currentStep as keyof typeof stepConfig].icon;
-  const iconColor = stepConfig[currentStep as keyof typeof stepConfig].color;
-  const iconBg = stepConfig[currentStep as keyof typeof stepConfig].bg;
+  const StepIcon = stepConfig[currentStep as keyof typeof stepConfig]?.icon || FileText;
+  const iconColor = stepConfig[currentStep as keyof typeof stepConfig]?.color || 'text-blue-500';
+  const iconBg = stepConfig[currentStep as keyof typeof stepConfig]?.bg || 'bg-blue-50';
+
+  // Função para renderizar uma pergunta personalizada
+  const renderCustomQuestion = (question: any) => {
+    const fieldKey = question.label.toLowerCase().replace(/\s+/g, '_');
+    const hasError = fieldErrors[fieldKey];
+
+    switch (question.type) {
+      case 'text':
+        return (
+          <div key={question.id}>
+            <input
+              type="text"
+              placeholder={question.label}
+              className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
+                hasError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+              }`}
+              value={(formData as any)[fieldKey] || ''}
+              onChange={(e) => updateFormData({ [fieldKey]: e.target.value })}
+            />
+            {hasError && (
+              <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                ⚠️ {hasError}
+              </p>
+            )}
+          </div>
+        );
+
+      case 'textarea':
+        return (
+          <div key={question.id}>
+            <textarea
+              placeholder={question.label}
+              rows={4}
+              className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors resize-none ${
+                hasError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+              }`}
+              value={(formData as any)[fieldKey] || ''}
+              onChange={(e) => updateFormData({ [fieldKey]: e.target.value })}
+            />
+            {hasError && (
+              <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                ⚠️ {hasError}
+              </p>
+            )}
+          </div>
+        );
+
+      case 'select':
+        return (
+          <div key={question.id}>
+            <select
+              className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
+                hasError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+              }`}
+              value={(formData as any)[fieldKey] || ''}
+              onChange={(e) => updateFormData({ [fieldKey]: e.target.value })}
+            >
+              <option value="">{question.label}</option>
+              {question.options?.map((opt: string) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
+            {hasError && (
+              <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                ⚠️ {hasError}
+              </p>
+            )}
+          </div>
+        );
+
+      case 'radio':
+        return (
+          <div key={question.id} className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">{question.label}</label>
+            <div className="flex flex-wrap gap-3">
+              {question.options?.map((opt: string) => (
+                <label key={opt} className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-pink-300 transition-colors">
+                  <input
+                    type="radio"
+                    name={fieldKey}
+                    value={opt}
+                    checked={(formData as any)[fieldKey] === opt}
+                    onChange={(e) => updateFormData({ [fieldKey]: e.target.value })}
+                    className="text-pink-500"
+                  />
+                  <span className="text-gray-900">{opt}</span>
+                </label>
+              ))}
+            </div>
+            {hasError && (
+              <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                ⚠️ {hasError}
+              </p>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  // Renderizar step customizado
+  const renderCustomStep = () => {
+    const currentSection = sections[currentStep - 1];
+    const questions = groupedQuestions[currentSection];
+
+    return (
+      <div className="space-y-5 animate-fadeIn">
+        <div className="text-center mb-6">
+          <div className={`w-16 h-16 ${iconBg} rounded-full flex items-center justify-center mx-auto mb-3`}>
+            <StepIcon className={`h-8 w-8 ${iconColor}`} />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900">{currentSection}</h3>
+          <p className="text-gray-600 mt-2">Preencha as informações abaixo</p>
+        </div>
+        <div className="space-y-4">
+          {questions.map((q: any) => renderCustomQuestion(q))}
+        </div>
+      </div>
+    );
+  };
 
   // Renderizar etapa atual
   const renderStep = () => {
+    // Se usa quiz customizado, renderizar steps customizados
+    if (useCustomQuiz) {
+      return renderCustomStep();
+    }
+
+    // Senão, usar o quiz padrão (switch case abaixo)
+
     switch (currentStep) {
       case 1:
         return (
@@ -99,57 +411,133 @@ export function QuizContainer({ mode, onComplete, onClose }: QuizContainerProps)
               <p className="text-gray-600 mt-2">Vamos começar com suas informações básicas</p>
             </div>
             <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Nome completo"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
-                value={formData.nomeCompleto || ''}
-                onChange={(e) => updateFormData({ nomeCompleto: e.target.value })}
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="date"
-                  placeholder="Data de nascimento"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
-                  value={formData.dataNascimento || ''}
-                  onChange={(e) => updateFormData({ dataNascimento: e.target.value })}
-                />
+              {/* Nome Completo */}
+              <div>
                 <input
                   type="text"
-                  placeholder="CPF"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
-                  value={formData.cpf || ''}
-                  onChange={(e) => updateFormData({ cpf: e.target.value })}
+                  placeholder="Nome completo"
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
+                    fieldErrors.nomeCompleto ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                  }`}
+                  value={formData.nomeCompleto || ''}
+                  onChange={(e) => updateFormData({ nomeCompleto: e.target.value })}
                 />
+                {fieldErrors.nomeCompleto && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    ⚠️ {fieldErrors.nomeCompleto}
+                  </p>
+                )}
               </div>
-              <input
-                type="text"
-                placeholder="RG"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
-                value={formData.rg || ''}
-                onChange={(e) => updateFormData({ rg: e.target.value })}
-              />
-              <input
-                type="tel"
-                placeholder="Telefone"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
-                value={formData.telefone || ''}
-                onChange={(e) => updateFormData({ telefone: e.target.value })}
-              />
-              <input
-                type="email"
-                placeholder="E-mail"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
-                value={formData.email || ''}
-                onChange={(e) => updateFormData({ email: e.target.value })}
-              />
-              <input
-                type="text"
-                placeholder="Endereço completo"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
-                value={formData.endereco || ''}
-                onChange={(e) => updateFormData({ endereco: e.target.value })}
-              />
+
+              <div className="grid grid-cols-2 gap-3">
+                {/* Data de Nascimento */}
+                <div>
+                  <input
+                    type="date"
+                    placeholder="Data de nascimento"
+                    className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
+                      fieldErrors.dataNascimento ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                    }`}
+                    value={formData.dataNascimento || ''}
+                    onChange={(e) => updateFormData({ dataNascimento: e.target.value })}
+                  />
+                  {fieldErrors.dataNascimento && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      ⚠️ {fieldErrors.dataNascimento}
+                    </p>
+                  )}
+                </div>
+
+                {/* CPF */}
+                <div>
+                  <input
+                    type="text"
+                    placeholder="CPF"
+                    className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
+                      fieldErrors.cpf ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                    }`}
+                    value={formData.cpf || ''}
+                    onChange={(e) => updateFormData({ cpf: e.target.value })}
+                  />
+                  {fieldErrors.cpf && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                      ⚠️ {fieldErrors.cpf}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* RG */}
+              <div>
+                <input
+                  type="text"
+                  placeholder="RG"
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
+                    fieldErrors.rg ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                  }`}
+                  value={formData.rg || ''}
+                  onChange={(e) => updateFormData({ rg: e.target.value })}
+                />
+                {fieldErrors.rg && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    ⚠️ {fieldErrors.rg}
+                  </p>
+                )}
+              </div>
+
+              {/* Telefone */}
+              <div>
+                <input
+                  type="tel"
+                  placeholder="Telefone"
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
+                    fieldErrors.telefone ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                  }`}
+                  value={formData.telefone || ''}
+                  onChange={(e) => updateFormData({ telefone: e.target.value })}
+                />
+                {fieldErrors.telefone && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    ⚠️ {fieldErrors.telefone}
+                  </p>
+                )}
+              </div>
+
+              {/* Email */}
+              <div>
+                <input
+                  type="email"
+                  placeholder="E-mail"
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
+                    fieldErrors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                  }`}
+                  value={formData.email || ''}
+                  onChange={(e) => updateFormData({ email: e.target.value })}
+                />
+                {fieldErrors.email && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    ⚠️ {fieldErrors.email}
+                  </p>
+                )}
+              </div>
+
+              {/* Endereço */}
+              <div>
+                <input
+                  type="text"
+                  placeholder="Endereço completo"
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
+                    fieldErrors.endereco ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                  }`}
+                  value={formData.endereco || ''}
+                  onChange={(e) => updateFormData({ endereco: e.target.value })}
+                />
+                {fieldErrors.endereco && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    ⚠️ {fieldErrors.endereco}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         );
@@ -185,14 +573,28 @@ export function QuizContainer({ mode, onComplete, onClose }: QuizContainerProps)
                 </button>
               ))}
             </div>
+            {fieldErrors.comoConheceu && (
+              <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
+                ⚠️ {fieldErrors.comoConheceu}
+              </p>
+            )}
             {formData.comoConheceu === 'Outro' && (
-              <input
-                type="text"
-                placeholder="Especifique..."
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors mt-4"
-                value={formData.outraOrigem || ''}
-                onChange={(e) => updateFormData({ outraOrigem: e.target.value })}
-              />
+              <div>
+                <input
+                  type="text"
+                  placeholder="Especifique..."
+                  className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors mt-4 ${
+                    fieldErrors.outraOrigem ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                  }`}
+                  value={formData.outraOrigem || ''}
+                  onChange={(e) => updateFormData({ outraOrigem: e.target.value })}
+                />
+                {fieldErrors.outraOrigem && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    ⚠️ {fieldErrors.outraOrigem}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         );
@@ -436,6 +838,25 @@ export function QuizContainer({ mode, onComplete, onClose }: QuizContainerProps)
                   este procedimento.
                 </p>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  💰 Valor da Tatuagem
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">R$</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0,00"
+                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors text-lg font-semibold"
+                    value={valorFormatado}
+                    onChange={(e) => handleValorChange(e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Digite apenas números • O valor será formatado automaticamente
+                </p>
+              </div>
               <div className="flex items-center gap-3 p-4 bg-pink-50 rounded-xl border-2 border-pink-200">
                 <input
                   type="checkbox"
@@ -486,6 +907,17 @@ export function QuizContainer({ mode, onComplete, onClose }: QuizContainerProps)
               Etapa {currentStep} de {totalSteps} • Modo: {mode === 'presencial' ? 'Presencial' : 'Remoto'}
             </div>
             <div className="text-2xl font-bold mt-1">Quiz de Anamnese</div>
+
+            {/* Botão "Alterar Dados Anteriores" - Aparece quando é cliente retornando */}
+            {initialData && currentStep >= 7 && (
+              <button
+                onClick={() => setCurrentStep(1)}
+                className="mt-3 px-4 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg flex items-center gap-2 text-sm font-medium transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Alterar Dados Anteriores
+              </button>
+            )}
           </div>
           <Progress value={progress} className="mt-4 h-2 bg-white/30" />
         </div>

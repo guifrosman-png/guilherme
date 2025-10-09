@@ -49,3 +49,14 @@ h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, label {
 .bg-primary, .bg-pink-500, .bg-pink-600 {
   color: #ffffff !important;
 }
+
+/* Notification Panel Positioning (do template) */
+.notification-panel-aligned {
+  transition: right .3s cubic-bezier(.4, 0, .2, 1) !important;
+}
+.notification-panel-collapsed {
+  right: 9rem;
+}
+.notification-panel-expanded {
+  right: 21rem;
+}

@@ -66,8 +66,8 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
             </div>
           )}
 
-          {/* Dados do Quiz (mock - na versão final virão do banco) */}
-          {anamnese.status === 'concluida' && (
+          {/* Dados do Quiz (REAIS do localStorage) */}
+          {anamnese.status === 'concluida' && anamnese.dadosCompletos && (
             <div className="space-y-6">
               {/* Seção 1: Dados Pessoais */}
               <div className="border-2 border-gray-200 rounded-xl p-5">
@@ -80,31 +80,35 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Nome Completo</label>
-                    <p className="text-gray-900 font-medium">{anamnese.clienteNome}</p>
+                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.nomeCompleto || 'Não informado'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Data de Nascimento</label>
-                    <p className="text-gray-900 font-medium">15/05/1997 (28 anos)</p>
+                    <p className="text-gray-900 font-medium">
+                      {anamnese.dadosCompletos.dataNascimento
+                        ? new Date(anamnese.dadosCompletos.dataNascimento).toLocaleDateString('pt-BR')
+                        : 'Não informado'}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">CPF</label>
-                    <p className="text-gray-900 font-medium">123.456.789-00</p>
+                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.cpf || 'Não informado'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">RG</label>
-                    <p className="text-gray-900 font-medium">12.345.678-9</p>
+                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.rg || 'Não informado'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Telefone</label>
-                    <p className="text-gray-900 font-medium">(11) 98765-4321</p>
+                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.telefone || 'Não informado'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">E-mail</label>
-                    <p className="text-gray-900 font-medium">maria@email.com</p>
+                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.email || 'Não informado'}</p>
                   </div>
                   <div className="md:col-span-2">
                     <label className="text-sm font-medium text-gray-600">Endereço</label>
-                    <p className="text-gray-900 font-medium">Rua das Flores, 123 - São Paulo/SP</p>
+                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.endereco || 'Não informado'}</p>
                   </div>
                 </div>
               </div>
@@ -117,9 +121,17 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">Origem do Cliente</h3>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Como me conheceu?</label>
-                  <p className="text-gray-900 font-medium">📱 Instagram</p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Como me conheceu?</label>
+                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.comoConheceu || 'Não informado'}</p>
+                  </div>
+                  {anamnese.dadosCompletos.outraOrigem && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Especificação</label>
+                      <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.outraOrigem}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -134,11 +146,11 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Doenças ou condições de saúde</label>
-                    <p className="text-gray-900">Nenhuma</p>
+                    <p className="text-gray-900">{anamnese.dadosCompletos.doencas || 'Nenhuma informação'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Medicamentos em uso</label>
-                    <p className="text-gray-900">Nenhum</p>
+                    <p className="text-gray-900">{anamnese.dadosCompletos.medicamentos || 'Nenhuma informação'}</p>
                   </div>
                 </div>
               </div>
@@ -151,9 +163,19 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">Alergias</h3>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Possui alergias?</label>
-                  <p className="text-gray-900 font-medium">❌ Não</p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Possui alergias?</label>
+                    <p className="text-gray-900 font-medium">
+                      {anamnese.dadosCompletos.temAlergias ? '✅ Sim' : '❌ Não'}
+                    </p>
+                  </div>
+                  {anamnese.dadosCompletos.temAlergias && anamnese.dadosCompletos.alergias && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Quais alergias?</label>
+                      <p className="text-gray-900">{anamnese.dadosCompletos.alergias}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -167,7 +189,7 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-600">Condições específicas</label>
-                  <p className="text-gray-900">Pele normal, sem problemas</p>
+                  <p className="text-gray-900">{anamnese.dadosCompletos.condicoesPele || 'Nenhuma informação'}</p>
                 </div>
               </div>
 
@@ -182,12 +204,16 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Já fez tatuagem antes?</label>
-                    <p className="text-gray-900 font-medium">✅ Sim</p>
+                    <p className="text-gray-900 font-medium">
+                      {anamnese.dadosCompletos.temTatuagem ? '✅ Sim' : '❌ Não'}
+                    </p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Histórico</label>
-                    <p className="text-gray-900">2 tatuagens anteriores no braço. Sem problemas de cicatrização.</p>
-                  </div>
+                  {anamnese.dadosCompletos.temTatuagem && anamnese.dadosCompletos.historicoTatuagens && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600">Histórico</label>
+                      <p className="text-gray-900">{anamnese.dadosCompletos.historicoTatuagens}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -202,15 +228,15 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Local</label>
-                    <p className="text-gray-900 font-medium">Braço direito</p>
+                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.localTatuagem || 'Não informado'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Tamanho</label>
-                    <p className="text-gray-900 font-medium">Média (5-15cm)</p>
+                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.tamanhoTatuagem || 'Não informado'}</p>
                   </div>
                   <div className="md:col-span-2">
                     <label className="text-sm font-medium text-gray-600">Estilo</label>
-                    <p className="text-gray-900 font-medium">Realista</p>
+                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.estiloTatuagem || 'Não informado'}</p>
                   </div>
                 </div>
               </div>
@@ -226,12 +252,14 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                 <div className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Termo aceito?</label>
-                    <p className="text-emerald-600 font-semibold">✓ Sim, aceito</p>
+                    <p className={`font-semibold ${anamnese.dadosCompletos.aceitaTermo ? 'text-emerald-600' : 'text-red-600'}`}>
+                      {anamnese.dadosCompletos.aceitaTermo ? '✓ Sim, aceito' : '✗ Não aceito'}
+                    </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Assinatura Digital</label>
                     <p className="text-gray-900 font-signature text-2xl" style={{ fontFamily: 'cursive' }}>
-                      {anamnese.clienteNome}
+                      {anamnese.dadosCompletos.assinatura || anamnese.clienteNome}
                     </p>
                   </div>
                 </div>

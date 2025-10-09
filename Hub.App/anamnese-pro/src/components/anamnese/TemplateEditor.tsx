@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Plus, Trash2, GripVertical } from 'lucide-react';
 import { Button } from '../ui/button';
 
-interface Question {
+export interface Question {
   id: number;
   section: string;
   label: string;
@@ -12,7 +12,7 @@ interface Question {
 }
 
 interface TemplateEditorProps {
-  onConfirm: () => void;
+  onConfirm: (customQuestions: Question[]) => void;
   onCancel: () => void;
 }
 
@@ -241,7 +241,7 @@ export function TemplateEditor({ onConfirm, onCancel }: TemplateEditorProps) {
           </Button>
           <Button
             className="bg-gradient-to-r from-pink-500 to-purple-500"
-            onClick={onConfirm}
+            onClick={() => onConfirm(questions)}
           >
             Confirmar e Gerar Link
           </Button>
