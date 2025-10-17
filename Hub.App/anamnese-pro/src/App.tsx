@@ -462,8 +462,99 @@ function AppContent() {
     });
   };
 
+  // 🎨 OBTER DADOS DA PROFISSÃO
+  const getProfissaoInfo = () => {
+    const profissoes: any = {
+      tatuagem: { nome: 'Tatuagem', icone: '🎨' },
+      psicologia: { nome: 'Psicologia', icone: '🧠' },
+      nutricao: { nome: 'Nutrição', icone: '🥗' },
+      fisioterapia: { nome: 'Fisioterapia', icone: '💪' },
+      estetica: { nome: 'Estética', icone: '✨' },
+    };
+    return profissoes[templateProfissao || 'tatuagem'] || profissoes.tatuagem;
+  };
+
+  // 🎨 OBTER CORES TEMÁTICAS DA PROFISSÃO (mesmo tom, cores diferentes)
+  const getCoresTema = () => {
+    const cores: any = {
+      tatuagem: {
+        // Rosa/Pink
+        gradient: 'from-pink-500 to-purple-500',
+        bg50: 'bg-pink-50',
+        bg100: 'bg-pink-100',
+        bg500: 'bg-pink-500',
+        text500: 'text-pink-500',
+        text700: 'text-pink-700',
+        border200: 'border-pink-200',
+        border300: 'border-pink-300',
+        border500: 'border-pink-500',
+        hover: 'hover:bg-pink-50 hover:border-pink-500',
+        focus: 'focus:border-pink-500',
+      },
+      psicologia: {
+        // Azul
+        gradient: 'from-blue-500 to-cyan-500',
+        bg50: 'bg-blue-50',
+        bg100: 'bg-blue-100',
+        bg500: 'bg-blue-500',
+        text500: 'text-blue-500',
+        text700: 'text-blue-700',
+        border200: 'border-blue-200',
+        border300: 'border-blue-300',
+        border500: 'border-blue-500',
+        hover: 'hover:bg-blue-50 hover:border-blue-500',
+        focus: 'focus:border-blue-500',
+      },
+      nutricao: {
+        // Verde
+        gradient: 'from-green-500 to-emerald-500',
+        bg50: 'bg-green-50',
+        bg100: 'bg-green-100',
+        bg500: 'bg-green-500',
+        text500: 'text-green-500',
+        text700: 'text-green-700',
+        border200: 'border-green-200',
+        border300: 'border-green-300',
+        border500: 'border-green-500',
+        hover: 'hover:bg-green-50 hover:border-green-500',
+        focus: 'focus:border-green-500',
+      },
+      fisioterapia: {
+        // Laranja
+        gradient: 'from-orange-500 to-amber-500',
+        bg50: 'bg-orange-50',
+        bg100: 'bg-orange-100',
+        bg500: 'bg-orange-500',
+        text500: 'text-orange-500',
+        text700: 'text-orange-700',
+        border200: 'border-orange-200',
+        border300: 'border-orange-300',
+        border500: 'border-orange-500',
+        hover: 'hover:bg-orange-50 hover:border-orange-500',
+        focus: 'focus:border-orange-500',
+      },
+      estetica: {
+        // Roxo/Lilás
+        gradient: 'from-purple-500 to-fuchsia-500',
+        bg50: 'bg-purple-50',
+        bg100: 'bg-purple-100',
+        bg500: 'bg-purple-500',
+        text500: 'text-purple-500',
+        text700: 'text-purple-700',
+        border200: 'border-purple-200',
+        border300: 'border-purple-300',
+        border500: 'border-purple-500',
+        hover: 'hover:bg-purple-50 hover:border-purple-500',
+        focus: 'focus:border-purple-500',
+      },
+    };
+    return cores[templateProfissao || 'tatuagem'] || cores.tatuagem;
+  };
+
   // Renderizar conteúdo baseado na aba ativa
   const renderContent = () => {
+    const coresTema = getCoresTema(); // 🎨 Pegar cores para usar dentro do render
+
     switch (activeTab) {
       case 'anamnese':
         return (
@@ -507,7 +598,7 @@ function AppContent() {
                             return (clientesValidos.length / 100) * 100;
                           })() > 80
                             ? 'bg-gradient-to-r from-red-500 to-orange-500'
-                            : 'bg-gradient-to-r from-pink-500 to-purple-500'
+                            : `bg-gradient-to-r ${coresTema.gradient}`
                         }`}
                         style={{ width: `${(() => {
                           const clientesCadastrados = JSON.parse(localStorage.getItem('clientes') || '[]');
@@ -548,7 +639,7 @@ function AppContent() {
                       placeholder="Digite o nome do cliente..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
+                      className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors`}
                     />
                     {searchTerm && (
                       <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -592,7 +683,7 @@ function AppContent() {
                     }).map((anamnese) => (
                       <div
                         key={anamnese.id}
-                        className="p-4 border-2 border-gray-200 rounded-xl hover:border-pink-300 hover:scale-[1.02] transition-all bg-white shadow-sm hover:shadow-md"
+                        className={`p-4 border-2 border-gray-200 rounded-xl hover:${coresTema.border300} hover:scale-[1.02] transition-all bg-white shadow-sm hover:shadow-md`}
                       >
                         {/* Cabeçalho do Card */}
                         <div className="flex items-start justify-between mb-3">
@@ -686,10 +777,10 @@ function AppContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button
                       onClick={() => handleStartQuiz('presencial')}
-                      className="p-6 border-2 border-gray-200 rounded-xl hover:border-pink-500 hover:bg-pink-50 transition-all text-left group"
+                      className={`p-6 border-2 border-gray-200 rounded-xl ${coresTema.hover} transition-all text-left group`}
                     >
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl group-hover:bg-blue-200 transition-colors">
+                        <div className={`w-12 h-12 ${coresTema.bg100} rounded-full flex items-center justify-center text-2xl transition-colors`}>
                           👩‍⚕️
                         </div>
                         <div className="flex-1">
@@ -702,10 +793,10 @@ function AppContent() {
                     </button>
                     <button
                       onClick={() => handleStartQuiz('remoto')}
-                      className="p-6 border-2 border-gray-200 rounded-xl hover:border-pink-500 hover:bg-pink-50 transition-all text-left group"
+                      className={`p-6 border-2 border-gray-200 rounded-xl ${coresTema.hover} transition-all text-left group`}
                     >
                       <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-2xl group-hover:bg-purple-200 transition-colors">
+                        <div className={`w-12 h-12 ${coresTema.bg100} rounded-full flex items-center justify-center text-2xl transition-colors`}>
                           📱
                         </div>
                         <div className="flex-1">
@@ -764,7 +855,7 @@ function AppContent() {
                         placeholder="Buscar cliente por nome..."
                         value={searchClientes}
                         onChange={(e) => setSearchClientes(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
+                        className={`w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors`}
                       />
                     </div>
                   </div>
@@ -794,7 +885,7 @@ function AppContent() {
                       <div
                         key={cliente.id}
                         onClick={() => setSelectedCliente(cliente)}
-                        className="p-4 border-2 border-gray-200 rounded-xl hover:border-pink-300 hover:scale-[1.02] transition-all bg-white shadow-sm hover:shadow-md cursor-pointer"
+                        className={`p-4 border-2 border-gray-200 rounded-xl hover:${coresTema.border300} hover:scale-[1.02] transition-all bg-white shadow-sm hover:shadow-md cursor-pointer`}
                       >
                         {/* Header com Foto */}
                         <div className="flex items-center gap-3 mb-4">
@@ -806,7 +897,7 @@ function AppContent() {
                                 className="w-16 h-16 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                              <div className={`w-16 h-16 bg-gradient-to-br ${coresTema.gradient} rounded-full flex items-center justify-center text-white text-2xl font-bold`}>
                                 {cliente.nome.charAt(0).toUpperCase()}
                               </div>
                             )}
@@ -916,6 +1007,10 @@ function AppContent() {
     return <Onboarding onComplete={handleOnboardingComplete} />;
   }
 
+  // 🎨 Pegar info da profissão e cores
+  const profissaoInfo = getProfissaoInfo();
+  const coresTema = getCoresTema();
+
   return (
     <>
       <E4CEODashboardLayout
@@ -923,7 +1018,14 @@ function AppContent() {
         onPageChange={setActiveTab}
         sidebarCollapsed={sidebarCollapsed}
         onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
-        title="Anamnese Pro"
+        title={
+          <div className="flex items-center gap-3">
+            <span>Anamnese Pro</span>
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 ${coresTema.bg100} ${coresTema.text700} text-sm font-semibold rounded-full border-2 ${coresTema.border300}`}>
+              {profissaoInfo.icone} {profissaoInfo.nome}
+            </span>
+          </div>
+        }
         onNotificationClick={() => console.log('Notificações')}
         onSettingsClick={() => setShowSettings(true)}
         onSearchClick={() => setShowSearchModal(true)}
@@ -944,7 +1046,7 @@ function AppContent() {
                   onClick={() => setSelectedPeriod(period.value)}
                   className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                     selectedPeriod === period.value
-                      ? 'bg-pink-500 text-white shadow-sm'
+                      ? `${coresTema.bg500} text-white shadow-sm`
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
@@ -957,7 +1059,7 @@ function AppContent() {
                 onClick={() => setShowFilters(!showFilters)}
                 className={`p-2 rounded-lg transition-all duration-200 ${
                   showFilters
-                    ? 'bg-pink-500 text-white shadow-sm'
+                    ? `${coresTema.bg500} text-white shadow-sm`
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
                 title="Filtros Avançados"
@@ -984,7 +1086,7 @@ function AppContent() {
               onClick={() => setShowSettings(true)}
               className={`p-2.5 rounded-xl transition-all duration-200 ${
                 showSettings
-                  ? 'bg-pink-500 text-white shadow-lg'
+                  ? `${coresTema.bg500} text-white shadow-lg`
                   : 'bg-white/95 backdrop-blur-xl border border-white/20 text-gray-700 hover:bg-gray-50 shadow-lg hover:shadow-xl'
               }`}
               title="Configurações"

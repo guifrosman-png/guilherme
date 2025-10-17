@@ -17,6 +17,83 @@ interface TemplateEditorProps {
 }
 
 export function TemplateEditor({ onConfirm, onCancel }: TemplateEditorProps) {
+  // 🎨 OBTER CORES TEMÁTICAS DA PROFISSÃO
+  const getCoresTema = () => {
+    const config = localStorage.getItem('anamneseConfig');
+    const templateProfissao = config ? JSON.parse(config).templateProfissao : 'tatuagem';
+
+    const cores: any = {
+      tatuagem: {
+        gradient: 'from-pink-500 to-purple-500',
+        bg50: 'bg-pink-50',
+        bg100: 'bg-pink-100',
+        bg500: 'bg-pink-500',
+        text500: 'text-pink-500',
+        text700: 'text-pink-700',
+        border200: 'border-pink-200',
+        border300: 'border-pink-300',
+        border500: 'border-pink-500',
+        hover: 'hover:bg-pink-50 hover:border-pink-500',
+        focus: 'focus:border-pink-500',
+      },
+      psicologia: {
+        gradient: 'from-blue-500 to-cyan-500',
+        bg50: 'bg-blue-50',
+        bg100: 'bg-blue-100',
+        bg500: 'bg-blue-500',
+        text500: 'text-blue-500',
+        text700: 'text-blue-700',
+        border200: 'border-blue-200',
+        border300: 'border-blue-300',
+        border500: 'border-blue-500',
+        hover: 'hover:bg-blue-50 hover:border-blue-500',
+        focus: 'focus:border-blue-500',
+      },
+      nutricao: {
+        gradient: 'from-green-500 to-emerald-500',
+        bg50: 'bg-green-50',
+        bg100: 'bg-green-100',
+        bg500: 'bg-green-500',
+        text500: 'text-green-500',
+        text700: 'text-green-700',
+        border200: 'border-green-200',
+        border300: 'border-green-300',
+        border500: 'border-green-500',
+        hover: 'hover:bg-green-50 hover:border-green-500',
+        focus: 'focus:border-green-500',
+      },
+      fisioterapia: {
+        gradient: 'from-orange-500 to-amber-500',
+        bg50: 'bg-orange-50',
+        bg100: 'bg-orange-100',
+        bg500: 'bg-orange-500',
+        text500: 'text-orange-500',
+        text700: 'text-orange-700',
+        border200: 'border-orange-200',
+        border300: 'border-orange-300',
+        border500: 'border-orange-500',
+        hover: 'hover:bg-orange-50 hover:border-orange-500',
+        focus: 'focus:border-orange-500',
+      },
+      estetica: {
+        gradient: 'from-purple-500 to-fuchsia-500',
+        bg50: 'bg-purple-50',
+        bg100: 'bg-purple-100',
+        bg500: 'bg-purple-500',
+        text500: 'text-purple-500',
+        text700: 'text-purple-700',
+        border200: 'border-purple-200',
+        border300: 'border-purple-300',
+        border500: 'border-purple-500',
+        hover: 'hover:bg-purple-50 hover:border-purple-500',
+        focus: 'focus:border-purple-500',
+      },
+    };
+    return cores[templateProfissao] || cores.tatuagem;
+  };
+
+  const coresTema = getCoresTema();
+
   const [questions, setQuestions] = useState<Question[]>([
     { id: 1, section: 'Dados Pessoais', label: 'Nome Completo', type: 'text', required: true },
     { id: 2, section: 'Dados Pessoais', label: 'Data de Nascimento', type: 'text', required: true },
@@ -78,7 +155,7 @@ export function TemplateEditor({ onConfirm, onCancel }: TemplateEditorProps) {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden my-8">
         {/* Header */}
-        <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-6 relative">
+        <div className={`bg-gradient-to-r ${coresTema.gradient} p-6 relative`}>
           <button
             onClick={onCancel}
             className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
@@ -104,7 +181,7 @@ export function TemplateEditor({ onConfirm, onCancel }: TemplateEditorProps) {
 
           {sections.map(section => (
             <div key={section} className="mb-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 border-pink-200">
+              <h3 className={`text-xl font-bold text-gray-900 mb-4 pb-2 border-b-2 ${coresTema.border200}`}>
                 {section}
               </h3>
               <div className="space-y-3">
@@ -113,7 +190,7 @@ export function TemplateEditor({ onConfirm, onCancel }: TemplateEditorProps) {
                   .map(question => (
                     <div
                       key={question.id}
-                      className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl hover:border-pink-300 transition-colors bg-white"
+                      className={`flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl hover:${coresTema.border300} transition-colors bg-white`}
                     >
                       <GripVertical className="h-5 w-5 text-gray-400 cursor-move" />
                       <div className="flex-1">
@@ -157,13 +234,13 @@ export function TemplateEditor({ onConfirm, onCancel }: TemplateEditorProps) {
           {!showAddQuestion ? (
             <button
               onClick={() => setShowAddQuestion(true)}
-              className="w-full p-4 border-2 border-dashed border-gray-300 rounded-xl hover:border-pink-500 hover:bg-pink-50 transition-colors flex items-center justify-center gap-2 text-gray-600 hover:text-pink-600"
+              className={`w-full p-4 border-2 border-dashed border-gray-300 rounded-xl hover:${coresTema.border500} ${coresTema.hover} transition-colors flex items-center justify-center gap-2 text-gray-600 hover:${coresTema.text500}`}
             >
               <Plus className="h-5 w-5" />
               <span className="font-medium">Adicionar Nova Pergunta</span>
             </button>
           ) : (
-            <div className="p-6 border-2 border-pink-300 rounded-xl bg-pink-50">
+            <div className={`p-6 border-2 ${coresTema.border300} rounded-xl ${coresTema.bg50}`}>
               <h4 className="text-lg font-bold text-gray-900 mb-4">Nova Pergunta</h4>
               <div className="space-y-4">
                 <div>
@@ -171,7 +248,7 @@ export function TemplateEditor({ onConfirm, onCancel }: TemplateEditorProps) {
                   <select
                     value={newQuestion.section}
                     onChange={(e) => setNewQuestion({ ...newQuestion, section: e.target.value })}
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-gray-900 focus:border-pink-500 focus:outline-none"
+                    className={`w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-gray-900 ${coresTema.focus} focus:outline-none`}
                   >
                     {sections.map(s => (
                       <option key={s} value={s}>{s}</option>
@@ -186,7 +263,7 @@ export function TemplateEditor({ onConfirm, onCancel }: TemplateEditorProps) {
                     value={newQuestion.label}
                     onChange={(e) => setNewQuestion({ ...newQuestion, label: e.target.value })}
                     placeholder="Ex: Qual seu tipo sanguíneo?"
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-gray-900 focus:border-pink-500 focus:outline-none"
+                    className={`w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-gray-900 ${coresTema.focus} focus:outline-none`}
                   />
                 </div>
                 <div>
@@ -194,7 +271,7 @@ export function TemplateEditor({ onConfirm, onCancel }: TemplateEditorProps) {
                   <select
                     value={newQuestion.type}
                     onChange={(e) => setNewQuestion({ ...newQuestion, type: e.target.value as any })}
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-gray-900 focus:border-pink-500 focus:outline-none"
+                    className={`w-full px-4 py-2 border-2 border-gray-200 rounded-lg text-gray-900 ${coresTema.focus} focus:outline-none`}
                   >
                     <option value="text">Texto Curto</option>
                     <option value="textarea">Texto Longo</option>
@@ -240,7 +317,7 @@ export function TemplateEditor({ onConfirm, onCancel }: TemplateEditorProps) {
             Cancelar
           </Button>
           <Button
-            className="bg-gradient-to-r from-pink-500 to-purple-500"
+            className={`bg-gradient-to-r ${coresTema.gradient}`}
             onClick={() => onConfirm(questions)}
           >
             Confirmar e Gerar Link

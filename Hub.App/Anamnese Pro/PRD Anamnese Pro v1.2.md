@@ -562,6 +562,125 @@ Esta abordagem transforma um processo tradicionalmente tedioso em uma ferramenta
 - Termo e assinatura obrigatórios
 - Feedback visual com mensagens de erro
 
+### 11.11. Sistema de Cores Dinâmicas por Profissão (v1.4 - Janeiro 2025)
+- **5 paletas de cores** específicas por profissão
+- **Mudança automática** de toda a interface baseada na profissão escolhida
+- **Cores aplicadas em:**
+  - Gradientes do header
+  - Bordas de inputs e botões
+  - Fundos de cards e seções
+  - Ícones e destaques visuais
+  - Estados de hover e focus
+
+**Paletas de Cores:**
+- **Tatuagem:** Rosa e Roxo (pink-500 to purple-500)
+- **Psicologia:** Azul e Ciano (blue-500 to cyan-500)
+- **Nutrição:** Verde e Esmeralda (green-500 to emerald-500)
+- **Fisioterapia:** Laranja e Âmbar (orange-500 to amber-500)
+- **Estética:** Roxo e Fúcsia (purple-500 to fuchsia-500)
+
+**Componentes com Cores Dinâmicas:**
+- QuizContainer (quiz de anamnese)
+- LinkGenerated (modal de links)
+- ClienteProfile (perfil do cliente)
+- AnamneseDetails (detalhes da anamnese)
+- TemplateEditor (editor de templates)
+- TemplateSettings (configurações)
+- Onboarding (fluxo de onboarding)
+
+**Armazenamento:** Configuração salva no localStorage junto com dados do onboarding
+
+### 11.12. Onboarding em 3 Etapas com Personalização (v1.4 - Janeiro 2025)
+**Sistema expandido de onboarding** para personalização completa da experiência
+
+**Etapa 1: Escolha da Profissão**
+- Grid visual com 5 profissões
+- Cards com ícones, títulos e descrições
+- Cores pink/purple para destaque
+- Click para selecionar e avançar
+
+**Etapa 2: Perguntas Específicas da Profissão (NOVO!)**
+- **2 perguntas personalizadas** por profissão
+- **Seleção múltipla** permitida em todas as opções
+- **Cores blue/cyan** para indicar personalização
+- **Exemplos de perguntas:**
+  - Tatuagem: "Qual seu estilo principal?" / "Quais serviços oferece?"
+  - Psicologia: "Qual sua abordagem terapêutica?" / "Qual público atende?"
+  - Nutrição: "Qual sua especialidade?" / "Quais serviços oferece?"
+  - Fisioterapia: "Qual sua área de atuação?" / "Tipo de atendimento?"
+  - Estética: "Qual tipo de estética trabalha?" / "Principais procedimentos?"
+
+**Etapa 3: Confirmação e Início**
+- Resumo da profissão escolhida
+- Lista de benefícios do módulo
+- Resumo das personalizações selecionadas
+- Cores green/emerald para "sucesso"
+- Botão "Começar a Usar! 🚀"
+
+**Indicadores de Progresso:**
+- 3 bolinhas mostrando etapa atual
+- Cores mudam conforme progresso (pink → blue → green)
+- Botão "Voltar" em todas as etapas
+- Validação antes de avançar
+
+**Dados Salvos:**
+```typescript
+{
+  templateProfissao: 'tatuagem' | 'psicologia' | 'nutricao' | 'fisioterapia' | 'estetica',
+  personalizacao: {
+    estilo: ['Realista', 'Old School'],
+    servicos: ['Tatuagem', 'Cover-up']
+  },
+  dataConfiguracao: '2025-01-17T...',
+  onboardingConcluido: true
+}
+```
+
+### 11.13. Melhorias de UX e Contraste (v1.4 - Janeiro 2025)
+**Problema resolvido:** Texto branco em fundo branco causando problemas de legibilidade
+
+**Correções Aplicadas:**
+- ✅ Todos os inputs com `text-gray-900` (texto escuro)
+- ✅ Todas as labels com `text-gray-900` (texto escuro)
+- ✅ Botões de seleção com `text-gray-900` (texto escuro)
+- ✅ Header com gradient mantém `text-white` (único lugar permitido)
+- ✅ Correção de template literals mal formatados (15+ ocorrências)
+
+**Regra de Contraste:**
+- Fundos claros (branco, bg-50, bg-100) → texto escuro (`text-gray-900`)
+- Fundos escuros (gradientes, bg-500+) → texto branco (`text-white`)
+- Nunca usar texto branco em fundos claros
+
+**Componentes Corrigidos:**
+- QuizContainer.tsx - 15+ correções
+- Todos os inputs, selects e textareas
+- Botões de sim/não e opções múltiplas
+- Cards e modais diversos
+
 ---
 
-© 2025 Hub.App - Módulo Anamnese Pro v2.1
+## 12. 📝 Funcionalidades Planejadas (Próximas Versões)
+
+### 12.1. Modal de Confirmação de Mudança de Template
+**Objetivo:** Prevenir mudanças acidentais que podem causar perda de dados
+
+**Funcionalidade:**
+- ⚠️ Modal de confirmação ao tentar mudar de profissão
+- 📋 Aviso sobre perda de perguntas personalizadas
+- 🎨 Aviso sobre mudança de cores do sistema
+- ✅ Botão "Sim, tenho certeza" (vermelho/laranja)
+- ❌ Botão "Cancelar" (cinza)
+
+**Mensagem:**
+```
+⚠️ Atenção! Mudar o template irá:
+- Alterar todas as cores do sistema
+- Pode afetar suas perguntas personalizadas
+- Modificar a experiência de seus clientes
+
+Tem certeza que deseja continuar?
+```
+
+---
+
+© 2025 Hub.App - Módulo Anamnese Pro v2.2

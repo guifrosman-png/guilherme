@@ -519,3 +519,220 @@ A profissional pode configurar um template padrão que será usado sempre:
 - Idade mínima 18 anos
 - Termo e assinatura obrigatórios
 - Feedback visual com mensagens de erro
+
+---
+
+## FASE 9: NOVAS FUNCIONALIDADES (v1.4 - Janeiro 2025)
+
+### 9.1. Sistema de Cores Dinâmicas por Profissão ✅ IMPLEMENTADO
+
+**O que foi feito:**
+- Criadas 5 paletas de cores específicas para cada profissão
+- Sistema de cores se aplica automaticamente a TODA interface
+- Cores mudam baseadas na escolha do onboarding
+
+**Implementação Técnica:**
+1. Função `getCoresTema()` em cada componente
+2. Lê configuração do localStorage
+3. Retorna objeto com cores da profissão escolhida
+4. Aplica via template literals no className
+
+**Paletas Criadas:**
+- Tatuagem: Rosa/Roxo (pink-purple)
+- Psicologia: Azul/Ciano (blue-cyan)
+- Nutrição: Verde/Esmeralda (green-emerald)
+- Fisioterapia: Laranja/Âmbar (orange-amber)
+- Estética: Roxo/Fúcsia (purple-fuchsia)
+
+**Componentes Atualizados:**
+- ✅ QuizContainer.tsx
+- ✅ LinkGenerated.tsx
+- ✅ ClienteProfile.tsx
+- ✅ AnamneseDetails.tsx
+- ✅ TemplateEditor.tsx
+- ✅ TemplateSettings.tsx
+- ✅ Onboarding.tsx
+
+**Padrão de Código:**
+```typescript
+const getCoresTema = () => {
+  const config = localStorage.getItem('anamneseConfig');
+  const templateProfissao = config ? JSON.parse(config).templateProfissao : 'tatuagem';
+  const cores = { /* paletas */ };
+  return cores[templateProfissao] || cores.tatuagem;
+};
+const coresTema = getCoresTema();
+
+// Uso
+<div className={`border-2 ${coresTema.border500} ${coresTema.bg50}`}>
+```
+
+### 9.2. Onboarding em 3 Etapas com Personalização ✅ IMPLEMENTADO
+
+**O que foi feito:**
+- Expandido de 2 para 3 etapas
+- Adicionada Etapa 2 com perguntas específicas da profissão
+- Sistema de seleção múltipla
+- Salvamento de personalizações
+
+**Estrutura das Etapas:**
+
+**Etapa 1: Escolha da Profissão**
+- Grid com 5 cards visuais
+- Ícones, títulos e descrições
+- Cores pink/purple
+- Click seleciona e avança
+
+**Etapa 2: Perguntas Específicas (NOVA!)**
+- 2 perguntas por profissão
+- Múltipla seleção permitida
+- Cores blue/cyan
+- Botão "Continuar"
+- Dica: "Você pode selecionar várias opções!"
+
+**Etapa 3: Confirmação**
+- Resumo da profissão
+- Lista de benefícios
+- Resumo das personalizações
+- Cores green/emerald
+- Botão "Começar a Usar! 🚀"
+
+**Exemplos de Perguntas:**
+```typescript
+tatuagem: [
+  { id: 'estilo', pergunta: 'Qual seu estilo principal de tatuagem?',
+    opcoes: ['Realista', 'Old School', 'Aquarela', 'Minimalista', 'Geométrica', 'Oriental', 'Outro'] },
+  { id: 'servicos', pergunta: 'Quais serviços você oferece?',
+    opcoes: ['Tatuagem', 'Cover-up', 'Piercing', 'Remoção a laser', 'Micropigmentação'] }
+]
+```
+
+**Dados Salvos no localStorage:**
+```typescript
+{
+  templateProfissao: 'tatuagem',
+  personalizacao: {
+    estilo: ['Realista', 'Old School'],
+    servicos: ['Tatuagem', 'Cover-up']
+  },
+  dataConfiguracao: '2025-01-17T...',
+  onboardingConcluido: true
+}
+```
+
+**Indicadores de Progresso:**
+- 3 bolinhas indicando etapa atual
+- Cores mudam: pink → blue → green
+- Botão "Voltar" em todas as etapas
+
+### 9.3. Correções de UX e Contraste ✅ IMPLEMENTADO
+
+**Problema Resolvido:**
+Texto branco em fundo branco no quiz causando ilegibilidade
+
+**Correções Aplicadas:**
+
+1. **Template Literals Corrigidos:**
+   - ❌ Errado: `className="border ${coresTema.border500}"`
+   - ✅ Correto: `className={`border ${coresTema.border500}`}`
+   - 15+ ocorrências corrigidas
+
+2. **Contraste de Texto:**
+   - Inputs: `text-gray-900` (escuro)
+   - Labels: `text-gray-900` (escuro)
+   - Botões: `text-gray-900` (escuro)
+   - Header gradient: `text-white` (único lugar permitido)
+
+3. **Regra de Ouro:**
+   - Fundos claros → texto escuro
+   - Fundos escuros → texto branco
+   - NUNCA branco em branco
+
+**Arquivos Corrigidos:**
+- QuizContainer.tsx (principal - 15+ correções)
+- Todos inputs, selects, textareas
+- Botões sim/não e opções múltiplas
+- Cards e modais diversos
+
+---
+
+## FASE 10: PRÓXIMAS IMPLEMENTAÇÕES
+
+### 10.1. Modal de Confirmação de Mudança de Template ⏳ PLANEJADO
+
+**Objetivo:**
+Prevenir mudanças acidentais de profissão que podem causar perda de dados
+
+**Como Será:**
+1. Usuário tenta mudar de profissão nas configurações
+2. Modal aparece com aviso vermelho/laranja
+3. Lista o que vai acontecer:
+   - Mudança de todas as cores
+   - Possível perda de perguntas personalizadas
+   - Mudança na experiência dos clientes
+4. Dois botões:
+   - "Sim, tenho certeza" (vermelho/laranja)
+   - "Cancelar" (cinza)
+
+**Onde Implementar:**
+- TemplateSettings.tsx
+- Ou componente de Configurações
+
+**Mensagem Proposta:**
+```
+⚠️ Atenção! Mudar o template irá:
+• Alterar todas as cores do sistema
+• Pode afetar suas perguntas personalizadas
+• Modificar a experiência de seus clientes
+
+Tem certeza que deseja continuar?
+```
+
+### 10.2. Melhorias Futuras a Considerar
+
+**Interface:**
+- Animações de transição entre etapas do onboarding
+- Preview das cores antes de confirmar mudança
+- Dark mode (cores adaptadas)
+
+**Funcionalidades:**
+- Exportar/importar configurações de template
+- Compartilhar template entre profissionais
+- Histórico de mudanças de configuração
+
+**Analytics:**
+- Rastrear quais profissões são mais usadas
+- Quais personalizações são mais escolhidas
+- Taxa de conclusão do onboarding por etapa
+
+---
+
+## 🎯 STATUS ATUAL DO PROJETO
+
+### ✅ Implementado (v1.4 - Janeiro 2025)
+- Sistema de cores dinâmicas (5 profissões)
+- Onboarding em 3 etapas com personalização
+- Correções de contraste e legibilidade
+- Seleção múltipla nas perguntas
+- Salvamento de personalizações
+- 7+ componentes com cores dinâmicas
+
+### 🔄 Em Desenvolvimento
+- (Nenhum item atualmente)
+
+### ⏳ Planejado (Próximas Versões)
+- Modal de confirmação de mudança de template
+- Exportar/importar configurações
+- Dark mode
+- Analytics de uso
+
+### 📊 Métricas de Sucesso
+- Onboarding concluído: espera-se 95%+ de conclusão
+- Cores aplicadas corretamente: 100% dos componentes
+- Legibilidade: 100% de contraste adequado
+- Tempo de setup: < 2 minutos para configuração inicial
+
+---
+
+**Última atualização**: 17 de Janeiro de 2025
+**Versão atual**: 1.4 (Cores Dinâmicas + Onboarding 3 Etapas)

@@ -17,6 +17,83 @@ interface ClienteProfileProps {
 export function ClienteProfile({ cliente, onClose, onVerHistorico, onNovaAnamnese, onExcluir }: ClienteProfileProps) {
   if (!cliente) return null;
 
+  // 🎨 OBTER CORES TEMÁTICAS DA PROFISSÃO
+  const getCoresTema = () => {
+    const config = localStorage.getItem('anamneseConfig');
+    const templateProfissao = config ? JSON.parse(config).templateProfissao : 'tatuagem';
+
+    const cores: any = {
+      tatuagem: {
+        gradient: 'from-pink-500 to-purple-500',
+        bg50: 'bg-pink-50',
+        bg100: 'bg-pink-100',
+        bg500: 'bg-pink-500',
+        text500: 'text-pink-500',
+        text700: 'text-pink-700',
+        border200: 'border-pink-200',
+        border300: 'border-pink-300',
+        border500: 'border-pink-500',
+        hover: 'hover:bg-pink-50 hover:border-pink-500',
+        focus: 'focus:border-pink-500',
+      },
+      psicologia: {
+        gradient: 'from-blue-500 to-cyan-500',
+        bg50: 'bg-blue-50',
+        bg100: 'bg-blue-100',
+        bg500: 'bg-blue-500',
+        text500: 'text-blue-500',
+        text700: 'text-blue-700',
+        border200: 'border-blue-200',
+        border300: 'border-blue-300',
+        border500: 'border-blue-500',
+        hover: 'hover:bg-blue-50 hover:border-blue-500',
+        focus: 'focus:border-blue-500',
+      },
+      nutricao: {
+        gradient: 'from-green-500 to-emerald-500',
+        bg50: 'bg-green-50',
+        bg100: 'bg-green-100',
+        bg500: 'bg-green-500',
+        text500: 'text-green-500',
+        text700: 'text-green-700',
+        border200: 'border-green-200',
+        border300: 'border-green-300',
+        border500: 'border-green-500',
+        hover: 'hover:bg-green-50 hover:border-green-500',
+        focus: 'focus:border-green-500',
+      },
+      fisioterapia: {
+        gradient: 'from-orange-500 to-amber-500',
+        bg50: 'bg-orange-50',
+        bg100: 'bg-orange-100',
+        bg500: 'bg-orange-500',
+        text500: 'text-orange-500',
+        text700: 'text-orange-700',
+        border200: 'border-orange-200',
+        border300: 'border-orange-300',
+        border500: 'border-orange-500',
+        hover: 'hover:bg-orange-50 hover:border-orange-500',
+        focus: 'focus:border-orange-500',
+      },
+      estetica: {
+        gradient: 'from-purple-500 to-fuchsia-500',
+        bg50: 'bg-purple-50',
+        bg100: 'bg-purple-100',
+        bg500: 'bg-purple-500',
+        text500: 'text-purple-500',
+        text700: 'text-purple-700',
+        border200: 'border-purple-200',
+        border300: 'border-purple-300',
+        border500: 'border-purple-500',
+        hover: 'hover:bg-purple-50 hover:border-purple-500',
+        focus: 'focus:border-purple-500',
+      },
+    };
+    return cores[templateProfissao] || cores.tatuagem;
+  };
+
+  const coresTema = getCoresTema();
+
   // Calcular idade se tiver data de nascimento
   const calcularIdade = (dataNascimento: string) => {
     if (!dataNascimento) return null;
@@ -43,7 +120,7 @@ export function ClienteProfile({ cliente, onClose, onVerHistorico, onNovaAnamnes
       {/* Modal */}
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl shadow-3xl z-50 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-6 text-white">
+        <div className={`bg-gradient-to-r ${coresTema.gradient} p-6 text-white`}>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               {/* Foto Grande */}
@@ -85,7 +162,7 @@ export function ClienteProfile({ cliente, onClose, onVerHistorico, onNovaAnamnes
             {/* Informações Pessoais */}
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <User className="h-5 w-5 text-pink-500" />
+                <User className={`h-5 w-5 ${coresTema.text500}`} />
                 Informações Pessoais
               </h3>
 
@@ -124,7 +201,7 @@ export function ClienteProfile({ cliente, onClose, onVerHistorico, onNovaAnamnes
             {/* Informações de Contato */}
             <div className="space-y-4">
               <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Phone className="h-5 w-5 text-pink-500" />
+                <Phone className={`h-5 w-5 ${coresTema.text500}`} />
                 Contato
               </h3>
 
@@ -162,13 +239,13 @@ export function ClienteProfile({ cliente, onClose, onVerHistorico, onNovaAnamnes
               <p className="text-3xl font-bold text-blue-600">{cliente.totalAnamneses || 0}</p>
               <p className="text-sm text-blue-700">Anamneses</p>
             </div>
-            <div className="p-4 bg-purple-50 rounded-xl text-center">
-              <p className="text-3xl font-bold text-purple-600">{cliente.totalTatuagens || 0}</p>
-              <p className="text-sm text-purple-700">Tatuagens</p>
+            <div className={`p-4 ${coresTema.bg50} rounded-xl text-center`}>
+              <p className={`text-3xl font-bold ${coresTema.text500}`}>{cliente.totalTatuagens || 0}</p>
+              <p className={`text-sm ${coresTema.text700}`}>Tatuagens</p>
             </div>
-            <div className="p-4 bg-pink-50 rounded-xl text-center">
-              <p className="text-3xl font-bold text-pink-600">R$ {cliente.totalGasto || 0}</p>
-              <p className="text-sm text-pink-700">Total Gasto</p>
+            <div className={`p-4 ${coresTema.bg50} rounded-xl text-center`}>
+              <p className={`text-3xl font-bold ${coresTema.text500}`}>R$ {cliente.totalGasto || 0}</p>
+              <p className={`text-sm ${coresTema.text700}`}>Total Gasto</p>
             </div>
           </div>
 
@@ -223,7 +300,7 @@ export function ClienteProfile({ cliente, onClose, onVerHistorico, onNovaAnamnes
               Fechar
             </Button>
             <Button
-              className="bg-pink-500 hover:bg-pink-600"
+              className={`${coresTema.bg500} hover:${coresTema.bg500}`}
               onClick={onNovaAnamnese}
             >
               Nova Anamnese

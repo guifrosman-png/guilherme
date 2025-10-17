@@ -10,6 +10,83 @@ interface LinkGeneratedProps {
 export function LinkGenerated({ link, onClose }: LinkGeneratedProps) {
   const [copied, setCopied] = useState(false);
 
+  // 🎨 OBTER CORES TEMÁTICAS DA PROFISSÃO
+  const getCoresTema = () => {
+    const config = localStorage.getItem('anamneseConfig');
+    const templateProfissao = config ? JSON.parse(config).templateProfissao : 'tatuagem';
+
+    const cores: any = {
+      tatuagem: {
+        gradient: 'from-pink-500 to-purple-500',
+        bg50: 'bg-pink-50',
+        bg100: 'bg-pink-100',
+        bg500: 'bg-pink-500',
+        text500: 'text-pink-500',
+        text700: 'text-pink-700',
+        border200: 'border-pink-200',
+        border300: 'border-pink-300',
+        border500: 'border-pink-500',
+        hover: 'hover:bg-pink-50 hover:border-pink-500',
+        focus: 'focus:border-pink-500',
+      },
+      psicologia: {
+        gradient: 'from-blue-500 to-cyan-500',
+        bg50: 'bg-blue-50',
+        bg100: 'bg-blue-100',
+        bg500: 'bg-blue-500',
+        text500: 'text-blue-500',
+        text700: 'text-blue-700',
+        border200: 'border-blue-200',
+        border300: 'border-blue-300',
+        border500: 'border-blue-500',
+        hover: 'hover:bg-blue-50 hover:border-blue-500',
+        focus: 'focus:border-blue-500',
+      },
+      nutricao: {
+        gradient: 'from-green-500 to-emerald-500',
+        bg50: 'bg-green-50',
+        bg100: 'bg-green-100',
+        bg500: 'bg-green-500',
+        text500: 'text-green-500',
+        text700: 'text-green-700',
+        border200: 'border-green-200',
+        border300: 'border-green-300',
+        border500: 'border-green-500',
+        hover: 'hover:bg-green-50 hover:border-green-500',
+        focus: 'focus:border-green-500',
+      },
+      fisioterapia: {
+        gradient: 'from-orange-500 to-amber-500',
+        bg50: 'bg-orange-50',
+        bg100: 'bg-orange-100',
+        bg500: 'bg-orange-500',
+        text500: 'text-orange-500',
+        text700: 'text-orange-700',
+        border200: 'border-orange-200',
+        border300: 'border-orange-300',
+        border500: 'border-orange-500',
+        hover: 'hover:bg-orange-50 hover:border-orange-500',
+        focus: 'focus:border-orange-500',
+      },
+      estetica: {
+        gradient: 'from-purple-500 to-fuchsia-500',
+        bg50: 'bg-purple-50',
+        bg100: 'bg-purple-100',
+        bg500: 'bg-purple-500',
+        text500: 'text-purple-500',
+        text700: 'text-purple-700',
+        border200: 'border-purple-200',
+        border300: 'border-purple-300',
+        border500: 'border-purple-500',
+        hover: 'hover:bg-purple-50 hover:border-purple-500',
+        focus: 'focus:border-purple-500',
+      },
+    };
+    return cores[templateProfissao] || cores.tatuagem;
+  };
+
+  const coresTema = getCoresTema();
+
   const handleCopy = async () => {
     try {
       // Tentar usar Clipboard API moderna (mais seguro)
@@ -102,7 +179,7 @@ export function LinkGenerated({ link, onClose }: LinkGeneratedProps) {
                 className={`px-6 ${
                   copied
                     ? 'bg-green-500 hover:bg-green-600'
-                    : 'bg-gradient-to-r from-pink-500 to-purple-500'
+                    : `bg-gradient-to-r ${coresTema.gradient}`
                 }`}
               >
                 {copied ? (
@@ -156,7 +233,7 @@ export function LinkGenerated({ link, onClose }: LinkGeneratedProps) {
                 href={`sms:?&body=${encodeURIComponent('Olá! Por favor, preencha sua anamnese através deste link: ' + link)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-3 border-2 border-purple-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all text-center"
+                className={`p-3 border-2 ${coresTema.border200} rounded-xl ${coresTema.hover} transition-all text-center`}
               >
                 <div className="text-2xl mb-1">💬</div>
                 <div className="text-sm font-medium text-gray-900">SMS</div>
@@ -176,7 +253,7 @@ export function LinkGenerated({ link, onClose }: LinkGeneratedProps) {
 
         {/* Footer */}
         <div className="border-t border-gray-200 p-4 flex justify-end bg-gray-50">
-          <Button onClick={onClose} className="bg-gradient-to-r from-pink-500 to-purple-500">
+          <Button onClick={onClose} className={`bg-gradient-to-r ${coresTema.gradient}`}>
             Entendi, Fechar
           </Button>
         </div>

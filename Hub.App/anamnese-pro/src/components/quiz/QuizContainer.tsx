@@ -43,6 +43,73 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({}); // Erros de validação
   const [valorFormatado, setValorFormatado] = useState('0,00'); // Valor formatado para exibição
 
+  // 🎨 OBTER CORES TEMÁTICAS DA PROFISSÃO
+  const getCoresTema = () => {
+    const config = localStorage.getItem('anamneseConfig');
+    const templateProfissao = config ? JSON.parse(config).templateProfissao : 'tatuagem';
+
+    const cores: any = {
+      tatuagem: {
+        gradient: 'from-pink-500 to-purple-500',
+        bg50: 'bg-pink-50',
+        border200: 'border-pink-200',
+        border300: 'border-pink-300',
+        border500: 'border-pink-500',
+        text500: 'text-pink-500',
+        focus: 'focus:border-pink-500',
+        hover: 'hover:border-pink-300',
+        hoverBg: 'hover:bg-pink-50/50',
+      },
+      psicologia: {
+        gradient: 'from-blue-500 to-cyan-500',
+        bg50: 'bg-blue-50',
+        border200: 'border-blue-200',
+        border300: 'border-blue-300',
+        border500: 'border-blue-500',
+        text500: 'text-blue-500',
+        focus: 'focus:border-blue-500',
+        hover: 'hover:border-blue-300',
+        hoverBg: 'hover:bg-blue-50/50',
+      },
+      nutricao: {
+        gradient: 'from-green-500 to-emerald-500',
+        bg50: 'bg-green-50',
+        border200: 'border-green-200',
+        border300: 'border-green-300',
+        border500: 'border-green-500',
+        text500: 'text-green-500',
+        focus: 'focus:border-green-500',
+        hover: 'hover:border-green-300',
+        hoverBg: 'hover:bg-green-50/50',
+      },
+      fisioterapia: {
+        gradient: 'from-orange-500 to-amber-500',
+        bg50: 'bg-orange-50',
+        border200: 'border-orange-200',
+        border300: 'border-orange-300',
+        border500: 'border-orange-500',
+        text500: 'text-orange-500',
+        focus: 'focus:border-orange-500',
+        hover: 'hover:border-orange-300',
+        hoverBg: 'hover:bg-orange-50/50',
+      },
+      estetica: {
+        gradient: 'from-purple-500 to-fuchsia-500',
+        bg50: 'bg-purple-50',
+        border200: 'border-purple-200',
+        border300: 'border-purple-300',
+        border500: 'border-purple-500',
+        text500: 'text-purple-500',
+        focus: 'focus:border-purple-500',
+        hover: 'hover:border-purple-300',
+        hoverBg: 'hover:bg-purple-50/50',
+      },
+    };
+    return cores[templateProfissao] || cores.tatuagem;
+  };
+
+  const coresTema = getCoresTema();
+
   // Log para verificar se as perguntas personalizadas chegaram
   console.log('🎯 Custom Questions recebidas no QuizContainer:', customQuestions);
 
@@ -261,7 +328,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
     4: { icon: AlertCircle, color: 'text-orange-500', bg: 'bg-orange-50' },
     5: { icon: Sparkles, color: 'text-purple-500', bg: 'bg-purple-50' },
     6: { icon: ImageIcon, color: 'text-indigo-500', bg: 'bg-indigo-50' },
-    7: { icon: ImageIcon, color: 'text-pink-500', bg: 'bg-pink-50' },
+    7: { icon: ImageIcon, color: coresTema.text500, bg: coresTema.bg50 },
     8: { icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
   };
 
@@ -282,7 +349,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
               type="text"
               placeholder={question.label}
               className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
-                hasError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                hasError ? 'border-red-500 focus:border-red-500' : `border-gray-200 ${coresTema.focus}`
               }`}
               value={(formData as any)[fieldKey] || ''}
               onChange={(e) => updateFormData({ [fieldKey]: e.target.value })}
@@ -302,7 +369,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
               placeholder={question.label}
               rows={4}
               className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors resize-none ${
-                hasError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                hasError ? 'border-red-500 focus:border-red-500' : `border-gray-200 ${coresTema.focus}`
               }`}
               value={(formData as any)[fieldKey] || ''}
               onChange={(e) => updateFormData({ [fieldKey]: e.target.value })}
@@ -320,7 +387,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
           <div key={question.id}>
             <select
               className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
-                hasError ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                hasError ? 'border-red-500 focus:border-red-500' : `border-gray-200 ${coresTema.focus}`
               }`}
               value={(formData as any)[fieldKey] || ''}
               onChange={(e) => updateFormData({ [fieldKey]: e.target.value })}
@@ -344,14 +411,14 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
             <label className="block text-sm font-medium text-gray-700 mb-2">{question.label}</label>
             <div className="flex flex-wrap gap-3">
               {question.options?.map((opt: string) => (
-                <label key={opt} className="flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-pink-300 transition-colors">
+                <label key={opt} className={`flex items-center gap-2 px-4 py-2 border-2 border-gray-200 rounded-xl cursor-pointer ${coresTema.hover} transition-colors`}>
                   <input
                     type="radio"
                     name={fieldKey}
                     value={opt}
                     checked={(formData as any)[fieldKey] === opt}
                     onChange={(e) => updateFormData({ [fieldKey]: e.target.value })}
-                    className="text-pink-500"
+                    className={coresTema.text500}
                   />
                   <span className="text-gray-900">{opt}</span>
                 </label>
@@ -403,7 +470,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   type="text"
                   inputMode="numeric"
                   placeholder="0,00"
-                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors text-lg font-semibold"
+                  className={`w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors text-lg font-semibold`}
                   value={valorFormatado}
                   onChange={(e) => handleValorChange(e.target.value)}
                 />
@@ -414,13 +481,13 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
             </div>
           )}
 
-          <div className="flex items-center gap-3 p-4 bg-pink-50 rounded-xl border-2 border-pink-200">
+          <div className={`flex items-center gap-3 p-4 ${coresTema.bg50} rounded-xl border-2 ${coresTema.border200}`}>
             <input
               type="checkbox"
               id="termo"
               checked={formData.aceitaTermo || false}
               onChange={(e) => updateFormData({ aceitaTermo: e.target.checked })}
-              className="w-5 h-5 text-pink-500 rounded focus:ring-pink-500"
+              className={`w-5 h-5 ${coresTema.text500} rounded`}
             />
             <label htmlFor="termo" className="text-sm font-medium text-gray-900 cursor-pointer">
               Li e concordo com o termo de compromisso
@@ -433,7 +500,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
             <input
               type="text"
               placeholder="Digite seu nome completo como assinatura"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors font-signature text-xl"
+              className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors font-signature text-xl`}
               value={formData.assinatura || ''}
               onChange={(e) => updateFormData({ assinatura: e.target.value })}
               style={{ fontFamily: 'cursive' }}
@@ -503,7 +570,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   type="text"
                   placeholder="Nome completo"
                   className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
-                    fieldErrors.nomeCompleto ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                    fieldErrors.nomeCompleto ? 'border-red-500 focus:border-red-500' : `border-gray-200 ${coresTema.focus}`
                   }`}
                   value={formData.nomeCompleto || ''}
                   onChange={(e) => updateFormData({ nomeCompleto: e.target.value })}
@@ -522,7 +589,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                     type="date"
                     placeholder="Data de nascimento"
                     className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
-                      fieldErrors.dataNascimento ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                      fieldErrors.dataNascimento ? 'border-red-500 focus:border-red-500' : `border-gray-200 ${coresTema.focus}`
                     }`}
                     value={formData.dataNascimento || ''}
                     onChange={(e) => updateFormData({ dataNascimento: e.target.value })}
@@ -540,7 +607,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                     type="text"
                     placeholder="CPF"
                     className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
-                      fieldErrors.cpf ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                      fieldErrors.cpf ? 'border-red-500 focus:border-red-500' : `border-gray-200 ${coresTema.focus}`
                     }`}
                     value={formData.cpf || ''}
                     onChange={(e) => updateFormData({ cpf: e.target.value })}
@@ -559,7 +626,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   type="text"
                   placeholder="RG"
                   className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
-                    fieldErrors.rg ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                    fieldErrors.rg ? 'border-red-500 focus:border-red-500' : `border-gray-200 ${coresTema.focus}`
                   }`}
                   value={formData.rg || ''}
                   onChange={(e) => updateFormData({ rg: e.target.value })}
@@ -577,7 +644,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   type="tel"
                   placeholder="Telefone"
                   className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
-                    fieldErrors.telefone ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                    fieldErrors.telefone ? 'border-red-500 focus:border-red-500' : `border-gray-200 ${coresTema.focus}`
                   }`}
                   value={formData.telefone || ''}
                   onChange={(e) => updateFormData({ telefone: e.target.value })}
@@ -595,7 +662,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   type="email"
                   placeholder="E-mail"
                   className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
-                    fieldErrors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                    fieldErrors.email ? 'border-red-500 focus:border-red-500' : `border-gray-200 ${coresTema.focus}`
                   }`}
                   value={formData.email || ''}
                   onChange={(e) => updateFormData({ email: e.target.value })}
@@ -613,7 +680,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   type="text"
                   placeholder="Endereço completo"
                   className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors ${
-                    fieldErrors.endereco ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                    fieldErrors.endereco ? 'border-red-500 focus:border-red-500' : `border-gray-200 ${coresTema.focus}`
                   }`}
                   value={formData.endereco || ''}
                   onChange={(e) => updateFormData({ endereco: e.target.value })}
@@ -650,8 +717,8 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   onClick={() => updateFormData({ comoConheceu: option.value })}
                   className={`px-6 py-4 rounded-xl border-2 transition-all text-center ${
                     formData.comoConheceu === option.value
-                      ? 'border-pink-500 bg-pink-50 shadow-lg scale-105'
-                      : 'border-gray-200 hover:border-pink-300 hover:bg-pink-50/50'
+                      ? `${coresTema.border500} ${coresTema.bg50} shadow-lg scale-105`
+                      : `border-gray-200 ${coresTema.hover} ${coresTema.hoverBg}`
                   }`}
                 >
                   <div className="text-3xl mb-2">{option.emoji}</div>
@@ -670,7 +737,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   type="text"
                   placeholder="Especifique..."
                   className={`w-full px-4 py-3 border-2 rounded-xl text-gray-900 focus:outline-none transition-colors mt-4 ${
-                    fieldErrors.outraOrigem ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-pink-500'
+                    fieldErrors.outraOrigem ? 'border-red-500 focus:border-red-500' : `border-gray-200 ${coresTema.focus}`
                   }`}
                   value={formData.outraOrigem || ''}
                   onChange={(e) => updateFormData({ outraOrigem: e.target.value })}
@@ -702,7 +769,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                 </label>
                 <textarea
                   placeholder="Descreva aqui... (Ex: diabetes, hipertensão, etc)"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors min-h-[100px] resize-none"
+                  className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors min-h-[100px] resize-none`}
                   value={formData.doencas || ''}
                   onChange={(e) => updateFormData({ doencas: e.target.value })}
                 />
@@ -713,7 +780,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                 </label>
                 <textarea
                   placeholder="Liste os medicamentos... (Ex: Losartana 50mg, etc)"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors min-h-[100px] resize-none"
+                  className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors min-h-[100px] resize-none`}
                   value={formData.medicamentos || ''}
                   onChange={(e) => updateFormData({ medicamentos: e.target.value })}
                 />
@@ -738,8 +805,8 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   onClick={() => updateFormData({ temAlergias: true })}
                   className={`px-6 py-4 rounded-xl border-2 transition-all ${
                     formData.temAlergias === true
-                      ? 'border-pink-500 bg-pink-50 shadow-lg scale-105'
-                      : 'border-gray-200 hover:border-pink-300'
+                      ? `${coresTema.border500} ${coresTema.bg50} shadow-lg scale-105`
+                      : `border-gray-200 ${coresTema.hover}`
                   }`}
                 >
                   <div className="text-2xl mb-1">✅</div>
@@ -749,8 +816,8 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   onClick={() => updateFormData({ temAlergias: false, alergias: '' })}
                   className={`px-6 py-4 rounded-xl border-2 transition-all ${
                     formData.temAlergias === false
-                      ? 'border-pink-500 bg-pink-50 shadow-lg scale-105'
-                      : 'border-gray-200 hover:border-pink-300'
+                      ? `${coresTema.border500} ${coresTema.bg50} shadow-lg scale-105`
+                      : `border-gray-200 ${coresTema.hover}`
                   }`}
                 >
                   <div className="text-2xl mb-1">❌</div>
@@ -764,7 +831,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   </label>
                   <textarea
                     placeholder="Descreva suas alergias... (Ex: tinta, metais, látex, etc)"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors min-h-[100px] resize-none"
+                    className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors min-h-[100px] resize-none`}
                     value={formData.alergias || ''}
                     onChange={(e) => updateFormData({ alergias: e.target.value })}
                   />
@@ -790,7 +857,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
               </label>
               <textarea
                 placeholder="Descreva aqui..."
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors min-h-[120px] resize-none"
+                className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors min-h-[120px] resize-none`}
                 value={formData.condicoesPele || ''}
                 onChange={(e) => updateFormData({ condicoesPele: e.target.value })}
               />
@@ -814,8 +881,8 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   onClick={() => updateFormData({ temTatuagem: true })}
                   className={`px-6 py-4 rounded-xl border-2 transition-all ${
                     formData.temTatuagem === true
-                      ? 'border-pink-500 bg-pink-50 shadow-lg scale-105'
-                      : 'border-gray-200 hover:border-pink-300'
+                      ? `${coresTema.border500} ${coresTema.bg50} shadow-lg scale-105`
+                      : `border-gray-200 ${coresTema.hover}`
                   }`}
                 >
                   <div className="text-2xl mb-1">✅</div>
@@ -825,8 +892,8 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   onClick={() => updateFormData({ temTatuagem: false, historicoTatuagens: '' })}
                   className={`px-6 py-4 rounded-xl border-2 transition-all ${
                     formData.temTatuagem === false
-                      ? 'border-pink-500 bg-pink-50 shadow-lg scale-105'
-                      : 'border-gray-200 hover:border-pink-300'
+                      ? `${coresTema.border500} ${coresTema.bg50} shadow-lg scale-105`
+                      : `border-gray-200 ${coresTema.hover}`
                   }`}
                 >
                   <div className="text-2xl mb-1">🆕</div>
@@ -840,7 +907,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   </label>
                   <textarea
                     placeholder="Quantas? Onde? Teve algum problema?"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors min-h-[100px] resize-none"
+                    className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors min-h-[100px] resize-none`}
                     value={formData.historicoTatuagens || ''}
                     onChange={(e) => updateFormData({ historicoTatuagens: e.target.value })}
                   />
@@ -868,7 +935,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                 <input
                   type="text"
                   placeholder="Ex: Braço direito, costas, perna esquerda..."
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
+                  className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors`}
                   value={formData.localTatuagem || ''}
                   onChange={(e) => updateFormData({ localTatuagem: e.target.value })}
                 />
@@ -878,7 +945,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   Qual o tamanho aproximado?
                 </label>
                 <select
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
+                  className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors`}
                   value={formData.tamanhoTatuagem || ''}
                   onChange={(e) => updateFormData({ tamanhoTatuagem: e.target.value })}
                 >
@@ -896,7 +963,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                 <input
                   type="text"
                   placeholder="Ex: Realista, tradicional, aquarela, minimalista..."
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
+                  className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 ${coresTema.focus} focus:outline-none transition-colors`}
                   value={formData.estiloTatuagem || ''}
                   onChange={(e) => updateFormData({ estiloTatuagem: e.target.value })}
                 />
@@ -914,7 +981,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header com botão fechar */}
-        <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-6 relative">
+        <div className={`bg-gradient-to-r ${coresTema.gradient} p-6 relative`}>
           <button
             onClick={onClose}
             className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
@@ -959,7 +1026,7 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
           {currentStep < totalSteps ? (
             <button
               onClick={handleNext}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+              className={`flex-1 px-6 py-3 bg-gradient-to-r ${coresTema.gradient} text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg hover:shadow-xl`}
             >
               Avançar
               <ChevronRight className="h-5 w-5" />

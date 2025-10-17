@@ -8,11 +8,88 @@ interface AnamneseDetailsProps {
 }
 
 export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
+  // 🎨 OBTER CORES TEMÁTICAS DA PROFISSÃO
+  const getCoresTema = () => {
+    const config = localStorage.getItem('anamneseConfig');
+    const templateProfissao = config ? JSON.parse(config).templateProfissao : 'tatuagem';
+
+    const cores: any = {
+      tatuagem: {
+        gradient: 'from-pink-500 to-purple-500',
+        bg50: 'bg-pink-50',
+        bg100: 'bg-pink-100',
+        bg500: 'bg-pink-500',
+        text500: 'text-pink-500',
+        text700: 'text-pink-700',
+        border200: 'border-pink-200',
+        border300: 'border-pink-300',
+        border500: 'border-pink-500',
+        hover: 'hover:bg-pink-50 hover:border-pink-500',
+        focus: 'focus:border-pink-500',
+      },
+      psicologia: {
+        gradient: 'from-blue-500 to-cyan-500',
+        bg50: 'bg-blue-50',
+        bg100: 'bg-blue-100',
+        bg500: 'bg-blue-500',
+        text500: 'text-blue-500',
+        text700: 'text-blue-700',
+        border200: 'border-blue-200',
+        border300: 'border-blue-300',
+        border500: 'border-blue-500',
+        hover: 'hover:bg-blue-50 hover:border-blue-500',
+        focus: 'focus:border-blue-500',
+      },
+      nutricao: {
+        gradient: 'from-green-500 to-emerald-500',
+        bg50: 'bg-green-50',
+        bg100: 'bg-green-100',
+        bg500: 'bg-green-500',
+        text500: 'text-green-500',
+        text700: 'text-green-700',
+        border200: 'border-green-200',
+        border300: 'border-green-300',
+        border500: 'border-green-500',
+        hover: 'hover:bg-green-50 hover:border-green-500',
+        focus: 'focus:border-green-500',
+      },
+      fisioterapia: {
+        gradient: 'from-orange-500 to-amber-500',
+        bg50: 'bg-orange-50',
+        bg100: 'bg-orange-100',
+        bg500: 'bg-orange-500',
+        text500: 'text-orange-500',
+        text700: 'text-orange-700',
+        border200: 'border-orange-200',
+        border300: 'border-orange-300',
+        border500: 'border-orange-500',
+        hover: 'hover:bg-orange-50 hover:border-orange-500',
+        focus: 'focus:border-orange-500',
+      },
+      estetica: {
+        gradient: 'from-purple-500 to-fuchsia-500',
+        bg50: 'bg-purple-50',
+        bg100: 'bg-purple-100',
+        bg500: 'bg-purple-500',
+        text500: 'text-purple-500',
+        text700: 'text-purple-700',
+        border200: 'border-purple-200',
+        border300: 'border-purple-300',
+        border500: 'border-purple-500',
+        hover: 'hover:bg-purple-50 hover:border-purple-500',
+        focus: 'focus:border-purple-500',
+      },
+    };
+    return cores[templateProfissao] || cores.tatuagem;
+  };
+
+  const coresTema = getCoresTema();
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden my-8">
         {/* Header */}
-        <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-6 relative">
+        <div className={`bg-gradient-to-r ${coresTema.gradient} p-6 relative`}>
           <button
             onClick={onClose}
             className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
@@ -220,7 +297,7 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
               {/* Seção 7: Nova Tatuagem */}
               <div className="border-2 border-gray-200 rounded-xl p-5">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center">
+                  <div className={`w-10 h-10 ${coresTema.bg100} rounded-full flex items-center justify-center`}>
                     <span className="text-xl">🖼️</span>
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">Nova Tatuagem</h3>
@@ -288,7 +365,7 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
           </Button>
           {anamnese.status === 'concluida' && (
             <Button
-              className="bg-gradient-to-r from-pink-500 to-purple-500"
+              className={`bg-gradient-to-r ${coresTema.gradient}`}
               onClick={() => {
                 generateAnamnesePDF(anamnese);
                 onClose();
