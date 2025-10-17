@@ -131,7 +131,8 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
   }, {}) : {};
 
   const sections = Object.keys(groupedQuestions);
-  const totalSteps = useCustomQuiz ? sections.length : 8;
+  // SEMPRE incluir +1 step para o Termo de Compromisso (Step 8)
+  const totalSteps = useCustomQuiz ? sections.length + 1 : 8;
   const progress = (currentStep / totalSteps) * 100;
 
   const handleNext = () => {
@@ -369,10 +370,90 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
     }
   };
 
+  // Renderizar Termo de Compromisso (Step 8) - Diferente para cada modo
+  const renderTermoDeCompromisso = () => {
+    return (
+      <div className="space-y-5 animate-fadeIn">
+        <div className="text-center mb-6">
+          <div className={`w-16 h-16 ${iconBg} rounded-full flex items-center justify-center mx-auto mb-3`}>
+            <StepIcon className={`h-8 w-8 ${iconColor}`} />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900">Termo de Compromisso</h3>
+          <p className="text-gray-600 mt-2">Última etapa! Assine digitalmente</p>
+        </div>
+        <div className="space-y-4">
+          <div className="bg-gray-50 p-4 rounded-xl border-2 border-gray-200 max-h-[200px] overflow-y-auto">
+            <p className="text-sm text-gray-700 leading-relaxed">
+              Eu, <strong>{formData.nomeCompleto || '[Nome]'}</strong>, declaro que as informações fornecidas são verdadeiras.
+              Estou ciente dos riscos do procedimento de tatuagem e concordo em seguir todas as orientações
+              de cuidados pós-procedimento. Confirmo que não possuo contraindicações médicas para realizar
+              este procedimento.
+            </p>
+          </div>
+
+          {/* VALOR DA TATUAGEM - Apenas para modo PRESENCIAL */}
+          {mode === 'presencial' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                💰 Valor da Tatuagem
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">R$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0,00"
+                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors text-lg font-semibold"
+                  value={valorFormatado}
+                  onChange={(e) => handleValorChange(e.target.value)}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Digite apenas números • O valor será formatado automaticamente
+              </p>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 p-4 bg-pink-50 rounded-xl border-2 border-pink-200">
+            <input
+              type="checkbox"
+              id="termo"
+              checked={formData.aceitaTermo || false}
+              onChange={(e) => updateFormData({ aceitaTermo: e.target.checked })}
+              className="w-5 h-5 text-pink-500 rounded focus:ring-pink-500"
+            />
+            <label htmlFor="termo" className="text-sm font-medium text-gray-900 cursor-pointer">
+              Li e concordo com o termo de compromisso
+            </label>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Assinatura Digital
+            </label>
+            <input
+              type="text"
+              placeholder="Digite seu nome completo como assinatura"
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors font-signature text-xl"
+              value={formData.assinatura || ''}
+              onChange={(e) => updateFormData({ assinatura: e.target.value })}
+              style={{ fontFamily: 'cursive' }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Renderizar step customizado
   const renderCustomStep = () => {
     const currentSection = sections[currentStep - 1];
     const questions = groupedQuestions[currentSection];
+
+    // PROTEÇÃO: Se não tem perguntas, não renderiza (evita erro)
+    if (!questions || questions.length === 0) {
+      console.warn('⚠️ Nenhuma pergunta encontrada para a seção:', currentSection);
+      return null;
+    }
 
     return (
       <div className="space-y-5 animate-fadeIn">
@@ -392,13 +473,18 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
 
   // Renderizar etapa atual
   const renderStep = () => {
-    // Se usa quiz customizado, renderizar steps customizados
+    // ✅ IMPORTANTE: Step 8 (Termo) SEMPRE usa a função renderTermoDeCompromisso()
+    // Isso garante que o campo de valor só aparece no modo presencial
+    if (currentStep === totalSteps) {
+      return renderTermoDeCompromisso();
+    }
+
+    // Se usa quiz customizado, renderizar steps customizados (Steps 1-7)
     if (useCustomQuiz) {
       return renderCustomStep();
     }
 
-    // Senão, usar o quiz padrão (switch case abaixo)
-
+    // Senão, usar o quiz padrão (Steps 1-7)
     switch (currentStep) {
       case 1:
         return (
@@ -813,73 +899,6 @@ export function QuizContainer({ mode, onComplete, onClose, customQuestions = [],
                   className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors"
                   value={formData.estiloTatuagem || ''}
                   onChange={(e) => updateFormData({ estiloTatuagem: e.target.value })}
-                />
-              </div>
-            </div>
-          </div>
-        );
-
-      case 8:
-        return (
-          <div className="space-y-5 animate-fadeIn">
-            <div className="text-center mb-6">
-              <div className={`w-16 h-16 ${iconBg} rounded-full flex items-center justify-center mx-auto mb-3`}>
-                <StepIcon className={`h-8 w-8 ${iconColor}`} />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900">Termo de Compromisso</h3>
-              <p className="text-gray-600 mt-2">Última etapa! Assine digitalmente</p>
-            </div>
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-xl border-2 border-gray-200 max-h-[200px] overflow-y-auto">
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  Eu, <strong>{formData.nomeCompleto || '[Nome]'}</strong>, declaro que as informações fornecidas são verdadeiras.
-                  Estou ciente dos riscos do procedimento de tatuagem e concordo em seguir todas as orientações
-                  de cuidados pós-procedimento. Confirmo que não possuo contraindicações médicas para realizar
-                  este procedimento.
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  💰 Valor da Tatuagem
-                </label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">R$</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="0,00"
-                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors text-lg font-semibold"
-                    value={valorFormatado}
-                    onChange={(e) => handleValorChange(e.target.value)}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Digite apenas números • O valor será formatado automaticamente
-                </p>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-pink-50 rounded-xl border-2 border-pink-200">
-                <input
-                  type="checkbox"
-                  id="termo"
-                  checked={formData.aceitaTermo || false}
-                  onChange={(e) => updateFormData({ aceitaTermo: e.target.checked })}
-                  className="w-5 h-5 text-pink-500 rounded focus:ring-pink-500"
-                />
-                <label htmlFor="termo" className="text-sm font-medium text-gray-900 cursor-pointer">
-                  Li e concordo com o termo de compromisso
-                </label>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Assinatura Digital
-                </label>
-                <input
-                  type="text"
-                  placeholder="Digite seu nome completo como assinatura"
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl text-gray-900 focus:border-pink-500 focus:outline-none transition-colors font-signature text-xl"
-                  value={formData.assinatura || ''}
-                  onChange={(e) => updateFormData({ assinatura: e.target.value })}
-                  style={{ fontFamily: 'cursive' }}
                 />
               </div>
             </div>

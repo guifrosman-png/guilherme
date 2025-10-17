@@ -10,10 +10,43 @@ interface LinkGeneratedProps {
 export function LinkGenerated({ link, onClose }: LinkGeneratedProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(link);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 3000);
+  const handleCopy = async () => {
+    try {
+      // Tentar usar Clipboard API moderna (mais seguro)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(link);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
+      } else {
+        // Fallback para navegadores antigos ou HTTP (não HTTPS)
+        const textArea = document.createElement('textarea');
+        textArea.value = link;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+          const successful = document.execCommand('copy');
+          if (successful) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 3000);
+          } else {
+            alert('❌ Não foi possível copiar. Por favor, selecione e copie manualmente (Ctrl+C)');
+          }
+        } catch (err) {
+          console.error('Erro ao copiar:', err);
+          alert('❌ Não foi possível copiar. Por favor, selecione e copie manualmente (Ctrl+C)');
+        }
+
+        document.body.removeChild(textArea);
+      }
+    } catch (err) {
+      console.error('Erro ao copiar link:', err);
+      alert('❌ Erro ao copiar o link. Por favor, selecione o texto e copie manualmente (Ctrl+C)');
+    }
   };
 
   return (
@@ -87,37 +120,45 @@ export function LinkGenerated({ link, onClose }: LinkGeneratedProps) {
             </div>
           </div>
 
-          {/* Atalhos de envio */}
+          {/* Botão Principal de WhatsApp */}
           <div className="mt-6">
             <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Ou envie diretamente:
+              📱 Envie agora via WhatsApp:
             </label>
-            <div className="grid grid-cols-3 gap-3">
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent('Olá! Por favor, preencha sua anamnese através deste link: ' + link)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-4 border-2 border-green-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all text-center"
-              >
-                <div className="text-3xl mb-2">📱</div>
-                <div className="text-sm font-medium text-gray-900">WhatsApp</div>
-              </a>
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent('Olá! 👋\n\nPor favor, preencha sua ficha de anamnese através deste link:\n\n' + link + '\n\n✅ É rápido e seguro!\n⏱️ Leva apenas 5 minutos\n🔒 Suas informações são confidenciais')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full p-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-xl shadow-lg hover:shadow-xl transition-all text-center flex items-center justify-center gap-3 text-white font-semibold text-lg"
+            >
+              <span className="text-2xl">💬</span>
+              <span>Enviar via WhatsApp</span>
+              <span className="text-xl">→</span>
+            </a>
+          </div>
+
+          {/* Atalhos de envio alternativos */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-600 mb-3 text-center">
+              Ou envie por:
+            </label>
+            <div className="grid grid-cols-2 gap-3">
               <a
                 href={`mailto:?subject=Anamnese&body=${encodeURIComponent('Olá! Por favor, preencha sua anamnese através deste link: ' + link)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-4 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-center"
+                className="p-3 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all text-center"
               >
-                <div className="text-3xl mb-2">📧</div>
+                <div className="text-2xl mb-1">📧</div>
                 <div className="text-sm font-medium text-gray-900">Email</div>
               </a>
               <a
                 href={`sms:?&body=${encodeURIComponent('Olá! Por favor, preencha sua anamnese através deste link: ' + link)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-4 border-2 border-purple-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all text-center"
+                className="p-3 border-2 border-purple-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all text-center"
               >
-                <div className="text-3xl mb-2">💬</div>
+                <div className="text-2xl mb-1">💬</div>
                 <div className="text-sm font-medium text-gray-900">SMS</div>
               </a>
             </div>

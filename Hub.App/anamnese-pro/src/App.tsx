@@ -18,6 +18,7 @@ import { generateAnamnesePDF } from './utils/generatePDF';
 import { Filter, Search, Settings, Bell, Clock, Trash2 } from 'lucide-react';
 import { useMobile } from './components/ui/use-mobile';
 import { ClienteProfile } from './components/clientes/ClienteProfile';
+import { ModalAdicionarValor } from './components/anamnese/ModalAdicionarValor';
 
 function AppContent() {
   const isMobile = useMobile();
@@ -41,21 +42,41 @@ function AppContent() {
   const [selectedCliente, setSelectedCliente] = useState<any>(null); // Cliente selecionado para ver perfil
   const [filtroClienteId, setFiltroClienteId] = useState<number | null>(null); // Filtrar anamneses por cliente
   const [initialQuizData, setInitialQuizData] = useState<any>(null); // Dados pré-preenchidos para o quiz
+  const [showModalValor, setShowModalValor] = useState(false); // 💰 Modal de adicionar valores
+  const [clienteParaValor, setClienteParaValor] = useState<any>(null); // 💰 Cliente selecionado para adicionar valores
 
   // Anamneses salvas (carrega do localStorage)
   const [anamneses, setAnamneses] = useState<any[]>([]);
+  // Clientes salvos (carrega do localStorage)
+  const [clientes, setClientes] = useState<any[]>([]);
 
-  // Carregar anamneses do localStorage ao iniciar
+  // Carregar anamneses e clientes do localStorage ao iniciar
   useEffect(() => {
     const anamnesesSalvas = JSON.parse(localStorage.getItem('anamneses') || '[]');
     setAnamneses(anamnesesSalvas);
+
+    // Carregar clientes
+    const clientesCadastrados = JSON.parse(localStorage.getItem('clientes') || '[]');
+    const clientesValidos = clientesCadastrados.filter((c: any) => c && c.nome && c.nome.trim() !== '');
+    if (clientesValidos.length !== clientesCadastrados.length) {
+      console.log('🧹 Limpando clientes inválidos do localStorage...');
+      localStorage.setItem('clientes', JSON.stringify(clientesValidos));
+    }
+    setClientes(clientesValidos);
   }, []);
 
-  // Atualizar quando houver mudanças no localStorage (polling a cada 2s)
+  // Atualizar quando houver mudanças no localStorage (event-driven - só quando necessário)
   useEffect(() => {
-    const interval = setInterval(() => {
+    // Função que verifica e atualiza dados
+    const atualizarDados = () => {
+      console.log('🔄 Atualizando dados do localStorage...');
       const anamnesesAtualizadas = JSON.parse(localStorage.getItem('anamneses') || '[]');
       setAnamneses(anamnesesAtualizadas);
+
+      // Atualizar clientes também
+      const clientesAtualizados = JSON.parse(localStorage.getItem('clientes') || '[]');
+      const clientesValidos = clientesAtualizados.filter((c: any) => c && c.nome && c.nome.trim() !== '');
+      setClientes(clientesValidos);
 
       // Carregar e mostrar notificações do localStorage
       const notificacoesLocal = JSON.parse(localStorage.getItem('notificacoes') || '[]');
@@ -71,14 +92,53 @@ function AppContent() {
         }
       });
       localStorage.setItem('notificacoes', JSON.stringify(notificacoesLocal));
-    }, 2000);
+    };
 
-    return () => clearInterval(interval);
+    // Listener para mudanças no storage (quando outra aba/janela muda)
+    window.addEventListener('storage', atualizarDados);
+
+    // Verificar a cada 10 segundos (backup - caso o evento não dispare)
+    const backupInterval = setInterval(atualizarDados, 10000);
+
+    // Cleanup ao desmontar
+    return () => {
+      window.removeEventListener('storage', atualizarDados);
+      clearInterval(backupInterval);
+    };
   }, [addNotification]);
 
+  // 🚀 LISTENER PARA ATUALIZAÇÃO INSTANTÂNEA quando cliente preenche anamnese remotamente
+  useEffect(() => {
+    const handleClienteUpdated = (event: any) => {
+      console.log('🎯 EVENTO RECEBIDO! Atualizando clientes instantaneamente...', event.detail);
+
+      // Recarregar clientes do localStorage IMEDIATAMENTE
+      const clientesAtualizados = JSON.parse(localStorage.getItem('clientes') || '[]');
+      const clientesValidos = clientesAtualizados.filter((c: any) => c && c.nome && c.nome.trim() !== '');
+      setClientes(clientesValidos);
+
+      // Recarregar anamneses também
+      const anamnesesAtualizadas = JSON.parse(localStorage.getItem('anamneses') || '[]');
+      setAnamneses(anamnesesAtualizadas);
+
+      console.log('✅ Atualização instantânea concluída! Novos clientes:', clientesValidos.length);
+    };
+
+    // Adicionar listener para o evento customizado
+    window.addEventListener('clienteUpdated', handleClienteUpdated);
+
+    // Cleanup ao desmontar
+    return () => {
+      window.removeEventListener('clienteUpdated', handleClienteUpdated);
+    };
+  }, []);
+
   const handleStartQuiz = (mode: 'presencial' | 'remoto') => {
-    // Verificar limite de clientes
-    const totalClientes = new Set(anamneses.map(a => a.clienteNome)).size;
+    // Verificar limite de clientes (contar CLIENTES cadastrados, não anamneses)
+    const clientesCadastrados = JSON.parse(localStorage.getItem('clientes') || '[]');
+    // Filtrar apenas clientes válidos (com nome)
+    const clientesValidos = clientesCadastrados.filter((c: any) => c && c.nome && c.nome.trim() !== '');
+    const totalClientes = clientesValidos.length;
     if (totalClientes >= 100) {
       alert('⚠️ Limite de 100 clientes atingido!\n\nVocê atingiu o limite do Anamnese Pro.\nPara cadastrar mais clientes, faça upgrade para o CRM Completo (clientes ilimitados).');
       return;
@@ -96,9 +156,10 @@ function AppContent() {
   };
 
   const handleConfirmTemplate = (customQuestions: any[]) => {
-    // Gerar link único
+    // Gerar link único usando o IP/host atual (funciona na rede local)
     const linkId = Math.random().toString(36).substring(7);
-    const uniqueLink = `${window.location.origin}/cliente/${linkId}`;
+    const baseUrl = `${window.location.protocol}//${window.location.host}`;
+    const uniqueLink = `${baseUrl}/cliente/${linkId}`;
 
     // Salvar link no localStorage COM AS PERGUNTAS PERSONALIZADAS
     const linksSalvos = JSON.parse(localStorage.getItem('anamneseLinks') || '[]');
@@ -194,7 +255,7 @@ function AppContent() {
       status: quizMode === 'remoto' ? ('pendente' as const) : ('concluida' as const),
       preenchidoPor: quizMode === 'remoto' ? ('cliente' as const) : ('profissional' as const),
       versao: 1,
-      linkEnviado: quizMode === 'remoto' ? `https://anamnese.hub.app/cliente/${Math.random().toString(36).substring(7)}` : undefined,
+      linkEnviado: quizMode === 'remoto' ? `${window.location.protocol}//${window.location.host}/cliente/${Math.random().toString(36).substring(7)}` : undefined,
       dadosCompletos: data, // SALVAR TODOS OS DADOS DO QUIZ
       dataCriacao: new Date().toISOString(),
     };
@@ -345,6 +406,23 @@ function AppContent() {
     reader.readAsDataURL(file);
   };
 
+  // 💰 CONTAR quantas anamneses SEM VALOR cada cliente tem
+  const contarAnamnesesSemValor = (clienteId: number): number => {
+    return anamneses.filter((a: any) =>
+      a.clienteId === clienteId &&
+      a.status === 'concluida' &&
+      a.preenchidoPor === 'cliente' &&
+      (!a.dadosCompletos?.valorTatuagem || a.dadosCompletos?.valorTatuagem === 0)
+    ).length;
+  };
+
+  // 💰 ABRIR MODAL para adicionar valores
+  const handleAbrirModalValor = (cliente: any, e: any) => {
+    e.stopPropagation();
+    setClienteParaValor(cliente);
+    setShowModalValor(true);
+  };
+
   // Renderizar conteúdo baseado na aba ativa
   const renderContent = () => {
     switch (activeTab) {
@@ -363,10 +441,20 @@ function AppContent() {
                       </div>
                       <div className="text-right">
                         <div className="text-3xl font-bold text-gray-900">
-                          {new Set(anamneses.map(a => a.clienteNome)).size}/100
+                          {(() => {
+                            const clientesCadastrados = JSON.parse(localStorage.getItem('clientes') || '[]');
+                            // Filtrar apenas clientes válidos (com nome)
+                            const clientesValidos = clientesCadastrados.filter((c: any) => c && c.nome && c.nome.trim() !== '');
+                            return clientesValidos.length;
+                          })()}/100
                         </div>
                         <p className="text-xs text-gray-500">
-                          {100 - new Set(anamneses.map(a => a.clienteNome)).size} disponíveis
+                          {(() => {
+                            const clientesCadastrados = JSON.parse(localStorage.getItem('clientes') || '[]');
+                            // Filtrar apenas clientes válidos (com nome)
+                            const clientesValidos = clientesCadastrados.filter((c: any) => c && c.nome && c.nome.trim() !== '');
+                            return 100 - clientesValidos.length;
+                          })()} disponíveis
                         </p>
                       </div>
                     </div>
@@ -374,14 +462,26 @@ function AppContent() {
                     <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                       <div
                         className={`h-full transition-all ${
-                          (new Set(anamneses.map(a => a.clienteNome)).size / 100) * 100 > 80
+                          (() => {
+                            const clientesCadastrados = JSON.parse(localStorage.getItem('clientes') || '[]');
+                            const clientesValidos = clientesCadastrados.filter((c: any) => c && c.nome && c.nome.trim() !== '');
+                            return (clientesValidos.length / 100) * 100;
+                          })() > 80
                             ? 'bg-gradient-to-r from-red-500 to-orange-500'
                             : 'bg-gradient-to-r from-pink-500 to-purple-500'
                         }`}
-                        style={{ width: `${(new Set(anamneses.map(a => a.clienteNome)).size / 100) * 100}%` }}
+                        style={{ width: `${(() => {
+                          const clientesCadastrados = JSON.parse(localStorage.getItem('clientes') || '[]');
+                          const clientesValidos = clientesCadastrados.filter((c: any) => c && c.nome && c.nome.trim() !== '');
+                          return (clientesValidos.length / 100) * 100;
+                        })()}%` }}
                       />
                     </div>
-                    {new Set(anamneses.map(a => a.clienteNome)).size >= 90 && (
+                    {(() => {
+                      const clientesCadastrados = JSON.parse(localStorage.getItem('clientes') || '[]');
+                      const clientesValidos = clientesCadastrados.filter((c: any) => c && c.nome && c.nome.trim() !== '');
+                      return clientesValidos.length >= 90;
+                    })() && (
                       <div className="mt-3 p-3 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
                         <p className="text-sm text-yellow-800">
                           ⚠️ Você está próximo do limite! Considere fazer upgrade para o CRM Completo.
@@ -602,8 +702,7 @@ function AppContent() {
         );
 
       case 'clientes':
-        // Carregar clientes do localStorage
-        const clientes = JSON.parse(localStorage.getItem('clientes') || '[]');
+        // Usar o estado 'clientes' ao invés de ler do localStorage
         const totalClientes = clientes.length;
 
         return (
@@ -645,9 +744,13 @@ function AppContent() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {clientes
-                      .filter((cliente: any) =>
-                        cliente.nome.toLowerCase().includes(searchClientes.toLowerCase())
-                      )
+                      .filter((cliente: any) => {
+                        // Validação extra: garantir que nome existe e é string
+                        if (!cliente || !cliente.nome || typeof cliente.nome !== 'string') {
+                          return false;
+                        }
+                        return cliente.nome.toLowerCase().includes(searchClientes.toLowerCase());
+                      })
                       .map((cliente: any) => (
                       <div
                         key={cliente.id}
@@ -698,6 +801,20 @@ function AppContent() {
                           </div>
                         </div>
 
+                        {/* 💰 BADGE DE VALORES PENDENTES */}
+                        {(() => {
+                          const valorespendentes = contarAnamnesesSemValor(cliente.id);
+                          return valorespendentes > 0 ? (
+                            <div className="mb-3">
+                              <div className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-lg">
+                                <span className="text-orange-600 font-bold text-sm">
+                                  💰 {valorespendentes} {valorespendentes === 1 ? 'valor pendente' : 'valores pendentes'}
+                                </span>
+                              </div>
+                            </div>
+                          ) : null;
+                        })()}
+
                         {/* Informações */}
                         <div className="space-y-2 mb-4 text-sm text-gray-600">
                           <div>📱 {cliente.telefone || 'Não informado'}</div>
@@ -705,13 +822,41 @@ function AppContent() {
                         </div>
 
                         {/* Botões */}
-                        <div className="flex gap-2 pt-3 border-t border-gray-100">
-                          <Button size="sm" variant="outline" className="flex-1">
-                            Ver Histórico
-                          </Button>
-                          <Button size="sm" className="flex-1">
-                            Nova Anamnese
-                          </Button>
+                        <div className="space-y-2 pt-3 border-t border-gray-100">
+                          {/* 💰 BOTÃO DE ADICIONAR VALOR - Aparece quando tem valores pendentes */}
+                          {contarAnamnesesSemValor(cliente.id) > 0 && (
+                            <Button
+                              size="sm"
+                              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold"
+                              onClick={(e) => handleAbrirModalValor(cliente, e)}
+                            >
+                              💰 Adicionar Valor ({contarAnamnesesSemValor(cliente.id)})
+                            </Button>
+                          )}
+
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleVerHistorico(cliente);
+                              }}
+                            >
+                              Ver Histórico
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleNovaAnamnese(cliente);
+                              }}
+                            >
+                              Nova Anamnese
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -855,6 +1000,63 @@ function AppContent() {
         />
       )}
 
+      {/* 💰 MODAL DE ADICIONAR VALORES */}
+      {showModalValor && clienteParaValor && (
+        <ModalAdicionarValor
+          cliente={clienteParaValor}
+          anamneses={anamneses}
+          onClose={() => {
+            setShowModalValor(false);
+            setClienteParaValor(null);
+          }}
+          onSave={(valoresAtualizados) => {
+            // Calcular total adicionado
+            let totalAdicionado = 0;
+            const anamnesesAtualizadas = [...anamneses];
+
+            // Atualizar cada anamnese com o valor
+            valoresAtualizados.forEach(({ anamneseId, valor }) => {
+              const anamneseIndex = anamnesesAtualizadas.findIndex(a => a.id === anamneseId);
+              if (anamneseIndex !== -1) {
+                anamnesesAtualizadas[anamneseIndex].dadosCompletos = {
+                  ...anamnesesAtualizadas[anamneseIndex].dadosCompletos,
+                  valorTatuagem: valor
+                };
+                totalAdicionado += valor;
+              }
+            });
+
+            // Atualizar cliente
+            const clientesAtualizados = JSON.parse(localStorage.getItem('clientes') || '[]');
+            const clienteIndex = clientesAtualizados.findIndex((c: any) => c.id === clienteParaValor.id);
+            if (clienteIndex !== -1) {
+              clientesAtualizados[clienteIndex].totalGasto = (clientesAtualizados[clienteIndex].totalGasto || 0) + totalAdicionado;
+              localStorage.setItem('clientes', JSON.stringify(clientesAtualizados));
+            }
+
+            // Salvar anamneses
+            localStorage.setItem('anamneses', JSON.stringify(anamnesesAtualizadas));
+            setAnamneses(anamnesesAtualizadas);
+
+            // Atualizar estado de clientes
+            const clientesValidos = clientesAtualizados.filter((c: any) => c && c.nome && c.nome.trim() !== '');
+            setClientes(clientesValidos);
+
+            // Mostrar notificação
+            const valorFormatado = totalAdicionado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            addNotification({
+              type: 'success',
+              title: 'Valores Adicionados! 💰',
+              message: `Total de ${valorFormatado} adicionado ao cliente`,
+            });
+
+            // Fechar modal
+            setShowModalValor(false);
+            setClienteParaValor(null);
+          }}
+        />
+      )}
+
       {/* Notification Panels (do template) */}
       {isMobile ? (
         <MobileNotificationPanel
@@ -902,6 +1104,7 @@ function AppContent() {
         isOpen={showSearchModal}
         onClose={() => setShowSearchModal(false)}
       />
+
     </>
   );
 }

@@ -9,6 +9,41 @@ export function generateAnamnesePDF(anamnese: any) {
   const margin = 20;
   let yPos = margin;
 
+  // Extrair dados completos (podem estar em dadosCompletos ou diretamente no objeto)
+  const dados = anamnese.dadosCompletos || anamnese;
+
+  // Função auxiliar para calcular idade
+  const calcularIdade = (dataNascimento: string) => {
+    if (!dataNascimento) return '';
+
+    const hoje = new Date();
+    const nascimento = new Date(dataNascimento);
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const mes = hoje.getMonth() - nascimento.getMonth();
+
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+      idade--;
+    }
+
+    return `${idade} anos`;
+  };
+
+  // Função auxiliar para formatar data
+  const formatarData = (data: string) => {
+    if (!data) return '';
+    const d = new Date(data);
+    return d.toLocaleDateString('pt-BR');
+  };
+
+  // Função auxiliar para formatar valor
+  const formatarValor = (valor: number) => {
+    if (!valor && valor !== 0) return 'Não informado';
+    return valor.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
+  };
+
   // Header com gradiente (simulado com retângulo colorido)
   doc.setFillColor(236, 72, 153); // Rosa
   doc.rect(0, 0, pageWidth, 40, 'F');
@@ -29,13 +64,13 @@ export function generateAnamnesePDF(anamnese: any) {
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Cliente: ${anamnese.clienteNome}`, margin, yPos);
+  doc.text(`Cliente: ${anamnese.clienteNome || dados.nomeCompleto || 'Não informado'}`, margin, yPos);
   yPos += 7;
-  doc.text(`Data: ${anamnese.data}`, margin, yPos);
+  doc.text(`Data: ${anamnese.data || 'Não informado'}`, margin, yPos);
   yPos += 7;
   doc.text(`Preenchido por: ${anamnese.preenchidoPor === 'profissional' ? 'Profissional' : 'Cliente'}`, margin, yPos);
   yPos += 7;
-  doc.text(`Versão: v${anamnese.versao}`, margin, yPos);
+  doc.text(`Versão: v${anamnese.versao || 1}`, margin, yPos);
   yPos += 7;
   doc.text(`Status: ${anamnese.status === 'concluida' ? 'Concluída' : 'Pendente'}`, margin, yPos);
 
@@ -85,53 +120,78 @@ export function generateAnamnesePDF(anamnese: any) {
 
   // Seção 1: Dados Pessoais
   addSection('DADOS PESSOAIS', '📄');
-  addField('Nome Completo', anamnese.clienteNome);
-  addField('Data de Nascimento', '15/05/1997 (28 anos)');
-  addField('CPF', '123.456.789-00');
-  addField('RG', '12.345.678-9');
-  addField('Telefone', '(11) 98765-4321');
-  addField('E-mail', 'maria@email.com');
-  addField('Endereço', 'Rua das Flores, 123 - São Paulo/SP');
+  addField('Nome Completo', dados.nomeCompleto || 'Não informado');
+
+  // Data de nascimento com idade
+  const dataNascFormatada = formatarData(dados.dataNascimento);
+  const idade = calcularIdade(dados.dataNascimento);
+  const dataNascCompleta = dataNascFormatada
+    ? `${dataNascFormatada}${idade ? ` (${idade})` : ''}`
+    : 'Não informado';
+  addField('Data de Nascimento', dataNascCompleta);
+
+  addField('CPF', dados.cpf || 'Não informado');
+  addField('RG', dados.rg || 'Não informado');
+  addField('Telefone', dados.telefone || 'Não informado');
+  addField('E-mail', dados.email || 'Não informado');
+  addField('Endereço', dados.endereco || 'Não informado');
   yPos += 5;
 
   // Seção 2: Origem
   addSection('ORIGEM DO CLIENTE', '📍');
-  addField('Como me conheceu', 'Instagram');
+  const origem = dados.comoConheceu || 'Não informado';
+  const origemCompleta = origem === 'Outro' && dados.outraOrigem
+    ? `${origem} - ${dados.outraOrigem}`
+    : origem;
+  addField('Como me conheceu', origemCompleta);
   yPos += 5;
 
   // Seção 3: Saúde Geral
   addSection('SAÚDE GERAL', '❤️');
-  addField('Doenças/Condições', 'Nenhuma');
-  addField('Medicamentos', 'Nenhum');
+  addField('Doenças/Condições', dados.doencas || 'Nenhuma');
+  addField('Medicamentos', dados.medicamentos || 'Nenhum');
   yPos += 5;
 
   // Seção 4: Alergias
   addSection('ALERGIAS', '⚠️');
-  addField('Possui alergias', 'Não');
+  const possuiAlergias = dados.temAlergias ? 'Sim' : 'Não';
+  addField('Possui alergias', possuiAlergias);
+  if (dados.temAlergias && dados.alergias) {
+    addField('Quais alergias', dados.alergias);
+  }
   yPos += 5;
 
   // Seção 5: Condições de Pele
   addSection('CONDIÇÕES DE PELE', '✨');
-  addField('Condições específicas', 'Pele normal, sem problemas');
+  addField('Condições específicas', dados.condicoesPele || 'Nenhuma condição especial');
   yPos += 5;
 
   // Seção 6: Histórico de Tatuagens
   addSection('HISTÓRICO DE TATUAGENS', '🎨');
-  addField('Já fez tatuagem antes', 'Sim');
-  addField('Histórico', '2 tatuagens anteriores no braço. Sem problemas de cicatrização.');
+  const possuiTatuagem = dados.temTatuagem ? 'Sim' : 'Não';
+  addField('Já fez tatuagem antes', possuiTatuagem);
+  if (dados.temTatuagem && dados.historicoTatuagens) {
+    addField('Histórico', dados.historicoTatuagens);
+  }
   yPos += 5;
 
   // Seção 7: Nova Tatuagem
   addSection('NOVA TATUAGEM', '🖼️');
-  addField('Local', 'Braço direito');
-  addField('Tamanho', 'Média (5-15cm)');
-  addField('Estilo', 'Realista');
+  addField('Local', dados.localTatuagem || 'Não informado');
+  addField('Tamanho', dados.tamanhoTatuagem || 'Não informado');
+  addField('Estilo', dados.estiloTatuagem || 'Não informado');
+
+  // Adicionar valor da tatuagem se existir
+  if (dados.valorTatuagem !== undefined && dados.valorTatuagem !== null) {
+    addField('Valor', formatarValor(dados.valorTatuagem));
+  }
   yPos += 5;
 
   // Seção 8: Termo
   addSection('TERMO DE COMPROMISSO', '✅');
-  addField('Termo aceito', 'Sim, aceito');
-  addField('Assinatura Digital', anamnese.clienteNome);
+  const termoAceito = dados.aceitaTermo ? 'Sim, aceito' : 'Não aceito';
+  addField('Termo aceito', termoAceito);
+  addField('Assinatura Digital', dados.assinatura || anamnese.clienteNome || 'Não assinado');
   yPos += 10;
 
   // Footer
@@ -152,5 +212,6 @@ export function generateAnamnesePDF(anamnese: any) {
   doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, pageWidth / 2, yPos, { align: 'center' });
 
   // Salvar PDF
-  doc.save(`Anamnese_${anamnese.clienteNome.replace(/\s/g, '_')}_${anamnese.data.replace(/\//g, '-')}.pdf`);
+  const nomeArquivo = `Anamnese_${(dados.nomeCompleto || anamnese.clienteNome || 'Cliente').replace(/\s/g, '_')}_${anamnese.data?.replace(/\//g, '-') || new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
+  doc.save(nomeArquivo);
 }

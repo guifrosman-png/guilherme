@@ -25,6 +25,7 @@ interface QuizData {
   localTatuagem: string;
   tamanhoTatuagem: string;
   estiloTatuagem: string;
+  valorTatuagem?: number; // Valor cobrado pela tatuagem
   aceitaTermo: boolean;
   assinatura: string;
 }
@@ -74,44 +75,54 @@ export function ClientePublico() {
 
   // Quando o cliente completa o quiz
   const handleQuizComplete = (data: QuizData) => {
-    // 1. Buscar a anamnese pendente associada a este link
-    const anamnesesExistentes = JSON.parse(localStorage.getItem('anamneses') || '[]');
-    const anamneseExistente = anamnesesExistentes.find((a: any) => a.linkId === linkId);
+    try {
+      // Salvar backup dos dados antes de processar
+      console.log('💾 Salvando backup dos dados do cliente...');
+      sessionStorage.setItem('anamneseBackup', JSON.stringify(data));
 
-    if (anamneseExistente) {
-      // Atualizar a anamnese pendente para concluída
-      anamneseExistente.status = 'concluida';
-      anamneseExistente.clienteNome = data.nomeCompleto;
-      anamneseExistente.dadosCompletos = data;
-      anamneseExistente.dataPreenchimento = new Date().toISOString();
-    } else {
-      // Se não encontrou, criar nova (fallback)
-      const novaAnamnese = {
-        id: Date.now(),
-        linkId: linkId,
-        clienteNome: data.nomeCompleto,
-        data: new Date().toLocaleDateString('pt-BR'),
-        status: 'concluida' as const,
-        preenchidoPor: 'cliente' as const,
-        versao: 1,
-        dadosCompletos: data,
-        dataCriacao: new Date().toISOString(),
-      };
-      anamnesesExistentes.push(novaAnamnese);
-    }
+      // 1. Buscar a anamnese pendente associada a este link
+      const anamnesesExistentes = JSON.parse(localStorage.getItem('anamneses') || '[]');
+      const anamneseExistente = anamnesesExistentes.find((a: any) => a.linkId === linkId);
 
-    // Salva de volta
-    localStorage.setItem('anamneses', JSON.stringify(anamnesesExistentes));
+      if (anamneseExistente) {
+        // Atualizar a anamnese pendente para concluída
+        anamneseExistente.status = 'concluida';
+        anamneseExistente.clienteNome = data.nomeCompleto;
+        anamneseExistente.dadosCompletos = data;
+        anamneseExistente.dataPreenchimento = new Date().toISOString();
+      } else {
+        // Se não encontrou, criar nova (fallback)
+        const novaAnamnese = {
+          id: Date.now(),
+          linkId: linkId,
+          clienteNome: data.nomeCompleto,
+          data: new Date().toLocaleDateString('pt-BR'),
+          status: 'concluida' as const,
+          preenchidoPor: 'cliente' as const,
+          versao: 1,
+          dadosCompletos: data,
+          dataCriacao: new Date().toISOString(),
+        };
+        anamnesesExistentes.push(novaAnamnese);
+      }
 
-    // 2. Cria/atualiza o cliente na aba de clientes
+      // Salva de volta
+      localStorage.setItem('anamneses', JSON.stringify(anamnesesExistentes));
+
+    // 2. Criar/atualizar cliente IMEDIATAMENTE (antes de adicionar valor)
+    console.log('🔍 INICIANDO CRIAÇÃO DE CLIENTE');
+    console.log('📋 Dados recebidos do quiz:', data);
+
     const clientesExistentes = JSON.parse(localStorage.getItem('clientes') || '[]');
+    console.log('👥 Clientes existentes no localStorage:', clientesExistentes);
 
-    // Verifica se o cliente já existe (por CPF)
+    // Buscar se o cliente já existe (por CPF)
     let clienteExistente = clientesExistentes.find((c: any) => c.cpf === data.cpf);
     let clienteId: number;
 
     if (clienteExistente) {
-      // Cliente já existe, atualiza os dados
+      // Cliente já existe, atualizar dados
+      console.log('🔄 Cliente já existe, atualizando...');
       clienteExistente.nome = data.nomeCompleto;
       clienteExistente.telefone = data.telefone;
       clienteExistente.email = data.email;
@@ -119,12 +130,14 @@ export function ClientePublico() {
       clienteExistente.dataNascimento = data.dataNascimento;
       clienteExistente.rg = data.rg;
       clienteExistente.totalAnamneses = (clienteExistente.totalAnamneses || 0) + 1;
-      clienteExistente.totalTatuagens = (clienteExistente.totalAnamneses || 0) + 1; // Total de tatuagens = total de anamneses
-      clienteExistente.totalGasto = (clienteExistente.totalGasto || 0) + (data.valorTatuagem || 0); // Somar valor da tatuagem
+      clienteExistente.totalTatuagens = (clienteExistente.totalTatuagens || 0) + 1;
       clienteExistente.ultimaAnamnese = new Date().toLocaleDateString('pt-BR');
       clienteId = clienteExistente.id;
+
+      console.log('✅ Cliente atualizado:', clienteExistente);
     } else {
-      // Cliente novo, cria um novo registro
+      // Cliente novo, criar
+      console.log('🆕 Criando novo cliente...');
       clienteId = Date.now();
       const novoCliente = {
         id: clienteId,
@@ -136,31 +149,35 @@ export function ClientePublico() {
         endereco: data.endereco,
         dataNascimento: data.dataNascimento,
         fotoUrl: null,
-        fotoAutorizada: false,
         totalAnamneses: 1,
-        totalTatuagens: 1, // Primeira anamnese = primeira tatuagem
-        totalGasto: data.valorTatuagem || 0, // Valor da primeira tatuagem
+        totalTatuagens: 1,
+        totalGasto: 0, // Valor será adicionado depois pela tatuadora
         primeiraAnamnese: new Date().toLocaleDateString('pt-BR'),
         ultimaAnamnese: new Date().toLocaleDateString('pt-BR'),
       };
-
       clientesExistentes.push(novoCliente);
+
+      console.log('✅ Novo cliente criado:', novoCliente);
     }
 
-    // Salva clientes atualizados
+    // Salvar clientes
+    console.log('💾 Salvando clientes no localStorage...');
     localStorage.setItem('clientes', JSON.stringify(clientesExistentes));
+    console.log('✅ Clientes salvos! Total de clientes:', clientesExistentes.length);
+
+    // Verificar se salvou mesmo
+    const verificacao = JSON.parse(localStorage.getItem('clientes') || '[]');
+    console.log('🔍 Verificação - Clientes após salvar:', verificacao);
 
     // Vincular anamnese ao cliente
-    if (anamneseExistente) {
-      anamneseExistente.clienteId = clienteId;
+    const anamneseParaVincular = anamnesesExistentes.find((a: any) => a.linkId === linkId);
+    if (anamneseParaVincular) {
+      anamneseParaVincular.clienteId = clienteId;
+      localStorage.setItem('anamneses', JSON.stringify(anamnesesExistentes));
+      console.log('✅ Anamnese vinculada ao cliente. ClienteId:', clienteId);
     } else {
-      // Atualizar fallback
-      const ultimaAnamnese = anamnesesExistentes[anamnesesExistentes.length - 1];
-      if (ultimaAnamnese) {
-        ultimaAnamnese.clienteId = clienteId;
-      }
+      console.error('❌ Anamnese não encontrada para vincular!');
     }
-    localStorage.setItem('anamneses', JSON.stringify(anamnesesExistentes));
 
     // 3. Marca o link como usado
     const linksSalvos = JSON.parse(localStorage.getItem('anamneseLinks') || '[]');
@@ -184,11 +201,48 @@ export function ClientePublico() {
     notificacoesExistentes.unshift(novaNotificacao);
     localStorage.setItem('notificacoes', JSON.stringify(notificacoesExistentes));
 
-    // 5. Mostra mensagem de sucesso
-    setConcluido(true);
+    // 5. DISPARAR EVENTO para atualização INSTANTÂNEA na aba de Clientes
+    console.log('🚀 Disparando evento de atualização instantânea...');
+    window.dispatchEvent(new CustomEvent('clienteUpdated', {
+      detail: {
+        clienteId,
+        acao: clienteExistente ? 'atualizado' : 'criado',
+        timestamp: new Date().toISOString()
+      }
+    }));
+    console.log('✅ Evento disparado! App.tsx receberá atualização instantânea.');
 
-    // 6. Simula notificação para a profissional
-    console.log('✅ Anamnese concluída! Profissional será notificada.');
+      // 6. Mostra mensagem de sucesso
+      setConcluido(true);
+
+      // 6. Simula notificação para a profissional
+      console.log('✅ Anamnese concluída! Profissional será notificada.');
+
+      // Limpar backup após sucesso
+      sessionStorage.removeItem('anamneseBackup');
+
+    } catch (error) {
+      // Se deu erro, mostrar mensagem amigável
+      console.error('❌ Erro ao salvar anamnese:', error);
+
+      alert(
+        '⚠️ Ops! Algo deu errado ao salvar sua anamnese.\n\n' +
+        'Não se preocupe! Seus dados foram salvos temporariamente.\n\n' +
+        'Por favor:\n' +
+        '1. Tire um print desta tela\n' +
+        '2. Entre em contato com o profissional\n' +
+        '3. Informe o erro: "Falha ao salvar dados"\n\n' +
+        'Seus dados estão seguros e podem ser recuperados!'
+      );
+
+      // Log detalhado para debug
+      console.error('Detalhes do erro:', {
+        erro: error,
+        dados: data,
+        linkId: linkId,
+        timestamp: new Date().toISOString()
+      });
+    }
   };
 
   // Tela de carregamento
