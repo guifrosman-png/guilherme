@@ -19,6 +19,7 @@ import { Filter, Search, Settings, Bell, Clock, Trash2 } from 'lucide-react';
 import { useMobile } from './components/ui/use-mobile';
 import { ClienteProfile } from './components/clientes/ClienteProfile';
 import { ModalAdicionarValor } from './components/anamnese/ModalAdicionarValor';
+import { Onboarding } from './components/onboarding/Onboarding';
 
 function AppContent() {
   const isMobile = useMobile();
@@ -44,11 +45,27 @@ function AppContent() {
   const [initialQuizData, setInitialQuizData] = useState<any>(null); // Dados pré-preenchidos para o quiz
   const [showModalValor, setShowModalValor] = useState(false); // 💰 Modal de adicionar valores
   const [clienteParaValor, setClienteParaValor] = useState<any>(null); // 💰 Cliente selecionado para adicionar valores
+  const [showOnboarding, setShowOnboarding] = useState(false); // 🎯 Mostrar onboarding na primeira vez
+  const [templateProfissao, setTemplateProfissao] = useState<string | null>(null); // 🎯 Template selecionado
 
   // Anamneses salvas (carrega do localStorage)
   const [anamneses, setAnamneses] = useState<any[]>([]);
   // Clientes salvos (carrega do localStorage)
   const [clientes, setClientes] = useState<any[]>([]);
+
+  // 🎯 VERIFICAR SE É PRIMEIRA VEZ (Onboarding)
+  useEffect(() => {
+    const config = localStorage.getItem('anamneseConfig');
+    if (!config) {
+      // Primeira vez! Mostrar onboarding
+      setShowOnboarding(true);
+    } else {
+      // Já tem configuração, carregar
+      const configuracao = JSON.parse(config);
+      setTemplateProfissao(configuracao.templateProfissao);
+      setShowOnboarding(false);
+    }
+  }, []);
 
   // Carregar anamneses e clientes do localStorage ao iniciar
   useEffect(() => {
@@ -421,6 +438,28 @@ function AppContent() {
     e.stopPropagation();
     setClienteParaValor(cliente);
     setShowModalValor(true);
+  };
+
+  // 🎯 CONCLUIR ONBOARDING
+  const handleOnboardingComplete = (profissao: string) => {
+    // Salvar configuração
+    const configuracao = {
+      templateProfissao: profissao,
+      dataConfiguracao: new Date().toISOString(),
+      onboardingConcluido: true,
+    };
+    localStorage.setItem('anamneseConfig', JSON.stringify(configuracao));
+
+    // Atualizar estados
+    setTemplateProfissao(profissao);
+    setShowOnboarding(false);
+
+    // Notificação de boas-vindas
+    addNotification({
+      type: 'success',
+      title: 'Configuração Concluída! 🎉',
+      message: `Seu Anamnese Pro está pronto para usar com o template de ${profissao}`,
+    });
   };
 
   // Renderizar conteúdo baseado na aba ativa
@@ -871,6 +910,11 @@ function AppContent() {
         return null;
     }
   };
+
+  // 🎯 SE FOR PRIMEIRA VEZ, MOSTRAR ONBOARDING
+  if (showOnboarding) {
+    return <Onboarding onComplete={handleOnboardingComplete} />;
+  }
 
   return (
     <>

@@ -99,6 +99,46 @@ export function TemplateSettings({ onClose }: TemplateSettingsProps) {
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-220px)]">
+          {/* 🎯 BOTÃO DE TROCAR TEMPLATE DE PROFISSÃO */}
+          <div className="mb-6 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="text-lg font-bold text-blue-900 mb-1">🔄 Trocar Template de Profissão</h3>
+                <p className="text-sm text-blue-700">
+                  Atualmente configurado para: <strong>{(() => {
+                    const config = localStorage.getItem('anamneseConfig');
+                    if (!config) return 'Tatuagem';
+                    const configuracao = JSON.parse(config);
+                    const profissoes: any = {
+                      tatuagem: 'Tatuagem',
+                      psicologia: 'Psicologia',
+                      nutricao: 'Nutrição',
+                      fisioterapia: 'Fisioterapia',
+                      estetica: 'Estética'
+                    };
+                    return profissoes[configuracao.templateProfissao] || 'Tatuagem';
+                  })()}</strong>
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                className="bg-white hover:bg-blue-50 border-blue-300 text-blue-700"
+                onClick={() => {
+                  if (confirm('⚠️ Tem certeza que deseja trocar o template de profissão?\n\nIsso afetará apenas as NOVAS anamneses. As anamneses existentes não serão alteradas.')) {
+                    // Limpar configuração e recarregar página
+                    localStorage.removeItem('anamneseConfig');
+                    window.location.reload();
+                  }
+                }}
+              >
+                🔄 Trocar Template
+              </Button>
+            </div>
+            <p className="text-xs text-blue-600 italic">
+              💡 Ao trocar, você passará novamente pelo processo de seleção de profissão
+            </p>
+          </div>
+
           <div className="mb-6 p-4 bg-purple-50 border-2 border-purple-200 rounded-xl">
             <h3 className="text-sm font-semibold text-purple-800 mb-2">💡 Como funciona</h3>
             <p className="text-sm text-purple-700 mb-2">
