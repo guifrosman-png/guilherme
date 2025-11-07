@@ -37,6 +37,12 @@ const PROFISSOES = [
     icone: '✨',
     descricao: 'Anamnese para procedimentos estéticos e cuidados com a pele',
   },
+  {
+    id: 'consultoria',
+    nome: 'Consultoria para Loja Autônomo',
+    icone: '💼',
+    descricao: 'Cadastro de clientes e gestão de relacionamento para consultores',
+  },
 ];
 
 // Perguntas específicas por profissão
@@ -99,6 +105,18 @@ const PERGUNTAS_PROFISSAO: Record<string, Array<{ id: string; pergunta: string; 
       id: 'procedimentos',
       pergunta: 'Principais procedimentos que oferece?',
       opcoes: ['Limpeza de pele', 'Peeling', 'Massagem', 'Drenagem', 'Tratamentos a laser', 'Outros']
+    }
+  ],
+  consultoria: [
+    {
+      id: 'segmento',
+      pergunta: 'Qual segmento você atua?',
+      opcoes: ['Moda', 'Cosméticos', 'Suplementos', 'Produtos naturais', 'Tecnologia', 'Outro']
+    },
+    {
+      id: 'tipo_atendimento',
+      pergunta: 'Como você atende seus clientes?',
+      opcoes: ['Presencial', 'Online', 'Domicílio', 'Eventos', 'Todos']
     }
   ]
 };

@@ -10,7 +10,10 @@
       "Bash(node fix-imports.js)",
       "Bash(node:*)",
       "Read(//c/Users/guifr/Pictures/Screenshots/**)",
-      "Bash(git tag:*)"
+      "Bash(git tag:*)",
+      "Bash(dir /b /s)",
+      "Bash(npm run dev:*)",
+      "Bash(start http://localhost:3000/)"
     ],
     "deny": [],
     "ask": []

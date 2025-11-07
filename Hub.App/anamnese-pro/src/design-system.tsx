@@ -15,8 +15,11 @@ import {
   Search,
   Bell,
   ChevronDown,
-  Plus
+  Plus,
+  BarChart3,
+  Layout
 } from 'lucide-react'
+import { useCoresProfissao } from './theme'
 
 // ==================== HOOKS ====================
 
@@ -50,9 +53,13 @@ export function E4CEOSidebar({
   onToggleCollapse = () => {},
   children
 }: SidebarProps) {
+  const cores = useCoresProfissao();
+
   const navigationItems = [
+    { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
     { id: 'anamnese', icon: FileText, label: 'Anamnese' },
-    { id: 'clientes', icon: Users, label: 'Clientes' }
+    { id: 'clientes', icon: Users, label: 'Clientes' },
+    { id: 'templates', icon: Layout, label: 'Templates' }
   ]
 
   return (
@@ -67,9 +74,11 @@ export function E4CEOSidebar({
         {collapsed ? (
           <button
             onClick={onToggleCollapse}
-            className="w-10 h-10 rounded-xl hover:bg-pink-500/10 transition-all duration-300 flex items-center justify-center group"
+            className={`w-10 h-10 rounded-xl ${cores.bg500}/10 transition-all duration-300 flex items-center justify-center group`}
+            style={{ backgroundColor: `${cores.primary}10` }}
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-400 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-md relative overflow-hidden">
+            <div className={`w-8 h-8 bg-gradient-to-br ${cores.bg500} ${cores.bg600} rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-md relative overflow-hidden`}
+              style={{ background: `linear-gradient(135deg, ${cores.primary}, ${cores.secondary})` }}>
               <span className="text-white font-bold text-sm transition-all duration-300 group-hover:opacity-0 group-hover:scale-50">
                 A
               </span>
@@ -85,9 +94,13 @@ export function E4CEOSidebar({
           <div className="flex items-center gap-3 w-full">
             <button
               onClick={onToggleCollapse}
-              className="w-10 h-10 rounded-xl hover:bg-pink-500/10 transition-all duration-300 flex items-center justify-center group flex-shrink-0"
+              className="w-10 h-10 rounded-xl transition-all duration-300 flex items-center justify-center group flex-shrink-0"
+              style={{ backgroundColor: `${cores.primary}10` }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${cores.primary}10`}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-400 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-md">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-md"
+                style={{ background: `linear-gradient(135deg, ${cores.primary}, ${cores.secondary})` }}>
                 <span className="text-white font-bold text-sm">A</span>
               </div>
             </button>
@@ -113,7 +126,7 @@ export function E4CEOSidebar({
               ${currentPage === item.id
                 ? collapsed
                   ? 'bg-transparent'
-                  : 'bg-pink-500/10 text-pink-600 shadow-sm'
+                  : `${cores.bg50} ${cores.text600} shadow-sm`
                 : collapsed
                   ? 'text-gray-600 hover:bg-transparent'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -124,18 +137,19 @@ export function E4CEOSidebar({
               <div className={`
                 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 shrink-0 relative
                 ${currentPage === item.id
-                  ? 'bg-gradient-to-br from-pink-500 to-pink-400 text-white shadow-lg hover:shadow-xl'
+                  ? `text-white shadow-lg hover:shadow-xl`
                   : 'bg-gradient-to-br from-white to-gray-50 border border-gray-200/60 text-gray-600 hover:bg-gradient-to-br hover:from-gray-50 hover:to-gray-100 hover:border-gray-300/60 hover:text-gray-800 shadow-md hover:shadow-lg'
                 }
                 hover:scale-105 group-hover:shadow-2xl
-              `}>
+              `}
+              style={currentPage === item.id ? { background: `linear-gradient(135deg, ${cores.primary}, ${cores.secondary})` } : {}}>
                 <item.icon className={`
                   h-5 w-5 transition-all duration-300
                   ${currentPage === item.id ? 'scale-110' : 'group-hover:scale-110'}
                 `} />
 
                 {currentPage === item.id && (
-                  <div className="absolute inset-0 rounded-xl bg-pink-500/20 blur-lg opacity-60"></div>
+                  <div className="absolute inset-0 rounded-xl blur-lg opacity-60" style={{ backgroundColor: `${cores.primary}33` }}></div>
                 )}
               </div>
             ) : (
@@ -143,7 +157,7 @@ export function E4CEOSidebar({
                 <div className={`
                   w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 shrink-0
                   ${currentPage === item.id
-                    ? 'bg-pink-500 text-white shadow-md'
+                    ? `${cores.bg500} text-white shadow-md`
                     : 'bg-gray-100 group-hover:bg-gray-200'
                   }
                 `}>
@@ -164,7 +178,7 @@ export function E4CEOSidebar({
             )}
 
             {currentPage === item.id && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-pink-500 rounded-r-full" />
+              <div className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 ${cores.bg500} rounded-r-full`} />
             )}
           </button>
         ))}
@@ -220,9 +234,13 @@ export function E4CEOMobileTabBar({
   onPageChange = () => {},
   className = ''
 }: MobileTabBarProps) {
+  const cores = useCoresProfissao();
+
   const tabItems = [
+    { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
     { id: 'anamnese', icon: FileText, label: 'Anamnese' },
-    { id: 'clientes', icon: Users, label: 'Clientes' }
+    { id: 'clientes', icon: Users, label: 'Clientes' },
+    { id: 'templates', icon: Layout, label: 'Templates' }
   ]
 
   return (
@@ -242,11 +260,14 @@ export function E4CEOMobileTabBar({
                   flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all duration-300
                   min-w-[64px] relative overflow-hidden
                   ${currentPage === item.id
-                    ? 'bg-pink-500 text-white shadow-lg scale-105'
+                    ? 'text-white shadow-lg scale-105'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }
                 `}
-                style={{ animationDelay: `${index * 0.1}s` }}
+                style={currentPage === item.id
+                  ? { background: cores.primary, animationDelay: `${index * 0.1}s` }
+                  : { animationDelay: `${index * 0.1}s` }
+                }
               >
                 <div className={`
                   w-6 h-6 flex items-center justify-center transition-all duration-200
@@ -260,7 +281,10 @@ export function E4CEOMobileTabBar({
                 </span>
 
                 {currentPage === item.id && (
-                  <div className="absolute inset-0 bg-pink-500 rounded-2xl opacity-10 animate-pulse" />
+                  <div
+                    className="absolute inset-0 rounded-2xl opacity-10 animate-pulse"
+                    style={{ backgroundColor: cores.primary }}
+                  />
                 )}
               </button>
             ))}
@@ -298,6 +322,7 @@ export function E4CEOHeader({
   notificationCount = 0,
   onSearchClick = () => {}
 }: HeaderProps) {
+  const cores = useCoresProfissao();
   const isMobile = useMobile();
 
   return (
@@ -305,7 +330,10 @@ export function E4CEOHeader({
       <header className="bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl shadow-black/10 h-16 w-full">
         <div className="h-full px-4 flex items-center justify-between w-full">
           <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-pink-400 rounded-xl flex items-center justify-center">
+            <div
+              className="w-8 h-8 rounded-xl flex items-center justify-center"
+              style={{ background: `linear-gradient(135deg, ${cores.primary}, ${cores.secondary})` }}
+            >
               <span className="text-white font-bold text-sm">🌸</span>
             </div>
             {!isMobile && (
@@ -407,8 +435,12 @@ export function E4CEODashboardLayout({
   notificationCount = 0,
   onSearchClick = () => {}
 }: DashboardLayoutProps) {
+  const cores = useCoresProfissao();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br" style={{
+      background: `linear-gradient(to bottom right, ${cores.primary}08, ${cores.secondary}08)`
+    }}>
       {/* Desktop Layout */}
       <div className="hidden md:block h-screen">
         <E4CEOHeader
@@ -465,3 +497,4 @@ export function E4CEODashboardLayout({
     </div>
   )
 }
+

@@ -8,11 +8,19 @@ import { CheckCircle } from 'lucide-react';
 interface QuizData {
   nomeCompleto: string;
   dataNascimento: string;
+  genero: string; // NOVO: Masculino/Feminino
   cpf: string;
-  rg: string;
+  instagram: string; // NOVO: @usuario
   telefone: string;
-  endereco: string;
   email: string;
+  // Endereço detalhado
+  cep: string; // NOVO
+  pais: string; // NOVO
+  estado: string; // NOVO
+  cidade: string; // NOVO
+  rua: string; // NOVO
+  numero: string; // NOVO
+  complemento: string; // NOVO
   comoConheceu: string;
   outraOrigem?: string;
   doencas: string;
@@ -22,12 +30,15 @@ interface QuizData {
   condicoesPele: string;
   temTatuagem: boolean;
   historicoTatuagens?: string;
+  tatuagemComigo?: boolean; // NOVO: Se já fez tatuagem com essa tatuadora
+  tipoTatuagem?: string; // NOVO: Pretas/Coloridas/Ambas
   localTatuagem: string;
   tamanhoTatuagem: string;
   estiloTatuagem: string;
-  valorTatuagem?: number; // Valor cobrado pela tatuagem
+  dataPreenchimento: string; // NOVO: Data que a anamnese foi preenchida
   aceitaTermo: boolean;
   assinatura: string;
+  // NOTA: valorTatuagem NÃO está aqui - cliente remoto não preenche valor
 }
 
 export function ClientePublico() {
@@ -46,28 +57,23 @@ export function ClientePublico() {
 
   // Função que verifica se o link existe e está válido
   const verificarLink = () => {
-    // Busca os links salvos no localStorage
-    const linksSalvos = JSON.parse(localStorage.getItem('anamneseLinks') || '[]');
+    // 🌐 MODO REDE: Sempre considera o link válido (sem validação de localStorage)
+    // Isso permite que dispositivos diferentes acessem o link
+    if (linkId && linkId.length > 0) {
+      setLinkValido(true);
+      setEmpresaNome('Anamnese Pro');
 
-    // Procura o link específico
-    const linkEncontrado = linksSalvos.find((l: any) => l.id === linkId);
+      // Buscar perguntas do template ativo (se disponível)
+      const templates = JSON.parse(localStorage.getItem('anamneseTemplates') || '[]');
+      const config = JSON.parse(localStorage.getItem('anamneseConfig') || '{}');
+      const profissaoAtual = config.templateProfissao || 'tatuagem';
+      const templateAtivo = templates.find((t: any) => t.profissao === profissaoAtual && t.ativo);
 
-    if (linkEncontrado) {
-      // Verifica se o link não expirou (7 dias)
-      const dataExpiracao = new Date(linkEncontrado.dataExpiracao);
-      const hoje = new Date();
-
-      if (hoje > dataExpiracao) {
-        setLinkValido(false); // Link expirado
-      } else if (linkEncontrado.usado) {
-        setLinkValido(false); // Link já foi usado
-      } else {
-        setLinkValido(true); // Link válido!
-        setEmpresaNome(linkEncontrado.empresaNome || 'Profissional');
-        setCustomQuestions(linkEncontrado.customQuestions || []); // CARREGAR PERGUNTAS PERSONALIZADAS
-      }
+      setCustomQuestions(templateAtivo?.perguntas || []);
+      console.log('🌐 Link acessado de outro dispositivo:', linkId);
+      console.log('📝 Template ativo carregado:', templateAtivo?.nome || 'Padrão');
     } else {
-      setLinkValido(false); // Link não existe
+      setLinkValido(false);
     }
 
     setLoading(false);
@@ -92,6 +98,9 @@ export function ClientePublico() {
         anamneseExistente.dataPreenchimento = new Date().toISOString();
       } else {
         // Se não encontrou, criar nova (fallback)
+        const config = localStorage.getItem('anamneseConfig');
+        const profissaoAtual = config ? JSON.parse(config).templateProfissao : 'tatuagem';
+
         const novaAnamnese = {
           id: Date.now(),
           linkId: linkId,
@@ -99,11 +108,20 @@ export function ClientePublico() {
           data: new Date().toLocaleDateString('pt-BR'),
           status: 'concluida' as const,
           preenchidoPor: 'cliente' as const,
+          profissao: profissaoAtual, // ✅ ADICIONAR PROFISSÃO
           versao: 1,
           dadosCompletos: data,
           dataCriacao: new Date().toISOString(),
         };
         anamnesesExistentes.push(novaAnamnese);
+        console.log('✅ Nova anamnese criada com profissão:', profissaoAtual);
+      }
+
+      // ✅ GARANTIR que a anamnese existente também tem profissão
+      if (anamneseExistente && !anamneseExistente.profissao) {
+        const config = localStorage.getItem('anamneseConfig');
+        anamneseExistente.profissao = config ? JSON.parse(config).templateProfissao : 'tatuagem';
+        console.log('✅ Profissão adicionada à anamnese existente');
       }
 
       // Salva de volta
@@ -126,12 +144,21 @@ export function ClientePublico() {
       clienteExistente.nome = data.nomeCompleto;
       clienteExistente.telefone = data.telefone;
       clienteExistente.email = data.email;
+      clienteExistente.instagram = data.instagram || clienteExistente.instagram || ''; // ✅ ATUALIZAR
+      clienteExistente.sexo = data.genero || data.sexo || clienteExistente.sexo || ''; // ✅ ATUALIZAR
       clienteExistente.endereco = data.endereco;
       clienteExistente.dataNascimento = data.dataNascimento;
       clienteExistente.rg = data.rg;
       clienteExistente.totalAnamneses = (clienteExistente.totalAnamneses || 0) + 1;
       clienteExistente.totalTatuagens = (clienteExistente.totalTatuagens || 0) + 1;
       clienteExistente.ultimaAnamnese = new Date().toLocaleDateString('pt-BR');
+
+      // ✅ Garantir que tem profissão (migração de dados antigos)
+      if (!clienteExistente.profissao) {
+        const config = localStorage.getItem('anamneseConfig');
+        clienteExistente.profissao = config ? JSON.parse(config).templateProfissao : 'tatuagem';
+      }
+
       clienteId = clienteExistente.id;
 
       console.log('✅ Cliente atualizado:', clienteExistente);
@@ -139,6 +166,11 @@ export function ClientePublico() {
       // Cliente novo, criar
       console.log('🆕 Criando novo cliente...');
       clienteId = Date.now();
+
+      // 🎯 Obter profissão atual do localStorage
+      const config = localStorage.getItem('anamneseConfig');
+      const profissaoAtual = config ? JSON.parse(config).templateProfissao : 'tatuagem';
+
       const novoCliente = {
         id: clienteId,
         nome: data.nomeCompleto,
@@ -146,9 +178,13 @@ export function ClientePublico() {
         rg: data.rg,
         telefone: data.telefone,
         email: data.email,
+        instagram: data.instagram || '', // ✅ NOVO
+        sexo: data.genero || data.sexo || '', // ✅ NOVO: Para gráfico de distribuição
         endereco: data.endereco,
         dataNascimento: data.dataNascimento,
         fotoUrl: null,
+        profissao: profissaoAtual, // ✅ CRÍTICO: Para filtrar por profissão
+        comoConheceu: data.comoConheceu || '', // ✅ NOVO: Para gráfico de origem
         totalAnamneses: 1,
         totalTatuagens: 1,
         totalGasto: 0, // Valor será adicionado depois pela tatuadora
@@ -158,6 +194,9 @@ export function ClientePublico() {
       clientesExistentes.push(novoCliente);
 
       console.log('✅ Novo cliente criado:', novoCliente);
+      console.log('🎯 Profissão:', profissaoAtual);
+      console.log('👤 Gênero:', novoCliente.sexo);
+      console.log('📱 Como conheceu:', novoCliente.comoConheceu);
     }
 
     // Salvar clientes
@@ -203,6 +242,8 @@ export function ClientePublico() {
 
     // 5. DISPARAR EVENTO para atualização INSTANTÂNEA na aba de Clientes
     console.log('🚀 Disparando evento de atualização instantânea...');
+
+    // Disparar evento customizado
     window.dispatchEvent(new CustomEvent('clienteUpdated', {
       detail: {
         clienteId,
@@ -210,7 +251,19 @@ export function ClientePublico() {
         timestamp: new Date().toISOString()
       }
     }));
-    console.log('✅ Evento disparado! App.tsx receberá atualização instantânea.');
+
+    // TAMBÉM disparar evento storage (caso esteja na mesma aba)
+    window.dispatchEvent(new Event('storage'));
+
+    // FORÇAR reload de TODAS as outras abas/janelas abertas
+    try {
+      // Salvar marcador de atualização
+      localStorage.setItem('anamneseAtualizada', Date.now().toString());
+    } catch (e) {
+      console.warn('Não foi possível marcar atualização:', e);
+    }
+
+    console.log('✅ Eventos disparados! App.tsx receberá atualização instantânea.');
 
       // 6. Mostra mensagem de sucesso
       setConcluido(true);

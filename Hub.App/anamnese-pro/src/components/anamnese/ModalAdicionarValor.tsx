@@ -11,12 +11,16 @@ interface ModalAdicionarValorProps {
 
 export function ModalAdicionarValor({ cliente, anamneses, onClose, onSave }: ModalAdicionarValorProps) {
   // Buscar todas as anamneses sem valor deste cliente
-  const anamnesesSemValor = anamneses.filter((a: any) =>
-    a.clienteId === cliente.id &&
-    a.status === 'concluida' &&
-    a.preenchidoPor === 'cliente' &&
-    (!a.dadosCompletos?.valorTatuagem || a.dadosCompletos?.valorTatuagem === 0)
-  );
+  // ✅ CORRIGIDO: Aceita tanto valorServico quanto valorTatuagem
+  const anamnesesSemValor = anamneses.filter((a: any) => {
+    const valor = a.dadosCompletos?.valorServico || a.dadosCompletos?.valorTatuagem || 0;
+    return (
+      a.clienteId === cliente.id &&
+      a.status === 'concluida' &&
+      a.preenchidoPor === 'cliente' &&
+      valor === 0
+    );
+  });
 
   // Estado local para os valores
   const [valores, setValores] = useState<{[key: number]: string}>({});

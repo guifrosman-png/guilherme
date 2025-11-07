@@ -128,16 +128,17 @@ export function LinkGenerated({ link, onClose }: LinkGeneratedProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
-        {/* Header */}
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        {/* Header com Botão de Fechar DESTACADO */}
         <div className="bg-gradient-to-r from-emerald-500 to-green-500 p-6 relative">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+            className="absolute top-4 right-4 w-12 h-12 bg-white hover:bg-white/90 rounded-full flex items-center justify-center transition-all shadow-lg hover:shadow-xl z-10 hover:scale-110"
+            title="Fechar"
           >
-            <X className="h-5 w-5 text-white" />
+            <X className="h-6 w-6 text-emerald-600" />
           </button>
-          <div className="text-white text-center">
+          <div className="text-white text-center pr-12">
             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Check className="h-10 w-10 text-white" />
             </div>
@@ -150,12 +151,28 @@ export function LinkGenerated({ link, onClose }: LinkGeneratedProps) {
 
         {/* Content */}
         <div className="p-6">
+          {/* 🌐 DESTAQUE DO IP */}
+          <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-green-50 border-2 border-emerald-300 rounded-xl">
+            <h3 className="text-sm font-semibold text-emerald-800 mb-3 flex items-center gap-2">
+              <span className="text-lg">🌐</span>
+              Link com seu IP da Rede WiFi
+            </h3>
+            <div className="bg-white/60 rounded-lg p-3 border border-emerald-200">
+              <p className="text-xs font-mono text-emerald-900 break-all">
+                {link}
+              </p>
+            </div>
+            <p className="text-xs text-emerald-700 mt-2">
+              ✅ Funciona para qualquer celular/computador conectado na <strong>mesma rede WiFi</strong> que você!
+            </p>
+          </div>
+
           {/* Instruções */}
           <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
             <h3 className="text-sm font-semibold text-blue-800 mb-2">📱 Como funciona:</h3>
             <ul className="space-y-2 text-sm text-blue-700">
-              <li>1. Copie o link abaixo</li>
-              <li>2. Envie para o cliente via WhatsApp, SMS ou Email</li>
+              <li>1. Copie o link abaixo (ou envie direto pelo WhatsApp)</li>
+              <li>2. O cliente precisa estar na <strong>mesma rede WiFi</strong> que você</li>
               <li>3. O cliente abrirá o link e responderá o quiz</li>
               <li>4. Quando finalizar, a anamnese aparecerá automaticamente no seu histórico!</li>
             </ul>

@@ -85,6 +85,10 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
 
   const coresTema = getCoresTema();
 
+  // Detectar profissão atual
+  const config = localStorage.getItem('anamneseConfig');
+  const profissao = config ? JSON.parse(config).templateProfissao : 'tatuagem';
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden my-8">
@@ -146,10 +150,10 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
           {/* Dados do Quiz (REAIS do localStorage) */}
           {anamnese.status === 'concluida' && anamnese.dadosCompletos && (
             <div className="space-y-6">
-              {/* Seção 1: Dados Pessoais */}
+              {/* ========== SEÇÃO FIXA 1: DADOS PESSOAIS ========== */}
               <div className="border-2 border-gray-200 rounded-xl p-5">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <div className={`w-10 h-10 ${coresTema.bg100} rounded-full flex items-center justify-center`}>
                     <span className="text-xl">📄</span>
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">Dados Pessoais</h3>
@@ -172,10 +176,6 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                     <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.cpf || 'Não informado'}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">RG</label>
-                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.rg || 'Não informado'}</p>
-                  </div>
-                  <div>
                     <label className="text-sm font-medium text-gray-600">Telefone</label>
                     <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.telefone || 'Não informado'}</p>
                   </div>
@@ -184,141 +184,114 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                     <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.email || 'Não informado'}</p>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-sm font-medium text-gray-600">Endereço</label>
-                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.endereco || 'Não informado'}</p>
+                    <label className="text-sm font-medium text-gray-600">Endereço Completo</label>
+                    {anamnese.dadosCompletos.cep ? (
+                      <div className="space-y-1">
+                        <p className="text-gray-900 font-medium">
+                          {anamnese.dadosCompletos.rua}, {anamnese.dadosCompletos.numero}
+                          {anamnese.dadosCompletos.complemento && ` - ${anamnese.dadosCompletos.complemento}`}
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                          {anamnese.dadosCompletos.bairro} - {anamnese.dadosCompletos.cidade}/{anamnese.dadosCompletos.estado}
+                        </p>
+                        <p className="text-gray-500 text-xs">CEP: {anamnese.dadosCompletos.cep}</p>
+                      </div>
+                    ) : (
+                      <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.endereco || 'Não informado'}</p>
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Seção 2: Como me conheceu */}
-              <div className="border-2 border-gray-200 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <span className="text-xl">📍</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Origem do Cliente</h3>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Como me conheceu?</label>
-                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.comoConheceu || 'Não informado'}</p>
-                  </div>
-                  {anamnese.dadosCompletos.outraOrigem && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Especificação</label>
-                      <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.outraOrigem}</p>
+              {/* ========== SEÇÃO DINÂMICA: PERGUNTAS CUSTOMIZADAS ========== */}
+              {anamnese.dadosCompletos.perguntasSnapshot &&
+               anamnese.dadosCompletos.perguntasSnapshot.length > 0 &&
+               anamnese.dadosCompletos.respostasCustomizadas && (
+                <div className="border-2 border-gray-200 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-10 h-10 ${coresTema.bg100} rounded-full flex items-center justify-center`}>
+                      <span className="text-xl">🎯</span>
                     </div>
-                  )}
-                </div>
-              </div>
+                    <h3 className="text-xl font-bold text-gray-900">Perguntas da Anamnese</h3>
+                  </div>
 
-              {/* Seção 3: Saúde Geral */}
-              <div className="border-2 border-gray-200 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                    <span className="text-xl">❤️</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Saúde Geral</h3>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Doenças ou condições de saúde</label>
-                    <p className="text-gray-900">{anamnese.dadosCompletos.doencas || 'Nenhuma informação'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Medicamentos em uso</label>
-                    <p className="text-gray-900">{anamnese.dadosCompletos.medicamentos || 'Nenhuma informação'}</p>
-                  </div>
-                </div>
-              </div>
+                  <div className="space-y-4">
+                    {anamnese.dadosCompletos.perguntasSnapshot.map((pergunta: any, index: number) => {
+                      const resposta = anamnese.dadosCompletos.respostasCustomizadas[pergunta.id];
 
-              {/* Seção 4: Alergias */}
-              <div className="border-2 border-gray-200 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                    <span className="text-xl">⚠️</span>
+                      return (
+                        <div key={pergunta.id} className="pb-4 border-b border-gray-100 last:border-b-0 last:pb-0">
+                          {/* Pergunta */}
+                          <div className="flex items-start gap-2 mb-2">
+                            <span className={`${coresTema.text500} font-bold text-sm`}>#{index + 1}</span>
+                            <label className="text-sm font-semibold text-gray-900">
+                              {pergunta.titulo}
+                              {pergunta.obrigatoria && <span className={`ml-1 ${coresTema.text500}`}>*</span>}
+                            </label>
+                          </div>
+
+                          {/* Resposta */}
+                          <div className={`ml-6 pl-3 border-l-2 ${coresTema.border200}`}>
+                            {pergunta.tipo === 'simNao' ? (
+                              <p className={`font-medium ${resposta === true || resposta === 'true' ? 'text-green-600' : 'text-gray-600'}`}>
+                                {resposta === true || resposta === 'true' ? '✅ Sim' : '❌ Não'}
+                              </p>
+                            ) : pergunta.tipo === 'multiplaEscolha' ? (
+                              <p className="text-gray-900">
+                                {Array.isArray(resposta)
+                                  ? resposta.join(', ')
+                                  : resposta || 'Não respondido'}
+                              </p>
+                            ) : (
+                              <p className="text-gray-900 whitespace-pre-wrap">
+                                {resposta || 'Não respondido'}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">Alergias</h3>
                 </div>
-                <div className="space-y-3">
+              )}
+
+              {/* ========== AVISO: ANAMNESES ANTIGAS ========== */}
+              {(!anamnese.dadosCompletos.perguntasSnapshot || anamnese.dadosCompletos.perguntasSnapshot.length === 0) && (
+                <div className="border-2 border-yellow-200 bg-yellow-50 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-2xl">⚠️</span>
+                    <h3 className="text-lg font-bold text-yellow-900">Anamnese Antiga</h3>
+                  </div>
+                  <p className="text-sm text-yellow-800">
+                    Esta anamnese foi criada antes da atualização do sistema de templates customizáveis.
+                    As perguntas específicas não estão disponíveis neste formato.
+                  </p>
+                </div>
+              )}
+
+              {/* Seção: Data da Anamnese */}
+              {anamnese.dadosCompletos.dataAnamnese && (
+                <div className="border-2 border-gray-200 rounded-xl p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`w-10 h-10 ${coresTema.bg100} rounded-full flex items-center justify-center`}>
+                      <span className="text-xl">📅</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900">Data da Anamnese</h3>
+                  </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-600">Possui alergias?</label>
-                    <p className="text-gray-900 font-medium">
-                      {anamnese.dadosCompletos.temAlergias ? '✅ Sim' : '❌ Não'}
+                    <label className="text-sm font-medium text-gray-600">Data de realização</label>
+                    <p className="text-gray-900 font-medium text-lg">
+                      {new Date(anamnese.dadosCompletos.dataAnamnese + 'T00:00:00').toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
                     </p>
                   </div>
-                  {anamnese.dadosCompletos.temAlergias && anamnese.dadosCompletos.alergias && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Quais alergias?</label>
-                      <p className="text-gray-900">{anamnese.dadosCompletos.alergias}</p>
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
 
-              {/* Seção 5: Condições de Pele */}
-              <div className="border-2 border-gray-200 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                    <span className="text-xl">✨</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Condições de Pele</h3>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">Condições específicas</label>
-                  <p className="text-gray-900">{anamnese.dadosCompletos.condicoesPele || 'Nenhuma informação'}</p>
-                </div>
-              </div>
-
-              {/* Seção 6: Histórico de Tatuagens */}
-              <div className="border-2 border-gray-200 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-xl">🎨</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Histórico de Tatuagens</h3>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Já fez tatuagem antes?</label>
-                    <p className="text-gray-900 font-medium">
-                      {anamnese.dadosCompletos.temTatuagem ? '✅ Sim' : '❌ Não'}
-                    </p>
-                  </div>
-                  {anamnese.dadosCompletos.temTatuagem && anamnese.dadosCompletos.historicoTatuagens && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-600">Histórico</label>
-                      <p className="text-gray-900">{anamnese.dadosCompletos.historicoTatuagens}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Seção 7: Nova Tatuagem */}
-              <div className="border-2 border-gray-200 rounded-xl p-5">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 ${coresTema.bg100} rounded-full flex items-center justify-center`}>
-                    <span className="text-xl">🖼️</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900">Nova Tatuagem</h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Local</label>
-                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.localTatuagem || 'Não informado'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-600">Tamanho</label>
-                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.tamanhoTatuagem || 'Não informado'}</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="text-sm font-medium text-gray-600">Estilo</label>
-                    <p className="text-gray-900 font-medium">{anamnese.dadosCompletos.estiloTatuagem || 'Não informado'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Seção 8: Termo e Assinatura */}
+              {/* Seção: Termo e Assinatura */}
               <div className="border-2 border-gray-200 rounded-xl p-5">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">

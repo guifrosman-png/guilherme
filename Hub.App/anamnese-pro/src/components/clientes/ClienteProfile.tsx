@@ -243,9 +243,16 @@ export function ClienteProfile({ cliente, onClose, onVerHistorico, onNovaAnamnes
               <p className={`text-3xl font-bold ${coresTema.text500}`}>{cliente.totalTatuagens || 0}</p>
               <p className={`text-sm ${coresTema.text700}`}>Tatuagens</p>
             </div>
-            <div className={`p-4 ${coresTema.bg50} rounded-xl text-center`}>
-              <p className={`text-3xl font-bold ${coresTema.text500}`}>R$ {cliente.totalGasto || 0}</p>
-              <p className={`text-sm ${coresTema.text700}`}>Total Gasto</p>
+            {/* 💰 CARD DE TOTAL INVESTIDO - Destaque Profissional */}
+            <div className={`p-4 bg-gradient-to-br ${coresTema.gradient} rounded-xl text-center shadow-lg border-2 border-white`}>
+              <p className="text-3xl font-bold text-white">
+                {new Intl.NumberFormat('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL',
+                  minimumFractionDigits: 2
+                }).format(cliente.totalGasto || 0)}
+              </p>
+              <p className="text-sm text-white/90 font-semibold mt-1">💰 Total Investido</p>
             </div>
           </div>
 
