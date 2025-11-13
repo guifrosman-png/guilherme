@@ -12,8 +12,9 @@
  * - pizza: Gráfico de pizza (ex: sim/não, masculino/feminino)
  * - donut: Gráfico de rosquinha (ex: múltiplas opções)
  * - barrasTop5: Gráfico de barras mostrando top 5 respostas (ex: locais mais tatuados)
+ * - galeria: Galeria de imagens (ex: arquivos enviados pelos clientes)
  */
-export type TipoGrafico = 'barras' | 'linha' | 'pizza' | 'donut' | 'barrasTop5';
+export type TipoGrafico = 'barras' | 'linha' | 'pizza' | 'donut' | 'barrasTop5' | 'galeria';
 
 /**
  * Categoria do gráfico
@@ -35,7 +36,7 @@ export interface GraficoConfig {
 
   // Vinculação com pergunta (apenas para customizados)
   perguntaId?: string;                  // ID da pergunta que gerou este gráfico (opcional)
-  tipoPergunta?: 'texto' | 'simNao' | 'multiplaEscolha'; // Tipo da pergunta original
+  tipoPergunta?: 'texto' | 'paragrafo' | 'simNao' | 'multiplaEscolha' | 'caixasSelecao' | 'escalaLinear' | 'classificacao' | 'data' | 'hora' | 'arquivo'; // Tipo da pergunta original
 
   // Informações de exibição
   titulo: string;                       // Título do gráfico (ex: "Preferência por Chocolate")
@@ -92,10 +93,17 @@ export const GRAFICOS_PADRAO_IDS = {
  * Mapeamento de tipo de pergunta para tipo de gráfico
  * Define qual gráfico será criado automaticamente para cada tipo de pergunta
  */
-export const MAPA_PERGUNTA_GRAFICO: Record<'texto' | 'simNao' | 'multiplaEscolha', TipoGrafico> = {
+export const MAPA_PERGUNTA_GRAFICO: Record<'texto' | 'paragrafo' | 'simNao' | 'multiplaEscolha' | 'caixasSelecao' | 'escalaLinear' | 'classificacao' | 'data' | 'hora' | 'arquivo', TipoGrafico> = {
   texto: 'barrasTop5',           // Pergunta aberta → Top 5 respostas
+  paragrafo: 'barrasTop5',       // Parágrafo → Top 5 respostas (igual texto)
   simNao: 'pizza',               // Sim/Não → Gráfico de pizza
   multiplaEscolha: 'donut',      // Múltipla escolha → Gráfico de rosquinha
+  caixasSelecao: 'barras',       // Caixas de seleção → Barras horizontais (múltiplas seleções)
+  escalaLinear: 'barras',        // Escala linear → Barras verticais (distribuição de valores)
+  classificacao: 'barras',       // Classificação → Barras verticais (distribuição de estrelas)
+  data: 'linha',                 // Data → Linha do tempo (evolução por mês)
+  hora: 'barras',                // Hora → Barras por período do dia (manhã, tarde, noite, madrugada)
+  arquivo: 'galeria',            // Arquivo → Galeria de imagens/arquivos enviados
 };
 
 // ========== HELPERS ==========
@@ -109,6 +117,7 @@ export const TIPO_GRAFICO_LABELS: Record<TipoGrafico, string> = {
   pizza: 'Gráfico de Pizza',
   donut: 'Gráfico de Rosquinha',
   barrasTop5: 'Top 5 Respostas',
+  galeria: 'Galeria de Arquivos',
 };
 
 /**
@@ -120,4 +129,5 @@ export const TIPO_GRAFICO_ICONS: Record<TipoGrafico, string> = {
   pizza: '🍰',
   donut: '🍩',
   barrasTop5: '🏆',
+  galeria: '🖼️',
 };

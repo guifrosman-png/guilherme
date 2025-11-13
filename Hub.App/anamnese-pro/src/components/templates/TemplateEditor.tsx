@@ -7,6 +7,13 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
+import {
   Template,
   PerguntaCustomizada,
   TipoPergunta,
@@ -179,6 +186,14 @@ export function TemplateEditor({ template, onClose }: TemplateEditorProps) {
   const [classificacaoMax, setClassificacaoMax] = useState(5);
   const [classificacaoIcone, setClassificacaoIcone] = useState<'estrela' | 'coracao'>('estrela');
 
+  // 🆕 Estados para grade (múltipla e checkbox)
+  const [gradeLinhas, setGradeLinhas] = useState<string[]>(['Row 1']);
+  const [gradeColunas, setGradeColunas] = useState<string[]>(['Column 1']);
+
+  // 🆕 Estados para arquivo
+  const [arquivoTipos, setArquivoTipos] = useState<string[]>(['*']);
+  const [arquivoTamanhoMax, setArquivoTamanhoMax] = useState(10);
+
   // Configurar sensores para drag & drop
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -232,6 +247,10 @@ export function TemplateEditor({ template, onClose }: TemplateEditorProps) {
     setEscalaLabelMax('');
     setClassificacaoMax(5);
     setClassificacaoIcone('estrela');
+    setGradeLinhas(['Row 1']); // 🆕 Resetar linhas da grade
+    setGradeColunas(['Column 1']); // 🆕 Resetar colunas da grade
+    setArquivoTipos(['*']); // 🆕 Resetar tipos de arquivo
+    setArquivoTamanhoMax(10); // 🆕 Resetar tamanho máximo
     setEditandoPergunta(null);
     setNovaPergunta(false);
   };
@@ -287,7 +306,7 @@ export function TemplateEditor({ template, onClose }: TemplateEditorProps) {
       return;
     }
 
-    if (tipoPergunta === 'multiplaEscolha') {
+    if (tipoPergunta === 'multiplaEscolha' || tipoPergunta === 'caixasSelecao') {
       const opcoesValidas = opcoes.filter(o => o.trim());
       if (opcoesValidas.length < 2) {
         alert('⚠️ Adicione pelo menos 2 opções de resposta!');
@@ -299,14 +318,29 @@ export function TemplateEditor({ template, onClose }: TemplateEditorProps) {
       tipo: tipoPergunta,
       titulo: tituloPergunta.trim(),
       obrigatoria,
-      frequencia, // 🆕 Incluir frequência
-      opcoes: tipoPergunta === 'multiplaEscolha'
+      frequencia,
+      opcoes: (tipoPergunta === 'multiplaEscolha' || tipoPergunta === 'caixasSelecao')
         ? opcoes.filter(o => o.trim()).map((texto, index) => ({
             id: `opcao_${Date.now()}_${index}`,
             texto: texto.trim(),
             ordem: index
           }))
-        : undefined
+        : undefined,
+      // 🆕 Configurações específicas por tipo
+      configEscala: tipoPergunta === 'escalaLinear' ? {
+        minimo: escalaMin,
+        maximo: escalaMax,
+        labelMinimo: escalaLabelMin || undefined,
+        labelMaximo: escalaLabelMax || undefined,
+      } : undefined,
+      configClassificacao: tipoPergunta === 'classificacao' ? {
+        quantidadeEstrelas: classificacaoMax as 3 | 5 | 10,
+        formato: classificacaoIcone === 'estrela' ? 'estrelas' : 'coracoes',
+      } : undefined,
+      configArquivo: tipoPergunta === 'arquivo' ? {
+        tiposAceitos: arquivoTipos,
+        tamanhoMaxMB: arquivoTamanhoMax,
+      } : undefined,
     });
 
     setPerguntas([...perguntas, pergunta]);
@@ -347,14 +381,29 @@ export function TemplateEditor({ template, onClose }: TemplateEditorProps) {
     editarPergunta(template.id, perguntaId, {
       titulo: tituloPergunta.trim(),
       obrigatoria,
-      frequencia, // 🆕 Incluir frequência
-      opcoes: tipoPergunta === 'multiplaEscolha'
+      frequencia,
+      opcoes: (tipoPergunta === 'multiplaEscolha' || tipoPergunta === 'caixasSelecao')
         ? opcoes.filter(o => o.trim()).map((texto, index) => ({
             id: `opcao_${Date.now()}_${index}`,
             texto: texto.trim(),
             ordem: index
           }))
-        : undefined
+        : undefined,
+      // 🆕 Configurações específicas por tipo
+      configEscala: tipoPergunta === 'escalaLinear' ? {
+        minimo: escalaMin,
+        maximo: escalaMax,
+        labelMinimo: escalaLabelMin || undefined,
+        labelMaximo: escalaLabelMax || undefined,
+      } : undefined,
+      configClassificacao: tipoPergunta === 'classificacao' ? {
+        quantidadeEstrelas: classificacaoMax as 3 | 5 | 10,
+        formato: classificacaoIcone === 'estrela' ? 'estrelas' : 'coracoes',
+      } : undefined,
+      configArquivo: tipoPergunta === 'arquivo' ? {
+        tiposAceitos: arquivoTipos,
+        tamanhoMaxMB: arquivoTamanhoMax,
+      } : undefined,
     });
 
     const perguntasAtualizadas = perguntas.map(p =>
@@ -472,30 +521,92 @@ export function TemplateEditor({ template, onClose }: TemplateEditorProps) {
                     {editandoPergunta ? 'Editar Pergunta' : 'Nova Pergunta'}
                   </h3>
 
-                  {/* Tipo de Pergunta */}
+                  {/* Tipo de Pergunta - Dropdown suspenso */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Tipo de Pergunta
                     </label>
-                    <div className="flex gap-2">
-                      {(['texto', 'simNao', 'multiplaEscolha'] as TipoPergunta[]).map((tipo) => (
-                        <button
-                          key={tipo}
-                          type="button"
-                          onClick={() => setTipoPergunta(tipo)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all hover:scale-105 ${
-                            tipoPergunta === tipo
-                              ? 'border-blue-500 bg-blue-500 text-white shadow-md'
-                              : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                          }`}
-                        >
-                          <span className="text-lg">{TIPOS_PERGUNTA_ICONS[tipo]}</span>
-                          <span className="text-sm font-medium whitespace-nowrap">
-                            {TIPOS_PERGUNTA_LABELS[tipo]}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    <Select
+                      value={tipoPergunta}
+                      onValueChange={(value) => setTipoPergunta(value as TipoPergunta)}
+                    >
+                      <SelectTrigger className="w-full h-12 text-base border-2 border-gray-300 hover:border-gray-400 focus:border-blue-500">
+                        <SelectValue>
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{TIPOS_PERGUNTA_ICONS[tipoPergunta]}</span>
+                            <span className="font-medium">{TIPOS_PERGUNTA_LABELS[tipoPergunta]}</span>
+                          </div>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="z-[10000] max-h-[400px] overflow-y-auto">
+                        {/* Tipos básicos */}
+                        <SelectItem value="texto" className="cursor-pointer py-3 hover:bg-gray-100">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{TIPOS_PERGUNTA_ICONS['texto']}</span>
+                            <span>{TIPOS_PERGUNTA_LABELS['texto']}</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="paragrafo" className="cursor-pointer py-3 hover:bg-gray-100">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{TIPOS_PERGUNTA_ICONS['paragrafo']}</span>
+                            <span>{TIPOS_PERGUNTA_LABELS['paragrafo']}</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="simNao" className="cursor-pointer py-3 hover:bg-gray-100">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{TIPOS_PERGUNTA_ICONS['simNao']}</span>
+                            <span>{TIPOS_PERGUNTA_LABELS['simNao']}</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="multiplaEscolha" className="cursor-pointer py-3 hover:bg-gray-100">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{TIPOS_PERGUNTA_ICONS['multiplaEscolha']}</span>
+                            <span>{TIPOS_PERGUNTA_LABELS['multiplaEscolha']}</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="caixasSelecao" className="cursor-pointer py-3 hover:bg-gray-100">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{TIPOS_PERGUNTA_ICONS['caixasSelecao']}</span>
+                            <span>{TIPOS_PERGUNTA_LABELS['caixasSelecao']}</span>
+                          </div>
+                        </SelectItem>
+
+                        {/* Tipos avançados */}
+                        <SelectItem value="escalaLinear" className="cursor-pointer py-3 hover:bg-gray-100">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{TIPOS_PERGUNTA_ICONS['escalaLinear']}</span>
+                            <span>{TIPOS_PERGUNTA_LABELS['escalaLinear']}</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="classificacao" className="cursor-pointer py-3 hover:bg-gray-100">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{TIPOS_PERGUNTA_ICONS['classificacao']}</span>
+                            <span>{TIPOS_PERGUNTA_LABELS['classificacao']}</span>
+                            <span className="ml-auto px-2 py-0.5 text-xs font-bold text-white bg-purple-500 rounded">Novo</span>
+                          </div>
+                        </SelectItem>
+
+                        {/* Tipos especiais */}
+                        <SelectItem value="data" className="cursor-pointer py-3 hover:bg-gray-100">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{TIPOS_PERGUNTA_ICONS['data']}</span>
+                            <span>{TIPOS_PERGUNTA_LABELS['data']}</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="hora" className="cursor-pointer py-3 hover:bg-gray-100">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{TIPOS_PERGUNTA_ICONS['hora']}</span>
+                            <span>{TIPOS_PERGUNTA_LABELS['hora']}</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="arquivo" className="cursor-pointer py-3 hover:bg-gray-100">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{TIPOS_PERGUNTA_ICONS['arquivo']}</span>
+                            <span>{TIPOS_PERGUNTA_LABELS['arquivo']}</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -575,8 +686,8 @@ export function TemplateEditor({ template, onClose }: TemplateEditorProps) {
                   </div>
                 )}
 
-                {/* ☑️ TIPO: CAIXA DE SELEÇÃO - múltiplas opções */}
-                {tipoPergunta === 'caixaSelecao' && (
+                {/* ☑️ TIPO: CAIXAS DE SELEÇÃO - múltiplas opções */}
+                {tipoPergunta === 'caixasSelecao' && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Opções de Resposta * <span className="text-xs text-gray-500">(cliente pode marcar várias)</span>
@@ -771,6 +882,66 @@ export function TemplateEditor({ template, onClose }: TemplateEditorProps) {
                           </span>
                         ))}
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 📎 TIPO: ARQUIVO - configurar tipos aceitos */}
+                {tipoPergunta === 'arquivo' && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tipos de Arquivo Aceitos
+                      </label>
+                      <div className="flex gap-2 flex-wrap mb-2">
+                        <button
+                          type="button"
+                          onClick={() => setArquivoTipos(['image/*'])}
+                          className={`px-3 py-1.5 text-sm rounded-full border-2 transition-all ${
+                            JSON.stringify(arquivoTipos) === JSON.stringify(['image/*'])
+                              ? 'border-blue-500 bg-blue-50 text-blue-700'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          🖼️ Apenas Imagens
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setArquivoTipos(['application/pdf'])}
+                          className={`px-3 py-1.5 text-sm rounded-full border-2 transition-all ${
+                            JSON.stringify(arquivoTipos) === JSON.stringify(['application/pdf'])
+                              ? 'border-blue-500 bg-blue-50 text-blue-700'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          📄 Apenas PDF
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setArquivoTipos(['*'])}
+                          className={`px-3 py-1.5 text-sm rounded-full border-2 transition-all ${
+                            JSON.stringify(arquivoTipos) === JSON.stringify(['*'])
+                              ? 'border-blue-500 bg-blue-50 text-blue-700'
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                        >
+                          📦 Todos os Arquivos
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tamanho Máximo (MB)
+                      </label>
+                      <input
+                        type="number"
+                        value={arquivoTamanhoMax}
+                        onChange={(e) => setArquivoTamanhoMax(Number(e.target.value))}
+                        min={1}
+                        max={50}
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Recomendado: 10MB ou menos</p>
                     </div>
                   </div>
                 )}

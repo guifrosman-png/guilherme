@@ -232,7 +232,17 @@ function obterDescricaoAutomatica(tipo: TipoPergunta): string {
       return 'Distribuição de respostas Sim/Não';
     case 'multiplaEscolha':
       return 'Distribuição das opções escolhidas';
+    case 'caixasSelecao':
+      return 'Frequência de seleção de cada opção';
+    case 'escalaLinear':
+      return 'Distribuição de valores na escala';
+    case 'classificacao':
+      return 'Distribuição das avaliações';
+    case 'data':
+      return 'Evolução ao longo do tempo';
     case 'texto':
+      return 'Top 5 respostas mais frequentes';
+    case 'paragrafo':
       return 'Top 5 respostas mais frequentes';
     default:
       return 'Análise das respostas';
@@ -346,4 +356,298 @@ export function processarRespostasMultipla(respostas: string[]): DadosGraficoPiz
       percentual: ((valor / total) * 100).toFixed(1),
     }))
     .sort((a, b) => b.valor - a.valor); // Ordenar por valor
+}
+
+/**
+ * Processa respostas de caixas de seleção e retorna dados para gráfico de barras
+ *
+ * Caixas de seleção permite múltiplas escolhas, então cada resposta é um array.
+ * Precisamos "achatar" todos os arrays e contar quantas vezes cada opção aparece.
+ *
+ * Exemplo:
+ * Respostas: [
+ *   ["Dor", "Coceira"],
+ *   ["Dor", "Vermelhidão"],
+ *   ["Coceira"]
+ * ]
+ * → [
+ *     { nome: "Dor", valor: 2 },
+ *     { nome: "Coceira", valor: 2 },
+ *     { nome: "Vermelhidão", valor: 1 }
+ *   ]
+ */
+export function processarRespostasCaixasSelecao(respostas: (string | string[])[]): DadosGraficoSimples[] {
+  // Achatar todos os arrays em um único array
+  // Algumas respostas podem vir como string, outras como array
+  const todasOpcoes: string[] = [];
+
+  respostas.forEach(resposta => {
+    if (Array.isArray(resposta)) {
+      todasOpcoes.push(...resposta);
+    } else if (typeof resposta === 'string') {
+      // Pode ser uma string separada por vírgula
+      const opcoes = resposta.split(',').map(o => o.trim()).filter(o => o);
+      todasOpcoes.push(...opcoes);
+    }
+  });
+
+  // Agrupar opções similares
+  const agrupado = agruparTextosSimilares(todasOpcoes);
+
+  if (todasOpcoes.length === 0) return [];
+
+  // Converter para formato de gráfico e ordenar por valor
+  return Object.entries(agrupado)
+    .map(([nome, valor]) => ({ nome, valor }))
+    .sort((a, b) => b.valor - a.valor);
+}
+
+/**
+ * Processa respostas de escala linear e retorna dados para gráfico de barras
+ *
+ * Escala linear são valores numéricos (ex: 1-10).
+ * Contamos quantas pessoas escolheram cada valor.
+ *
+ * Exemplo:
+ * Respostas: [7, 8, 7, 9, 7, 10, 8]
+ * → [
+ *     { nome: "7", valor: 3 },
+ *     { nome: "8", valor: 2 },
+ *     { nome: "9", valor: 1 },
+ *     { nome: "10", valor: 1 }
+ *   ]
+ */
+export function processarRespostasEscalaLinear(respostas: (number | string)[]): DadosGraficoSimples[] {
+  // Converter todas para números
+  const valores = respostas
+    .map(r => typeof r === 'number' ? r : parseInt(String(r)))
+    .filter(v => !isNaN(v));
+
+  if (valores.length === 0) return [];
+
+  // Contar frequência de cada valor
+  const frequencia: Record<number, number> = {};
+  valores.forEach(valor => {
+    frequencia[valor] = (frequencia[valor] || 0) + 1;
+  });
+
+  // Converter para formato de gráfico e ordenar por valor numérico
+  return Object.entries(frequencia)
+    .map(([nome, valor]) => ({ nome, valor }))
+    .sort((a, b) => parseInt(a.nome) - parseInt(b.nome));
+}
+
+/**
+ * Processa respostas de classificação (estrelas/corações) e retorna dados para gráfico de barras
+ *
+ * Classificação funciona igual a escala linear, mas com visual de estrelas.
+ * Contamos quantas pessoas deram cada quantidade de estrelas.
+ *
+ * Exemplo:
+ * Respostas: [5, 4, 5, 5, 3, 4]
+ * → [
+ *     { nome: "3⭐", valor: 1 },
+ *     { nome: "4⭐", valor: 2 },
+ *     { nome: "5⭐", valor: 3 }
+ *   ]
+ */
+export function processarRespostasClassificacao(respostas: (number | string)[]): DadosGraficoSimples[] {
+  // Converter todas para números
+  const valores = respostas
+    .map(r => typeof r === 'number' ? r : parseInt(String(r)))
+    .filter(v => !isNaN(v));
+
+  if (valores.length === 0) return [];
+
+  // Contar frequência de cada valor
+  const frequencia: Record<number, number> = {};
+  valores.forEach(valor => {
+    frequencia[valor] = (frequencia[valor] || 0) + 1;
+  });
+
+  // Converter para formato de gráfico com estrelas e ordenar por valor numérico
+  return Object.entries(frequencia)
+    .map(([nome, valor]) => ({
+      nome: `${nome}⭐`, // Adicionar estrelinha visual
+      valor
+    }))
+    .sort((a, b) => parseInt(a.nome) - parseInt(b.nome)); // Ordenar por valor (1⭐, 2⭐, 3⭐...)
+}
+
+/**
+ * Processa respostas de data e retorna dados para gráfico de linha
+ *
+ * Agrupa datas por mês/ano e conta quantas respostas em cada período.
+ * Ideal para ver evolução ao longo do tempo.
+ *
+ * Exemplo:
+ * Respostas: ["2025-01-15", "2025-01-20", "2025-02-10", "2025-02-15"]
+ * → [
+ *     { nome: "Jan/25", valor: 2 },
+ *     { nome: "Fev/25", valor: 2 }
+ *   ]
+ */
+export function processarRespostasData(respostas: string[]): DadosGraficoSimples[] {
+  // Filtrar apenas datas válidas
+  const datasValidas = respostas.filter(r => {
+    if (!r) return false;
+    const data = new Date(r);
+    return !isNaN(data.getTime());
+  });
+
+  if (datasValidas.length === 0) return [];
+
+  // Agrupar por mês/ano
+  const porMes: Record<string, number> = {};
+  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+  datasValidas.forEach(dataStr => {
+    const data = new Date(dataStr);
+    const mes = meses[data.getMonth()];
+    const ano = data.getFullYear().toString().slice(-2); // Últimos 2 dígitos
+    const chave = `${mes}/${ano}`;
+
+    porMes[chave] = (porMes[chave] || 0) + 1;
+  });
+
+  // Converter para array e ordenar cronologicamente
+  return Object.entries(porMes)
+    .map(([nome, valor]) => ({ nome, valor }))
+    .sort((a, b) => {
+      // Extrair mês e ano para ordenar corretamente
+      const [mesA, anoA] = a.nome.split('/');
+      const [mesB, anoB] = b.nome.split('/');
+      const mesIndexA = meses.indexOf(mesA);
+      const mesIndexB = meses.indexOf(mesB);
+
+      // Comparar ano primeiro, depois mês
+      if (anoA !== anoB) return parseInt(anoA) - parseInt(anoB);
+      return mesIndexA - mesIndexB;
+    });
+}
+
+// ========================================
+// 📊 PROCESSAMENTO: HORA (Períodos do dia)
+// ========================================
+
+/**
+ * Processa respostas de HORA agrupando por período do dia
+ *
+ * @example
+ * Input: ['09:30', '14:00', '19:45', '02:00', '15:30']
+ * Output: [
+ *   { nome: '🌅 Manhã (6h-12h)', valor: 1 },
+ *   { nome: '☀️ Tarde (12h-18h)', valor: 2 },
+ *   { nome: '🌙 Noite (18h-0h)', valor: 1 },
+ *   { nome: '🌃 Madrugada (0h-6h)', valor: 1 }
+ * ]
+ */
+export function processarRespostasHora(respostas: string[]): DadosGraficoSimples[] {
+  // Filtrar apenas respostas válidas (formato HH:MM)
+  const horasValidas = respostas.filter(r => {
+    if (typeof r !== 'string') return false;
+    return /^\d{2}:\d{2}$/.test(r.trim());
+  });
+
+  console.log('📊 Processando horas:', horasValidas);
+
+  if (horasValidas.length === 0) {
+    console.warn('⚠️ Nenhuma hora válida encontrada');
+    return [];
+  }
+
+  // Contador de períodos
+  const periodos = {
+    'madrugada': 0, // 0h-6h
+    'manha': 0,     // 6h-12h
+    'tarde': 0,     // 12h-18h
+    'noite': 0      // 18h-0h (24h)
+  };
+
+  // Agrupar por período
+  horasValidas.forEach(horaStr => {
+    const [hora] = horaStr.split(':').map(Number);
+
+    if (hora >= 0 && hora < 6) {
+      periodos.madrugada++;
+    } else if (hora >= 6 && hora < 12) {
+      periodos.manha++;
+    } else if (hora >= 12 && hora < 18) {
+      periodos.tarde++;
+    } else {
+      periodos.noite++;
+    }
+  });
+
+  console.log('📊 Períodos agrupados:', periodos);
+
+  // Retornar apenas períodos com valores > 0, na ordem do dia
+  const resultado: DadosGraficoSimples[] = [];
+
+  if (periodos.madrugada > 0) {
+    resultado.push({ nome: '🌃 Madrugada (0h-6h)', valor: periodos.madrugada });
+  }
+  if (periodos.manha > 0) {
+    resultado.push({ nome: '🌅 Manhã (6h-12h)', valor: periodos.manha });
+  }
+  if (periodos.tarde > 0) {
+    resultado.push({ nome: '☀️ Tarde (12h-18h)', valor: periodos.tarde });
+  }
+  if (periodos.noite > 0) {
+    resultado.push({ nome: '🌙 Noite (18h-0h)', valor: periodos.noite });
+  }
+
+  return resultado;
+}
+
+// ========================================
+// 🖼️ PROCESSAMENTO: ARQUIVO (Galeria)
+// ========================================
+
+/**
+ * Interface para dados da galeria
+ */
+export interface DadosGaleria {
+  url: string;       // URL do arquivo (base64 ou URL)
+  tipo: 'imagem' | 'arquivo';  // Se é imagem ou outro tipo de arquivo
+}
+
+/**
+ * Processa respostas de ARQUIVO criando uma galeria
+ *
+ * @example
+ * Input: ['data:image/png;base64,...', 'data:image/jpeg;base64,...']
+ * Output: [
+ *   { url: 'data:image/png;base64,...', tipo: 'imagem' },
+ *   { url: 'data:image/jpeg;base64,...', tipo: 'imagem' }
+ * ]
+ */
+export function processarRespostasArquivo(respostas: string[]): DadosGaleria[] {
+  // Filtrar apenas respostas válidas (strings não vazias)
+  const arquivosValidos = respostas.filter(r => {
+    if (typeof r !== 'string') return false;
+    return r.trim() !== '';
+  });
+
+  console.log('🖼️ Processando arquivos:', arquivosValidos.length);
+
+  if (arquivosValidos.length === 0) {
+    console.warn('⚠️ Nenhum arquivo válido encontrado');
+    return [];
+  }
+
+  // Mapear para interface de galeria
+  const galeria: DadosGaleria[] = arquivosValidos.map(url => {
+    // Detectar se é imagem pelo prefixo data:image/
+    const isImagem = url.startsWith('data:image/');
+
+    return {
+      url,
+      tipo: isImagem ? 'imagem' : 'arquivo'
+    };
+  });
+
+  console.log('🖼️ Galeria processada:', galeria.length, 'arquivos');
+
+  return galeria;
 }

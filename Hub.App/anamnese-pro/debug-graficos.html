@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Gráficos - Anamnese Pro</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #ec4899;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        button {
+            background: #ec4899;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #db2777;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug de Gráficos - Anamnese Pro</h1>
+
+    <div class="section">
+        <h2>📊 Anamneses Salvas</h2>
+        <button onclick="mostrarAnamneses()">Mostrar Anamneses</button>
+        <button onclick="copiarDados()">Copiar JSON</button>
+        <div id="anamneses"></div>
+    </div>
+
+    <div class="section">
+        <h2>📝 Templates Salvos</h2>
+        <button onclick="mostrarTemplates()">Mostrar Templates</button>
+        <div id="templates"></div>
+    </div>
+
+    <script>
+        function mostrarAnamneses() {
+            const anamneses = JSON.parse(localStorage.getItem('anamneses') || '[]');
+            const div = document.getElementById('anamneses');
+
+            if (anamneses.length === 0) {
+                div.innerHTML = '<p style="color: #ef4444;">❌ Nenhuma anamnese encontrada!</p>';
+                return;
+            }
+
+            let html = `<p>✅ Encontradas <span class="highlight">${anamneses.length}</span> anamnese(s)</p>`;
+
+            anamneses.forEach((anamnese, index) => {
+                html += `
+                    <div style="border: 2px solid #e5e7eb; padding: 15px; margin: 10px 0; border-radius: 6px;">
+                        <h3>📋 Anamnese #${index + 1} - ${anamnese.clienteNome || 'Sem nome'}</h3>
+                        <p><strong>ID:</strong> ${anamnese.id}</p>
+                        <p><strong>Template Usado:</strong> ${anamnese.dadosCompletos?.templateUsadoId || 'N/A'}</p>
+
+                        <h4>🎯 Respostas Customizadas:</h4>
+                        ${anamnese.dadosCompletos?.respostasCustomizadas ?
+                            '<pre>' + JSON.stringify(anamnese.dadosCompletos.respostasCustomizadas, null, 2) + '</pre>'
+                            : '<p style="color: #ef4444;">❌ Sem respostas customizadas</p>'
+                        }
+
+                        <h4>📸 Snapshot das Perguntas:</h4>
+                        ${anamnese.dadosCompletos?.perguntasSnapshot ?
+                            '<pre>' + JSON.stringify(anamnese.dadosCompletos.perguntasSnapshot, null, 2) + '</pre>'
+                            : '<p style="color: #ef4444;">❌ Sem snapshot</p>'
+                        }
+
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer; color: #3b82f6;">Ver Dados Completos</summary>
+                            <pre>${JSON.stringify(anamnese, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            });
+
+            div.innerHTML = html;
+        }
+
+        function mostrarTemplates() {
+            const templates = JSON.parse(localStorage.getItem('templates') || '[]');
+            const div = document.getElementById('templates');
+
+            if (templates.length === 0) {
+                div.innerHTML = '<p style="color: #ef4444;">❌ Nenhum template encontrado!</p>';
+                return;
+            }
+
+            let html = `<p>✅ Encontrados <span class="highlight">${templates.length}</span> template(s)</p>`;
+
+            templates.forEach((template, index) => {
+                html += `
+                    <div style="border: 2px solid #e5e7eb; padding: 15px; margin: 10px 0; border-radius: 6px;">
+                        <h3>📝 Template: ${template.nome || 'Sem nome'}</h3>
+                        <p><strong>ID:</strong> ${template.id}</p>
+                        <p><strong>Perguntas:</strong> ${template.perguntas?.length || 0}</p>
+
+                        <h4>❓ Perguntas:</h4>
+                        ${template.perguntas?.map((p, i) => `
+                            <div style="background: #f9fafb; padding: 10px; margin: 5px 0; border-left: 3px solid #ec4899;">
+                                <strong>${i + 1}. ${p.texto}</strong><br>
+                                <small>Tipo: <span class="highlight">${p.tipo}</span> | ID: ${p.id}</small>
+                            </div>
+                        `).join('') || 'Nenhuma pergunta'}
+
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer; color: #3b82f6;">Ver Dados Completos</summary>
+                            <pre>${JSON.stringify(template, null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            });
+
+            div.innerHTML = html;
+        }
+
+        function copiarDados() {
+            const anamneses = JSON.parse(localStorage.getItem('anamneses') || '[]');
+            const templates = JSON.parse(localStorage.getItem('templates') || '[]');
+
+            const dados = {
+                anamneses: anamneses,
+                templates: templates
+            };
+
+            const json = JSON.stringify(dados, null, 2);
+
+            navigator.clipboard.writeText(json).then(() => {
+                alert('✅ Dados copiados para a área de transferência!');
+            }).catch(err => {
+                console.error('Erro ao copiar:', err);
+                alert('❌ Erro ao copiar. Veja o console.');
+            });
+        }
+
+        // Executar automaticamente ao carregar
+        window.addEventListener('load', () => {
+            mostrarAnamneses();
+            mostrarTemplates();
+        });
+    </script>
+</body>
+</html>

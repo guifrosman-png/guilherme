@@ -517,7 +517,7 @@ export function QuizContainer({ mode, onComplete, onClose, initialData = null, c
               )}
 
               {/* ☑️ CAIXA DE SELEÇÃO - checkboxes */}
-              {pergunta.tipo === 'caixaSelecao' && (
+              {pergunta.tipo === 'caixasSelecao' && (
                 <div className="space-y-2">
                   {pergunta.opcoes?.map((opcao) => {
                     const valoresArray = Array.isArray(valor) ? valor : [];
@@ -625,6 +625,34 @@ export function QuizContainer({ mode, onComplete, onClose, initialData = null, c
                       </button>
                     );
                   })}
+                </div>
+              )}
+
+              {/* 📎 ARQUIVO (FILE UPLOAD) */}
+              {pergunta.tipo === 'arquivo' && (
+                <div className="space-y-2">
+                  <input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setRespostasCustomizadas({...respostasCustomizadas, [pergunta.id]: file.name});
+                      }
+                    }}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none transition-colors text-sm"
+                    accept={pergunta.configArquivo?.tiposAceitos?.join(',') || '*'}
+                  />
+                  {pergunta.configArquivo && (
+                    <div className="text-xs text-gray-500">
+                      <p>📎 Tipos aceitos: {pergunta.configArquivo.tiposAceitos?.join(', ') || 'Todos'}</p>
+                      <p>📦 Tamanho máximo: {pergunta.configArquivo.tamanhoMaxMB || 10}MB</p>
+                    </div>
+                  )}
+                  {valor && (
+                    <div className="p-2 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="text-xs text-green-800">✓ Arquivo: {valor as string}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -883,9 +911,6 @@ export function QuizContainer({ mode, onComplete, onClose, initialData = null, c
                 {pergunta.titulo}
                 {pergunta.obrigatoria && <span className="text-red-500 ml-1">*</span>}
               </h2>
-              {pergunta.descricao && (
-                <p className="text-gray-600">{pergunta.descricao}</p>
-              )}
             </div>
           </div>
 
@@ -977,7 +1002,7 @@ export function QuizContainer({ mode, onComplete, onClose, initialData = null, c
             )}
 
             {/* ☑️ CAIXA DE SELEÇÃO */}
-            {pergunta.tipo === 'caixaSelecao' && (
+            {pergunta.tipo === 'caixasSelecao' && (
               <div className="space-y-3">
                 {pergunta.opcoes?.map((opcao) => {
                   const valoresArray = Array.isArray(valor) ? valor : [];
@@ -1085,6 +1110,34 @@ export function QuizContainer({ mode, onComplete, onClose, initialData = null, c
                     </button>
                   );
                 })}
+              </div>
+            )}
+
+            {/* 📎 ARQUIVO (FILE UPLOAD) */}
+            {pergunta.tipo === 'arquivo' && (
+              <div className="space-y-3">
+                <input
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setRespostasCustomizadas({...respostasCustomizadas, [pergunta.id]: file.name});
+                    }
+                  }}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none transition-colors"
+                  accept={pergunta.configArquivo?.tiposAceitos?.join(',') || '*'}
+                />
+                {pergunta.configArquivo && (
+                  <div className="text-sm text-gray-500">
+                    <p>📎 Tipos aceitos: {pergunta.configArquivo.tiposAceitos?.join(', ') || 'Todos'}</p>
+                    <p>📦 Tamanho máximo: {pergunta.configArquivo.tamanhoMaxMB || 10}MB</p>
+                  </div>
+                )}
+                {valor && (
+                  <div className="p-3 bg-green-50 border-2 border-green-200 rounded-lg">
+                    <p className="text-sm text-green-800">✓ Arquivo selecionado: {valor as string}</p>
+                  </div>
+                )}
               </div>
             )}
 

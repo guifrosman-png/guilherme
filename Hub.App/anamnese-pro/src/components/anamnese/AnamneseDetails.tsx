@@ -236,12 +236,59 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                               <p className={`font-medium ${resposta === true || resposta === 'true' ? 'text-green-600' : 'text-gray-600'}`}>
                                 {resposta === true || resposta === 'true' ? '✅ Sim' : '❌ Não'}
                               </p>
-                            ) : pergunta.tipo === 'multiplaEscolha' ? (
+                            ) : pergunta.tipo === 'multiplaEscolha' || pergunta.tipo === 'caixasSelecao' ? (
                               <p className="text-gray-900">
                                 {Array.isArray(resposta)
                                   ? resposta.join(', ')
                                   : resposta || 'Não respondido'}
                               </p>
+                            ) : pergunta.tipo === 'arquivo' ? (
+                              resposta ? (
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                                    <span>📎</span>
+                                    <span>Arquivo enviado</span>
+                                  </div>
+                                  {resposta.startsWith('data:image/') ? (
+                                    <img
+                                      src={resposta}
+                                      alt="Arquivo enviado"
+                                      className="max-w-md rounded-lg border-2 border-gray-200"
+                                    />
+                                  ) : (
+                                    <a
+                                      href={resposta}
+                                      download
+                                      className={`inline-flex items-center gap-2 px-4 py-2 ${coresTema.bg50} ${coresTema.text500} rounded-lg hover:opacity-80 transition-opacity`}
+                                    >
+                                      <span>📥</span>
+                                      <span>Baixar arquivo</span>
+                                    </a>
+                                  )}
+                                </div>
+                              ) : (
+                                <p className="text-gray-500 italic">Nenhum arquivo enviado</p>
+                              )
+                            ) : pergunta.tipo === 'classificacao' ? (
+                              <div className="flex items-center gap-1">
+                                {Array.from({ length: parseInt(resposta) || 0 }).map((_, i) => (
+                                  <span key={i} className="text-2xl">
+                                    {pergunta.configClassificacao?.formato === 'coracoes' ? '❤️' : '⭐'}
+                                  </span>
+                                ))}
+                                <span className="ml-2 text-sm text-gray-600">
+                                  ({resposta || 0}/{pergunta.configClassificacao?.quantidadeEstrelas || 5})
+                                </span>
+                              </div>
+                            ) : pergunta.tipo === 'escalaLinear' ? (
+                              <div className="flex items-center gap-3">
+                                <span className={`text-2xl font-bold ${coresTema.text500}`}>{resposta || 'N/A'}</span>
+                                {pergunta.configEscala && (
+                                  <span className="text-sm text-gray-500">
+                                    (de {pergunta.configEscala.minimo} a {pergunta.configEscala.maximo})
+                                  </span>
+                                )}
+                              </div>
                             ) : (
                               <p className="text-gray-900 whitespace-pre-wrap">
                                 {resposta || 'Não respondido'}

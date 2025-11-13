@@ -7,7 +7,17 @@ import { Profissao } from '../theme';
 
 // ========== TIPOS DE PERGUNTA ==========
 
-export type TipoPergunta = 'texto' | 'simNao' | 'multiplaEscolha';
+export type TipoPergunta =
+  | 'texto'              // Resposta curta
+  | 'paragrafo'          // 📝 Texto longo
+  | 'simNao'             // Sim/Não
+  | 'multiplaEscolha'    // Múltipla escolha (uma resposta)
+  | 'caixasSelecao'      // ☑️ Checkboxes - múltiplas respostas
+  | 'escalaLinear'       // 📊 Escala numérica 1-5, 1-10
+  | 'classificacao'      // ⭐ Estrelas (1-5)
+  | 'data'               // 📅 Seletor de data
+  | 'hora'               // 🕐 Seletor de hora
+  | 'arquivo';           // 📎 Upload de arquivo
 
 // 🆕 Frequência da pergunta
 export type FrequenciaPergunta = 'sempre' | 'primeira-vez';
@@ -26,11 +36,29 @@ export interface PerguntaCustomizada {
   tipo: TipoPergunta;
   titulo: string;
   obrigatoria: boolean;
-  frequencia: FrequenciaPergunta; // 🆕 Nova propriedade
+  frequencia: FrequenciaPergunta;
   ordem: number;
 
-  // Apenas para tipo 'multiplaEscolha'
+  // Apenas para tipo 'multiplaEscolha' e 'caixasSelecao'
   opcoes?: OpcaoResposta[];
+
+  // 🆕 Configurações específicas por tipo de pergunta
+  configEscala?: {
+    minimo: number;
+    maximo: number;
+    labelMinimo?: string;
+    labelMaximo?: string;
+  };
+
+  configClassificacao?: {
+    quantidadeEstrelas: 3 | 5 | 10;
+    formato: 'estrelas' | 'coracoes' | 'numeros';
+  };
+
+  configArquivo?: {
+    tiposAceitos: string[];  // Ex: ['image/*', 'application/pdf']
+    tamanhoMaxMB: number;
+  };
 
   // Metadados
   dataCriacao: string;
@@ -79,15 +107,29 @@ export interface AnamneseCustomizada {
 // ========== HELPERS ==========
 
 export const TIPOS_PERGUNTA_LABELS: Record<TipoPergunta, string> = {
-  texto: 'Texto Livre',
+  texto: 'Resposta curta',
+  paragrafo: 'Parágrafo',
   simNao: 'Sim ou Não',
-  multiplaEscolha: 'Múltipla Escolha'
+  multiplaEscolha: 'Múltipla escolha',
+  caixasSelecao: 'Caixas de seleção',
+  escalaLinear: 'Escala linear',
+  classificacao: 'Classificação',
+  data: 'Data',
+  hora: 'Tempo',
+  arquivo: 'Arquivo carregar'
 };
 
 export const TIPOS_PERGUNTA_ICONS: Record<TipoPergunta, string> = {
-  texto: '📝',
-  simNao: '✓✗',
-  multiplaEscolha: '🔘'
+  texto: '—',
+  paragrafo: '≡',
+  simNao: '◉',
+  multiplaEscolha: '◎',
+  caixasSelecao: '☑',
+  escalaLinear: '▬',
+  classificacao: '⭐',
+  data: '📅',
+  hora: '🕐',
+  arquivo: '☁'
 };
 
 // 🆕 Labels e descrições para frequência
