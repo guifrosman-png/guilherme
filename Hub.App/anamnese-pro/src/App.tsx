@@ -268,7 +268,7 @@ function AppContent() {
     );
     const totalClientes = clientesValidos.length;
     if (totalClientes >= 100) {
-      alert('⚠️ Limite de 100 clientes atingido!\n\nVocê atingiu o limite do Anamnese Pro.\nPara cadastrar mais clientes, faça upgrade para o CRM Completo (clientes ilimitados).');
+      alert('⚠️ Limite de 100 clientes atingido!\n\nVocê atingiu o limite do Forms Pro.\nPara cadastrar mais clientes, faça upgrade para o CRM Completo (clientes ilimitados).');
       return;
     }
 
@@ -319,7 +319,7 @@ function AppContent() {
       url: uniqueLink,
       dataCriacao: new Date().toISOString(),
       dataExpiracao: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias
-      empresaNome: 'Anamnese Pro',
+      empresaNome: 'Forms Pro',
       usado: false,
       dataUso: null,
       customQuestions: customQuestions // SALVAR PERGUNTAS EDITADAS
@@ -664,7 +664,7 @@ function AppContent() {
     addNotification({
       type: 'success',
       title: 'Configuração Concluída! 🎉',
-      message: `Seu Anamnese Pro está pronto para usar com o template de ${profissao}`,
+      message: `Seu Forms Pro está pronto para usar com o template de ${profissao}`,
     });
   };
 
@@ -852,7 +852,7 @@ function AppContent() {
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <h3 className="text-lg font-bold text-gray-900">👥 Clientes Cadastrados</h3>
-                        <p className="text-sm text-gray-600">Limite do Anamnese Pro</p>
+                        <p className="text-sm text-gray-600">Limite do Forms Pro</p>
                       </div>
                       <div className="text-right">
                         <div className="text-3xl font-bold text-gray-900">
@@ -1385,7 +1385,7 @@ function AppContent() {
         onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
         title={
           <div className="flex items-center gap-3">
-            <span>Anamnese Pro</span>
+            <span>Forms Pro</span>
             <span className={`inline-flex items-center gap-1.5 px-3 py-1 ${coresTema.bg100} ${coresTema.text700} text-sm font-semibold rounded-full border-2 ${coresTema.border300}`}>
               {profissaoInfo.icone} {profissaoInfo.nome}
             </span>

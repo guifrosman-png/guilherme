@@ -175,7 +175,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 <span className="text-4xl">👋</span>
               </div>
               <CardTitle className="text-3xl text-gray-900 mb-2">
-                Bem-vindo ao Anamnese Pro!
+                Bem-vindo ao Forms Pro!
               </CardTitle>
               <CardDescription className="text-lg text-gray-600">
                 Vamos configurar seu módulo em apenas 3 passos

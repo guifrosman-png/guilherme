@@ -92,10 +92,10 @@ export const GRAFICOS_PADRAO_IDS = {
 /**
  * Mapeamento de tipo de pergunta para tipo de gráfico
  * Define qual gráfico será criado automaticamente para cada tipo de pergunta
+ * NOTA: 'paragrafo' não gera gráfico (respostas longas são muito variadas para agrupar)
  */
-export const MAPA_PERGUNTA_GRAFICO: Record<'texto' | 'paragrafo' | 'simNao' | 'multiplaEscolha' | 'caixasSelecao' | 'escalaLinear' | 'classificacao' | 'data' | 'hora' | 'arquivo', TipoGrafico> = {
+export const MAPA_PERGUNTA_GRAFICO: Record<'texto' | 'simNao' | 'multiplaEscolha' | 'caixasSelecao' | 'escalaLinear' | 'classificacao' | 'data' | 'hora' | 'arquivo', TipoGrafico> = {
   texto: 'barrasTop5',           // Pergunta aberta → Top 5 respostas
-  paragrafo: 'barrasTop5',       // Parágrafo → Top 5 respostas (igual texto)
   simNao: 'pizza',               // Sim/Não → Gráfico de pizza
   multiplaEscolha: 'donut',      // Múltipla escolha → Gráfico de rosquinha
   caixasSelecao: 'barras',       // Caixas de seleção → Barras horizontais (múltiplas seleções)

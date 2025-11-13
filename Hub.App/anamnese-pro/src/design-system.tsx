@@ -1,6 +1,6 @@
 /**
- * E4CEO Design System - Anamnese Pro Edition
- * Sistema de design baseado no E4CEO adaptado para o Anamnese Pro
+ * E4CEO Design System - Forms Pro Edition
+ * Sistema de design baseado no E4CEO adaptado para o Forms Pro
  */
 
 import { useState, ReactNode, useEffect } from 'react'
@@ -105,7 +105,7 @@ export function E4CEOSidebar({
               </div>
             </button>
 
-            <span className="font-semibold text-gray-900">Anamnese Pro</span>
+            <span className="font-semibold text-gray-900">Forms Pro</span>
           </div>
         )}
       </div>
@@ -311,7 +311,7 @@ interface HeaderProps {
 }
 
 export function E4CEOHeader({
-  title = "Anamnese Pro",
+  title = "Forms Pro",
   rightContent,
   showSearch = true,
   showNotifications = true,
@@ -340,7 +340,7 @@ export function E4CEOHeader({
               <span className="text-lg font-semibold text-gray-900">{title}</span>
             )}
             {isMobile && (
-              <span className="text-lg font-semibold text-gray-900">Anamnese Pro</span>
+              <span className="text-lg font-semibold text-gray-900">Forms Pro</span>
             )}
           </div>
 
@@ -426,7 +426,7 @@ export function E4CEODashboardLayout({
   onPageChange = () => {},
   sidebarCollapsed = false,
   onToggleSidebar = () => {},
-  title = "Anamnese Pro",
+  title = "Forms Pro",
   rightContent,
   children,
   onNotificationClick = () => {},

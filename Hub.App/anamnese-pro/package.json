@@ -1,8 +1,8 @@
 {
-  "name": "anamnese-pro",
+  "name": "forms-pro",
   "version": "1.0.0",
   "private": true,
-  "description": "Módulo Anamnese Pro - Fichas de anamnese inteligentes",
+  "description": "Módulo Forms Pro - Sistema inteligente de formulários",
   "scripts": {
     "dev": "vite",
     "build": "vite build"

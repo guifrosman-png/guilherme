@@ -1,10 +1,10 @@
-# CLAUDE.md - Sistema de Anamnese Pro
+# CLAUDE.md - Sistema de Forms Pro
 
 Este arquivo fornece contexto para o Claude Code ao trabalhar neste projeto.
 
 ## 📋 Sobre o Projeto
 
-**Anamnese Pro** é um sistema completo de gerenciamento de fichas de anamnese para estúdios de tatuagem. Permite criar, gerenciar e compartilhar anamneses digitais com clientes.
+**Forms Pro** é um sistema completo de gerenciamento de formulários inteligentes para diversos profissionais. Permite criar, gerenciar e compartilhar formulários digitais com clientes.
 
 ## 🚀 Comandos de Desenvolvimento
 

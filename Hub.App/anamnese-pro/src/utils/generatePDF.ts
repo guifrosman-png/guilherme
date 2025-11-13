@@ -56,7 +56,7 @@ export function generateAnamnesePDF(anamnese: any) {
 
   doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.text('Anamnese Pro', pageWidth / 2, 30, { align: 'center' });
+  doc.text('Forms Pro', pageWidth / 2, 30, { align: 'center' });
 
   yPos = 50;
 
@@ -207,7 +207,7 @@ export function generateAnamnesePDF(anamnese: any) {
 
   doc.setFontSize(8);
   doc.setTextColor(100, 100, 100);
-  doc.text('Gerado por Anamnese Pro - Hub.App', pageWidth / 2, yPos, { align: 'center' });
+  doc.text('Gerado por Forms Pro - Hub.App', pageWidth / 2, yPos, { align: 'center' });
   yPos += 5;
   doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, pageWidth / 2, yPos, { align: 'center' });
 

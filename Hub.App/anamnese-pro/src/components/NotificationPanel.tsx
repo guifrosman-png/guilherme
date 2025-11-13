@@ -1,5 +1,5 @@
 /**
- * Notification Panel - Anamnese Pro
+ * Notification Panel - Forms Pro
  * Painel de notificações flutuante
  */
 

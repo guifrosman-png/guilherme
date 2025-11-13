@@ -61,7 +61,7 @@ export function ClientePublico() {
     // Isso permite que dispositivos diferentes acessem o link
     if (linkId && linkId.length > 0) {
       setLinkValido(true);
-      setEmpresaNome('Anamnese Pro');
+      setEmpresaNome('Forms Pro');
 
       // Buscar perguntas do template ativo (se disponível)
       const templates = JSON.parse(localStorage.getItem('anamneseTemplates') || '[]');
