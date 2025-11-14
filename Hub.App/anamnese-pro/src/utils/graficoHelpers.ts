@@ -103,6 +103,28 @@ export function carregarGraficosConfig(): GraficoConfig[] {
 }
 
 /**
+ * Carrega gráficos filtrados pela profissão atual
+ * Retorna apenas gráficos padrão + gráficos customizados da profissão atual
+ */
+export function carregarGraficosPorProfissao(profissao: string): GraficoConfig[] {
+  const todosGraficos = carregarGraficosConfig();
+
+  return todosGraficos.filter(grafico => {
+    // Gráficos padrão aparecem em todas as profissões
+    if (grafico.categoria === 'padrao') {
+      return true;
+    }
+
+    // Gráficos customizados só aparecem na profissão correspondente
+    if (grafico.categoria === 'customizado') {
+      return grafico.profissao === profissao;
+    }
+
+    return false;
+  });
+}
+
+/**
  * Salva configurações de gráficos no localStorage
  */
 export function salvarGraficosConfig(configs: GraficoConfig[]): void {
@@ -202,7 +224,7 @@ export function inicializarGraficosPadrao(): void {
  * Pergunta: "Gosta de chocolate?" (simNao)
  * → Cria gráfico de pizza automaticamente
  */
-export function criarGraficoParaPergunta(pergunta: PerguntaCustomizada): GraficoConfig {
+export function criarGraficoParaPergunta(pergunta: PerguntaCustomizada, profissao?: string): GraficoConfig {
   const tipoGrafico = MAPA_PERGUNTA_GRAFICO[pergunta.tipo];
   const configs = carregarGraficosConfig();
   const ultimaOrdem = configs.length > 0 ? Math.max(...configs.map(c => c.ordem)) : 0;
@@ -210,6 +232,7 @@ export function criarGraficoParaPergunta(pergunta: PerguntaCustomizada): Grafico
   const novoGrafico: GraficoConfig = {
     id: `grafico-${pergunta.id}`,
     categoria: 'customizado',
+    profissao: profissao, // Salvar profissão para filtrar depois
     perguntaId: pergunta.id,
     tipoPergunta: pergunta.tipo,
     titulo: pergunta.titulo,

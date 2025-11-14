@@ -176,11 +176,11 @@ export function TemplateSettings({ onClose }: TemplateSettingsProps) {
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-220px)]">
-          {/* 🎯 BOTÃO DE TROCAR TEMPLATE DE PROFISSÃO */}
+          {/* 🎯 BOTÃO DE TROCAR MODO DE PROFISSÃO */}
           <div className="mb-6 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-xl">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h3 className="text-lg font-bold text-blue-900 mb-1">🔄 Trocar Template de Profissão</h3>
+                <h3 className="text-lg font-bold text-blue-900 mb-1">🔄 Trocar Modo de Profissão</h3>
                 <p className="text-sm text-blue-700">
                   Atualmente configurado para: <strong>{(() => {
                     const config = localStorage.getItem('anamneseConfig');
@@ -191,7 +191,8 @@ export function TemplateSettings({ onClose }: TemplateSettingsProps) {
                       psicologia: 'Psicologia',
                       nutricao: 'Nutrição',
                       fisioterapia: 'Fisioterapia',
-                      estetica: 'Estética'
+                      estetica: 'Estética',
+                      consultoria: 'Consultoria'
                     };
                     return profissoes[configuracao.templateProfissao] || 'Tatuagem';
                   })()}</strong>
@@ -201,14 +202,14 @@ export function TemplateSettings({ onClose }: TemplateSettingsProps) {
                 variant="outline"
                 className="bg-white hover:bg-blue-50 border-blue-300 text-blue-700"
                 onClick={() => {
-                  if (confirm('⚠️ Tem certeza que deseja trocar o template de profissão?\n\nIsso afetará apenas as NOVAS anamneses. As anamneses existentes não serão alteradas.')) {
+                  if (confirm('⚠️ Tem certeza que deseja trocar o modo de profissão?\n\nIsso afetará apenas as NOVAS anamneses. As anamneses existentes não serão alteradas.')) {
                     // Limpar configuração e recarregar página
                     localStorage.removeItem('anamneseConfig');
                     window.location.reload();
                   }
                 }}
               >
-                🔄 Trocar Template
+                🔄 Trocar Modo
               </Button>
             </div>
             <p className="text-xs text-blue-600 italic">

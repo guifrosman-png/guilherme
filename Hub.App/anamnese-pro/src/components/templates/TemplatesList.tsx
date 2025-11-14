@@ -191,7 +191,7 @@ export function TemplatesList() {
             <div>
               <CardTitle className="text-gray-900">Meus Templates</CardTitle>
               <CardDescription className="text-gray-600">
-                Gerencie os templates de anamnese para sua profissão
+                Gerencie os templates de formulários para sua profissão
               </CardDescription>
             </div>
             <Button
@@ -217,7 +217,7 @@ export function TemplatesList() {
                 Nenhum template encontrado
               </h3>
               <p className="text-gray-600 mb-6">
-                Crie seu primeiro template personalizado para anamneses
+                Crie seu primeiro template personalizado para formulários
               </p>
               <Button
                 onClick={handleNovoTemplate}
@@ -306,16 +306,16 @@ export function TemplatesList() {
                       </Button>
                     </div>
 
-                    {/* Botão de Trocar Formato */}
+                    {/* Botão de Trocar Modo */}
                     <Button
                       size="sm"
                       variant="outline"
                       className="w-full"
                       onClick={() => handleTrocarFormato(template)}
-                      title={`Trocar para ${template.formato === 'quiz' ? 'Ficha' : 'Quiz'}`}
+                      title={`Trocar modo para ${template.formato === 'quiz' ? 'Ficha' : 'Quiz'}`}
                     >
                       <span className="text-sm">
-                        {template.formato === 'quiz' ? '📋' : '🎯'} Trocar para {template.formato === 'quiz' ? 'Ficha' : 'Quiz'}
+                        {template.formato === 'quiz' ? '📋' : '🎯'} Trocar Modo para {template.formato === 'quiz' ? 'Ficha' : 'Quiz'}
                       </span>
                     </Button>
 

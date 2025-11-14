@@ -5,8 +5,9 @@ import { Users, FileText, TrendingUp, Sparkles, Settings } from 'lucide-react';
 import { Button } from '../ui/button';
 import { GraficoManager } from './GraficoManager';
 import { GraficoCustomizado } from './GraficoCustomizado';
-import { inicializarGraficosPadrao, carregarGraficosConfig } from '../../utils/graficoHelpers';
+import { inicializarGraficosPadrao, carregarGraficosPorProfissao } from '../../utils/graficoHelpers';
 import { GraficoConfig, GRAFICOS_PADRAO_IDS } from '../../types/graficos';
+import { getProfissaoAtual } from '../../theme';
 
 interface DashboardProps {
   anamneses: any[];
@@ -36,9 +37,10 @@ export function Dashboard({ anamneses, clientes, selectedPeriod, customDateRange
     carregarConfiguracoes();
   }, []);
 
-  // Carregar configurações dos gráficos
+  // Carregar configurações dos gráficos (filtrados por profissão)
   const carregarConfiguracoes = () => {
-    const configs = carregarGraficosConfig();
+    const profissaoAtual = getProfissaoAtual();
+    const configs = carregarGraficosPorProfissao(profissaoAtual);
     setGraficosConfig(configs);
   };
 

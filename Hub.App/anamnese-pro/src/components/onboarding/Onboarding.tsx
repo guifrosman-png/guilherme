@@ -11,13 +11,13 @@ const PROFISSOES = [
     id: 'tatuagem',
     nome: 'Tatuador(a)',
     icone: '🎨',
-    descricao: 'Fichas de anamnese especializadas para estúdios de tatuagem',
+    descricao: 'Formulários especializados para estúdios de tatuagem',
   },
   {
     id: 'psicologia',
     nome: 'Psicólogo(a)',
     icone: '🧠',
-    descricao: 'Anamnese completa para consultas psicológicas e terapias',
+    descricao: 'Formulários completos para consultas psicológicas e terapias',
   },
   {
     id: 'nutricao',
@@ -29,13 +29,13 @@ const PROFISSOES = [
     id: 'fisioterapia',
     nome: 'Fisioterapeuta',
     icone: '💪',
-    descricao: 'Fichas de avaliação física e acompanhamento de tratamentos',
+    descricao: 'Formulários de avaliação física e acompanhamento de tratamentos',
   },
   {
     id: 'estetica',
     nome: 'Esteticista',
     icone: '✨',
-    descricao: 'Anamnese para procedimentos estéticos e cuidados com a pele',
+    descricao: 'Formulários para procedimentos estéticos e cuidados com a pele',
   },
   {
     id: 'consultoria',
@@ -128,7 +128,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
   const handleSelecionarProfissao = (profissaoId: string) => {
     setProfissaoSelecionada(profissaoId);
-    setEtapa(2);
+    setEtapa(2); // Pula direto para confirmação (não tem mais personalização)
   };
 
   const handleRespostaChange = (perguntaId: string, opcao: string) => {
@@ -178,7 +178,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 Bem-vindo ao Forms Pro!
               </CardTitle>
               <CardDescription className="text-lg text-gray-600">
-                Vamos configurar seu módulo em apenas 3 passos
+                Vamos configurar seu módulo em apenas 2 passos
               </CardDescription>
             </CardHeader>
 
@@ -209,105 +209,13 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               <div className="flex items-center justify-center gap-2 pt-6 border-t">
                 <div className="w-2 h-2 rounded-full bg-pink-500"></div>
                 <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
               </div>
             </CardContent>
           </>
         )}
 
-        {/* Etapa 2: Perguntas Específicas */}
+        {/* Etapa 2: Confirmação (antiga etapa 3) */}
         {etapa === 2 && profissaoSelecionada && (
-          <>
-            <CardHeader className="text-center pb-8">
-              <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mx-auto mb-6 flex items-center justify-center">
-                <span className="text-4xl">
-                  {PROFISSOES.find(p => p.id === profissaoSelecionada)?.icone}
-                </span>
-              </div>
-              <CardTitle className="text-3xl text-gray-900 mb-2">
-                Personalize seu Atendimento
-              </CardTitle>
-              <CardDescription className="text-lg text-gray-600">
-                Responda algumas perguntas para personalizar sua experiência
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent>
-              <div className="space-y-8 mb-8">
-                {PERGUNTAS_PROFISSAO[profissaoSelecionada]?.map((pergunta, index) => (
-                  <div key={pergunta.id}>
-                    <h3 className="text-lg font-bold text-gray-900 mb-4">
-                      {index + 1}. {pergunta.pergunta}
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {pergunta.opcoes.map((opcao) => {
-                        const isSelected = respostas[pergunta.id]?.includes(opcao);
-                        return (
-                          <button
-                            key={opcao}
-                            onClick={() => handleRespostaChange(pergunta.id, opcao)}
-                            className={`p-4 border-2 rounded-xl transition-all text-left ${
-                              isSelected
-                                ? 'border-blue-500 bg-blue-50 shadow-md'
-                                : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                                isSelected ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
-                              }`}>
-                                {isSelected && (
-                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                )}
-                              </div>
-                              <span className="text-sm font-medium text-gray-900">{opcao}</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-6">
-                <p className="text-sm text-blue-800">
-                  💡 <strong>Dica:</strong> Você pode selecionar várias opções! Isso ajudará a personalizar seu sistema.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    setEtapa(1);
-                    setRespostas({});
-                  }}
-                >
-                  ← Voltar
-                </Button>
-                <Button
-                  className="flex-1 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
-                  onClick={handleAvancarParaConfirmacao}
-                >
-                  Continuar →
-                </Button>
-              </div>
-
-              <div className="flex items-center justify-center gap-2 pt-6 border-t mt-6">
-                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-              </div>
-            </CardContent>
-          </>
-        )}
-
-        {/* Etapa 3: Confirmação */}
-        {etapa === 3 && profissaoSelecionada && (
           <>
             <CardHeader className="text-center pb-8">
               <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mx-auto mb-6 flex items-center justify-center">
@@ -319,7 +227,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 Perfeito!
               </CardTitle>
               <CardDescription className="text-lg text-gray-600">
-                Vamos configurar seu template de anamnese
+                Vamos configurar seus formulários
               </CardDescription>
             </CardHeader>
 
@@ -339,10 +247,10 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                     <div className="bg-white border border-pink-200 rounded-lg p-4">
                       <h5 className="font-semibold text-gray-900 mb-2">✅ O que você terá:</h5>
                       <ul className="space-y-1 text-sm text-gray-600">
-                        <li>• Fichas de anamnese especializadas</li>
+                        <li>• Formulários especializados</li>
                         <li>• Quiz interativo personalizado</li>
                         <li>• Gestão completa de clientes</li>
-                        <li>• Envio de anamnese remota</li>
+                        <li>• Envio remoto para clientes</li>
                         <li>• Geração automática de PDF</li>
                       </ul>
                     </div>
@@ -350,30 +258,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
                 </div>
               </div>
 
-              {/* Mostrar resumo das personalizações */}
-              {Object.keys(respostas).length > 0 && (
-                <div className="bg-white border-2 border-green-200 rounded-lg p-4 mb-6">
-                  <h5 className="font-semibold text-gray-900 mb-3">📋 Suas Personalizações:</h5>
-                  <div className="space-y-2">
-                    {Object.entries(respostas).map(([perguntaId, opcoes]) => {
-                      const pergunta = PERGUNTAS_PROFISSAO[profissaoSelecionada]?.find(p => p.id === perguntaId);
-                      return opcoes.length > 0 && (
-                        <div key={perguntaId} className="text-sm">
-                          <strong className="text-gray-700">{pergunta?.pergunta}</strong>
-                          <p className="text-gray-600 ml-2">→ {opcoes.join(', ')}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
               <div className="flex gap-3">
                 <Button
                   variant="outline"
                   className="flex-1"
                   onClick={() => {
-                    setEtapa(2);
+                    setEtapa(1);
                   }}
                 >
                   ← Voltar
@@ -387,7 +277,6 @@ export function Onboarding({ onComplete }: OnboardingProps) {
               </div>
 
               <div className="flex items-center justify-center gap-2 pt-6 border-t mt-6">
-                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
                 <div className="w-2 h-2 rounded-full bg-gray-300"></div>
                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
               </div>

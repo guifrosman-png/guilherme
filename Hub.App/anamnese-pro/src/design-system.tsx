@@ -101,7 +101,7 @@ export function E4CEOSidebar({
             >
               <div className="w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105 shadow-md"
                 style={{ background: `linear-gradient(135deg, ${cores.primary}, ${cores.secondary})` }}>
-                <span className="text-white font-bold text-sm">A</span>
+                <span className="text-white font-bold text-sm">F</span>
               </div>
             </button>
 

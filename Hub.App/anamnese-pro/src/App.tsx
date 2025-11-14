@@ -225,7 +225,7 @@ function AppContent() {
       // 🔔 MOSTRAR NOTIFICAÇÃO VISUAL
       addNotification({
         type: 'success',
-        title: '🎉 Nova Anamnese Recebida!',
+        title: '🎉 Novo Formulário Recebido!',
         message: `Cliente acabou de finalizar o preenchimento!`
       });
     };
@@ -886,9 +886,9 @@ function AppContent() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-gray-900">Nova Anamnese</CardTitle>
+                    <CardTitle className="text-gray-900">Novo Formulário</CardTitle>
                     <CardDescription className="text-gray-600">
-                      Preencha os dados do cliente para criar uma nova ficha
+                      Preencha os dados do cliente para criar um novo formulário
                     </CardDescription>
                   </CardHeader>
                 <CardContent className="space-y-4">
@@ -915,10 +915,10 @@ function AppContent() {
 
                   <div className="pt-2">
                     <p className="text-gray-700 mb-3">
-                      Ou crie uma nova anamnese:
+                      Ou crie um novo formulário:
                     </p>
                     <Button onClick={() => setShowModeSelection(true)} className="w-full">
-                      + Nova Anamnese
+                      + Novo Formulário
                     </Button>
                   </div>
                 </CardContent>
@@ -926,11 +926,11 @@ function AppContent() {
               </>
             ) : null}
 
-            {/* Histórico de Anamneses */}
+            {/* Histórico de Formulários */}
             {!showQuiz && !showModeSelection && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-gray-900">Histórico de Anamneses</CardTitle>
+                  <CardTitle className="text-gray-900">Histórico de Formulários</CardTitle>
                   <CardDescription className="text-gray-600">
                     Todas as fichas de anamnese criadas
                   </CardDescription>
@@ -1325,7 +1325,7 @@ function AppContent() {
                             </Button>
                           )}
 
-                          {/* Botão Primário - Nova Anamnese (Ação Principal) */}
+                          {/* Botão Primário - Novo Formulário (Ação Principal) */}
                           <Button
                             size="sm"
                             className={`w-full bg-gradient-to-r ${coresTema.gradient} hover:opacity-90 text-white font-semibold shadow-sm hover:shadow-md transition-all`}
@@ -1334,7 +1334,7 @@ function AppContent() {
                               handleNovaAnamnese(cliente);
                             }}
                           >
-                            ✨ Nova Anamnese
+                            ✨ Novo Formulário
                           </Button>
 
                           {/* Botão Secundário - Ver Histórico */}
@@ -1664,7 +1664,10 @@ function AppContent() {
 
       {/* Botões Flutuantes (do template) */}
       <FloatingButtons
-        onNewAnamnese={() => setShowModeSelection(true)}
+        onNewAnamnese={() => {
+          setActiveTab('anamnese');
+          setShowModeSelection(true);
+        }}
         onOpenClientes={() => setActiveTab('clientes')}
         onOpenSettings={() => setShowSettings(true)}
         totalClientes={clientes.length}

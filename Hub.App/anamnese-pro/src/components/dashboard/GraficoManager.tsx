@@ -8,8 +8,9 @@ import { X, Eye, EyeOff, BarChart3, Sparkles } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { GraficoConfig } from '../../types/graficos';
-import { carregarGraficosConfig, toggleVisibilidadeGrafico } from '../../utils/graficoHelpers';
+import { carregarGraficosPorProfissao, toggleVisibilidadeGrafico } from '../../utils/graficoHelpers';
 import { TIPO_GRAFICO_ICONS } from '../../types/graficos';
+import { getProfissaoAtual } from '../../theme';
 
 interface GraficoManagerProps {
   onClose: () => void;
@@ -78,9 +79,10 @@ export function GraficoManager({ onClose, onUpdate }: GraficoManagerProps) {
     carregarGraficos();
   }, []);
 
-  // Função para carregar gráficos do localStorage
+  // Função para carregar gráficos do localStorage (filtrados por profissão)
   const carregarGraficos = () => {
-    const configs = carregarGraficosConfig();
+    const profissaoAtual = getProfissaoAtual();
+    const configs = carregarGraficosPorProfissao(profissaoAtual);
     // Ordenar por ordem
     configs.sort((a, b) => a.ordem - b.ordem);
     setGraficos(configs);

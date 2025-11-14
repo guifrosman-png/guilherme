@@ -33,6 +33,7 @@ export interface GraficoConfig {
   // Identificação
   id: string;                           // ID único do gráfico (ex: "clientes-mes", "grafico-chocolate")
   categoria: CategoriaGrafico;          // Se é padrão ou customizado
+  profissao?: string;                   // Profissão/modo ao qual o gráfico pertence (opcional, apenas para customizados)
 
   // Vinculação com pergunta (apenas para customizados)
   perguntaId?: string;                  // ID da pergunta que gerou este gráfico (opcional)

@@ -136,9 +136,9 @@ export const adicionarPergunta = (
 
   // 🎨 CRIAR GRÁFICO AUTOMATICAMENTE PARA A NOVA PERGUNTA
   try {
-    const novoGrafico = criarGraficoParaPergunta(novaPergunta);
+    const novoGrafico = criarGraficoParaPergunta(novaPergunta, template.profissao);
     adicionarGrafico(novoGrafico);
-    console.log(`✅ Gráfico criado automaticamente para: ${novaPergunta.titulo}`);
+    console.log(`✅ Gráfico criado automaticamente para: ${novaPergunta.titulo} (profissão: ${template.profissao})`);
   } catch (error) {
     console.error('❌ Erro ao criar gráfico para pergunta:', error);
   }
