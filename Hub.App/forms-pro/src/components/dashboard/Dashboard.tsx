@@ -485,14 +485,14 @@ export function Dashboard({ anamneses, clientes, selectedPeriod, customDateRange
 
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Total de Anamneses</CardDescription>
+            <CardDescription>Total de Formulários</CardDescription>
             <CardTitle className="text-4xl">{anamnesesFiltradas.length}</CardTitle>
           </CardHeader>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Anamneses Concluídas</CardDescription>
+            <CardDescription>Formulários Concluídos</CardDescription>
             <CardTitle className="text-4xl">
               {anamnesesFiltradas.filter(a => a.status === 'concluida').length}
             </CardTitle>
@@ -537,19 +537,19 @@ export function Dashboard({ anamneses, clientes, selectedPeriod, customDateRange
         </Card>
         )}
 
-        {/* 📈 GRÁFICO 2: Anamneses por Mês (Linha) */}
+        {/* 📈 GRÁFICO 2: Formulários por Mês (Linha) */}
         {graficoAnamnesesMesVisivel && (
         <Card>
           <CardHeader>
-            <CardTitle>Anamneses por Mês</CardTitle>
-            <CardDescription>Quantidade de anamneses realizadas em cada mês</CardDescription>
+            <CardTitle>Formulários por Mês</CardTitle>
+            <CardDescription>Quantidade de formulários preenchidos em cada mês</CardDescription>
           </CardHeader>
           <CardContent>
             {anamnesesFiltradas.length === 0 ? (
               <EmptyState
                 icon={FileText}
-                titulo="Nenhuma anamnese no período"
-                descricao="Não há anamneses registradas no período selecionado. Tente ampliar o filtro de data."
+                titulo="Nenhum formulário no período"
+                descricao="Não há formulários registrados no período selecionado. Tente ampliar o filtro de data."
               />
             ) : (
               <ResponsiveContainer width="100%" height={300}>
@@ -640,13 +640,13 @@ export function Dashboard({ anamneses, clientes, selectedPeriod, customDateRange
               <EmptyState
                 icon={TrendingUp}
                 titulo="Sem dados no período"
-                descricao="Não há anamneses no período selecionado. Tente ampliar o filtro de data."
+                descricao="Não há formulários no período selecionado. Tente ampliar o filtro de data."
               />
             ) : dadosOrigem.length === 0 ? (
               <EmptyState
                 icon={TrendingUp}
                 titulo="Sem dados de origem"
-                descricao="Preencha o campo 'Como conheceu' nas anamneses para ver este gráfico"
+                descricao="Preencha o campo 'Como conheceu' nos formulários para ver este gráfico"
               />
             ) : (
               <ResponsiveContainer width="100%" height={300}>

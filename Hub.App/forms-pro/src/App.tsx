@@ -281,7 +281,7 @@ function AppContent() {
       title: mode === 'remoto' ? '📱 Modo Remoto Ativado' : '👤 Modo Presencial Ativado',
       message: mode === 'remoto'
         ? 'Link será gerado para o cliente preencher remotamente'
-        : 'Você irá preencher a anamnese presencialmente com o cliente'
+        : 'Você irá preencher o formulário presencialmente com o cliente'
     });
 
     // 🎯 NOVO: Modo remoto agora gera link DIRETO com template ativo (sem editor)
@@ -932,7 +932,7 @@ function AppContent() {
                 <CardHeader>
                   <CardTitle className="text-gray-900">Histórico de Formulários</CardTitle>
                   <CardDescription className="text-gray-600">
-                    Todas as fichas de anamnese criadas
+                    Todos os formulários criados
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -1033,7 +1033,7 @@ function AppContent() {
                 <CardHeader>
                   <CardTitle className="text-gray-900">Escolha o Modo de Preenchimento</CardTitle>
                   <CardDescription className="text-gray-600">
-                    Como você deseja criar esta anamnese?
+                    Como você deseja criar este formulário?
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1047,7 +1047,7 @@ function AppContent() {
                           👩‍⚕️
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-bold text-gray-900 mb-2">Anamnese Presencial</h3>
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">Formulário Presencial</h3>
                           <p className="text-sm text-gray-600">
                             Você faz as perguntas e preenche o formulário durante o atendimento
                           </p>
@@ -1063,7 +1063,7 @@ function AppContent() {
                           📱
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-bold text-gray-900 mb-2">Anamnese Remota</h3>
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">Formulário Remoto</h3>
                           <p className="text-sm text-gray-600">
                             Envie um link para o cliente preencher sozinho no celular dele
                           </p>
@@ -1157,7 +1157,7 @@ function AppContent() {
               <CardHeader>
                 <CardTitle className="text-gray-900">Lista de Clientes</CardTitle>
                 <CardDescription className="text-gray-600">
-                  Gerencie seus clientes e anamneses
+                  Gerencie seus clientes e formulários
                 </CardDescription>
               </CardHeader>
               <CardContent>

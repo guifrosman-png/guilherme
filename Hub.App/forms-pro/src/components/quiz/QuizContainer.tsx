@@ -1408,7 +1408,7 @@ export function QuizContainer({ mode, onComplete, onClose, initialData = null, c
               </div>
               <div>
                 <CardTitle className="text-white">
-                  {mode === 'presencial' ? 'Anamnese Presencial' : 'Anamnese Remota'}
+                  {mode === 'presencial' ? 'Formulário Presencial' : 'Formulário Remoto'}
                 </CardTitle>
                 <CardDescription className="text-white/80">
                   Etapa {currentStep} de {totalSteps}

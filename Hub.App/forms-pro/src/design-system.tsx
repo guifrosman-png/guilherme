@@ -57,7 +57,7 @@ export function E4CEOSidebar({
 
   const navigationItems = [
     { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
-    { id: 'anamnese', icon: FileText, label: 'Anamnese' },
+    { id: 'anamnese', icon: FileText, label: 'Formulários' },
     { id: 'clientes', icon: Users, label: 'Clientes' },
     { id: 'templates', icon: Layout, label: 'Templates' }
   ]
@@ -238,7 +238,7 @@ export function E4CEOMobileTabBar({
 
   const tabItems = [
     { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
-    { id: 'anamnese', icon: FileText, label: 'Anamnese' },
+    { id: 'anamnese', icon: FileText, label: 'Formulários' },
     { id: 'clientes', icon: Users, label: 'Clientes' },
     { id: 'templates', icon: Layout, label: 'Templates' }
   ]

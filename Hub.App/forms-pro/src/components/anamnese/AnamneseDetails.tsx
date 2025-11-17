@@ -212,7 +212,7 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                     <div className={`w-10 h-10 ${coresTema.bg100} rounded-full flex items-center justify-center`}>
                       <span className="text-xl">🎯</span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">Perguntas da Anamnese</h3>
+                    <h3 className="text-xl font-bold text-gray-900">Perguntas do Formulário</h3>
                   </div>
 
                   <div className="space-y-4">
@@ -323,7 +323,7 @@ export function AnamneseDetails({ anamnese, onClose }: AnamneseDetailsProps) {
                     <div className={`w-10 h-10 ${coresTema.bg100} rounded-full flex items-center justify-center`}>
                       <span className="text-xl">📅</span>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">Data da Anamnese</h3>
+                    <h3 className="text-xl font-bold text-gray-900">Data do Formulário</h3>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Data de realização</label>

@@ -144,7 +144,7 @@ export function LinkGenerated({ link, onClose }: LinkGeneratedProps) {
             </div>
             <h2 className="text-3xl font-bold mb-2">✅ Link Gerado com Sucesso!</h2>
             <p className="text-sm opacity-90">
-              Envie este link para o cliente preencher a anamnese
+              Envie este link para o cliente preencher o formulário
             </p>
           </div>
         </div>
@@ -174,7 +174,7 @@ export function LinkGenerated({ link, onClose }: LinkGeneratedProps) {
               <li>1. Copie o link abaixo (ou envie direto pelo WhatsApp)</li>
               <li>2. O cliente precisa estar na <strong>mesma rede WiFi</strong> que você</li>
               <li>3. O cliente abrirá o link e responderá o quiz</li>
-              <li>4. Quando finalizar, a anamnese aparecerá automaticamente no seu histórico!</li>
+              <li>4. Quando finalizar, o formulário aparecerá automaticamente no seu histórico!</li>
             </ul>
           </div>
 
@@ -262,7 +262,7 @@ export function LinkGenerated({ link, onClose }: LinkGeneratedProps) {
           <div className="mt-6 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl">
             <h3 className="text-sm font-semibold text-yellow-800 mb-2">⚠️ Importante:</h3>
             <p className="text-sm text-yellow-700">
-              A anamnese ficará com status "Pendente" até o cliente finalizar o preenchimento.
+              O formulário ficará com status "Pendente" até o cliente finalizar o preenchimento.
               Você será notificado automaticamente quando ele concluir!
             </p>
           </div>
