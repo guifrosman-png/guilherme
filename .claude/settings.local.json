@@ -14,7 +14,10 @@
       "Bash(dir /b /s)",
       "Bash(npm run dev:*)",
       "Bash(start http://localhost:3000/)",
-      "Bash(git push)"
+      "Bash(git push)",
+      "Bash(git ls-tree:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
