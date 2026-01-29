@@ -1,0 +1,1254 @@
+  const renderComponentContent = (comp: CanvasComponent) => {
+    switch (comp.type) {
+      case 'title':
+        return (
+          <span className="text-neutral-600 font-medium text-sm truncate">
+            {comp.props.text as string}
+          </span>
+        )
+      case 'value':
+        const sizeClasses: Record<string, string> = {
+          sm: 'text-lg',
+          md: 'text-xl',
+          lg: 'text-2xl',
+          xl: 'text-3xl'
+        }
+        return (
+          <span className={`font-bold ${currentColor.text} ${sizeClasses[comp.props.size as string] || 'text-2xl'}`}>
+            {comp.props.text as string}
+          </span>
+        )
+      case 'description':
+        return (
+          <p className="text-neutral-500 text-xs truncate">
+            {comp.props.text as string}
+          </p>
+        )
+      case 'icon':
+        return (
+          <div className={`p-2 rounded-lg ${currentColor.bg} h-full w-full flex items-center justify-center`}>
+            <Activity className={`h-6 w-6 ${currentColor.text}`} />
+          </div>
+        )
+      case 'trend':
+        const isUp = comp.props.direction === 'up'
+        return (
+          <div className={`flex items-center gap-1 ${isUp ? 'text-emerald-600' : 'text-rose-600'}`}>
+            {isUp ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+            <span className="text-sm font-medium">{comp.props.value as string}</span>
+          </div>
+        )
+      case 'progress':
+        return (
+          <div className="w-full flex flex-col justify-center h-full">
+            <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full ${currentColor.bgSolid} rounded-full transition-all`}
+                style={{ width: `${comp.props.value}%` }}
+              />
+            </div>
+            <span className="text-xs text-slate-500 mt-1">{String(comp.props.value)}%</span>
+          </div>
+        )
+      case 'badge':
+        const badgeVariants: Record<string, string> = {
+          success: 'bg-emerald-100 text-emerald-700',
+          warning: 'bg-amber-100 text-amber-700',
+          error: 'bg-rose-100 text-rose-700',
+          info: 'bg-blue-100 text-blue-700'
+        }
+        return (
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${badgeVariants[comp.props.variant as string] || badgeVariants.info}`}>
+            {comp.props.text as string}
+          </span>
+        )
+      case 'chart-bar':
+        const barData = comp.props.data as number[]
+        const barMax = Math.max(...barData)
+        const barGradientId = `bar-grad-${comp.id}`
+        return (
+          <div className="flex flex-col h-full w-full p-2">
+            {/* Eixo Y com labels */}
+            <div className="flex-1 flex">
+              <div className="flex flex-col justify-between text-[8px] text-slate-400 pr-1 py-1">
+                <span>{barMax}</span>
+                <span>{Math.round(barMax / 2)}</span>
+                <span>0</span>
+              </div>
+              {/* Barras */}
+              <div className="flex-1 flex items-end gap-[3px] relative">
+                {/* Grid lines horizontais */}
+                {/* Grid lines horizontais - removidas */}
+                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                  {/* <div className="border-b border-dashed border-slate-100" />
+                  <div className="border-b border-dashed border-slate-100" />
+                  <div className="border-b border-slate-200" /> */}
+                </div>
+                <svg className="absolute" width="0" height="0">
+                  <defs>
+                    <linearGradient id={barGradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="currentColor" stopOpacity="1" />
+                      <stop offset="100%" stopColor="currentColor" stopOpacity="0.6" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                {barData.map((v, i) => {
+                  const heightPercent = (v / barMax) * 100
+                  return (
+                    <div
+                      key={i}
+                      className="flex-1 flex flex-col items-center justify-end group/bar relative z-10"
+                    >
+                      {/* Tooltip */}
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-slate-800 text-white text-[9px] rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20">
+                        {v}
+                      </div>
+                      <div
+                        className={`w-full rounded-t-sm ${currentColor.bgSolid} transition-all duration-300 hover:opacity-90 shadow-sm`}
+                        style={{
+                          height: `${heightPercent}%`,
+                          minHeight: heightPercent > 0 ? '2px' : '0'
+                        }}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            {/* Eixo X */}
+            <div className="flex mt-1 pl-4">
+              {barData.map((_, i) => (
+                <div key={i} className="flex-1 text-center text-[8px] text-slate-400">
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      case 'chart-line':
+      case 'chart-area':
+        const lineData = comp.props.data as number[]
+        const lineMax = Math.max(...lineData)
+        const lineMin = Math.min(...lineData)
+        const lineRange = lineMax - lineMin || 1
+        const padding = 10
+        const chartWidth = 100 - padding * 2
+        const chartHeight = 100 - padding * 2
+        const gradientId = `area-grad-${comp.id}`
+
+        // Criar pontos para curva suave usando Catmull-Rom spline
+        const linePoints = lineData.map((v, i) => ({
+          x: padding + (i / (lineData.length - 1)) * chartWidth,
+          y: padding + (1 - (v - lineMin) / lineRange) * chartHeight
+        }))
+
+        // Path com curvas bezier suaves
+        const createSmoothPath = (pts: { x: number; y: number }[]) => {
+          if (pts.length < 2) return ''
+          let path = `M ${pts[0].x} ${pts[0].y}`
+          for (let i = 0; i < pts.length - 1; i++) {
+            const p0 = pts[Math.max(0, i - 1)]
+            const p1 = pts[i]
+            const p2 = pts[i + 1]
+            const p3 = pts[Math.min(pts.length - 1, i + 2)]
+            const tension = 0.3
+            const cp1x = p1.x + (p2.x - p0.x) * tension
+            const cp1y = p1.y + (p2.y - p0.y) * tension
+            const cp2x = p2.x - (p3.x - p1.x) * tension
+            const cp2y = p2.y - (p3.y - p1.y) * tension
+            path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`
+          }
+          return path
+        }
+
+        const smoothPath = createSmoothPath(linePoints)
+        const areaPath = smoothPath + ` L ${linePoints[linePoints.length - 1].x} ${100 - padding} L ${padding} ${100 - padding} Z`
+
+        return (
+          <div className="w-full h-full p-1 relative">
+            <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="currentColor" stopOpacity="0.02" />
+                </linearGradient>
+                <filter id={`shadow-${comp.id}`} x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="1" stdDeviation="1" floodOpacity="0.15" />
+                </filter>
+              </defs>
+
+              {/* Grid lines - removidas */}
+              {/* <g className="text-slate-200">
+                {[0, 25, 50, 75, 100].map(pct => (
+                  <line
+                    key={pct}
+                    x1={padding}
+                    y1={padding + (pct / 100) * chartHeight}
+                    x2={100 - padding}
+                    y2={padding + (pct / 100) * chartHeight}
+                    stroke="currentColor"
+                    strokeWidth="0.3"
+                    strokeDasharray={pct === 100 ? "0" : "2,2"}
+                  />
+                ))}
+              </g> */}
+
+              {/* Área preenchida */}
+              {comp.type === 'chart-area' && (
+                <path
+                  d={areaPath}
+                  className={currentColor.text}
+                  fill={`url(#${gradientId})`}
+                />
+              )}
+
+              {/* Linha principal */}
+              <path
+                d={smoothPath}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={currentColor.text}
+                filter={`url(#shadow-${comp.id})`}
+              />
+
+              {/* Pontos nos dados */}
+              {linePoints.map((pt, i) => (
+                <g key={i} className="group/point">
+                  <circle
+                    cx={pt.x}
+                    cy={pt.y}
+                    r="3"
+                    className={`${currentColor.text} fill-white stroke-current`}
+                    strokeWidth="1.5"
+                  />
+                  {/* Ponto hover maior */}
+                  <circle
+                    cx={pt.x}
+                    cy={pt.y}
+                    r="6"
+                    className="fill-transparent hover:fill-current opacity-0 hover:opacity-20 cursor-pointer transition-opacity"
+                  />
+                </g>
+              ))}
+            </svg>
+
+            {/* Labels nos eixos */}
+            <div className="absolute left-0 top-1 bottom-1 w-4 flex flex-col justify-between text-[7px] text-slate-400">
+              <span>{lineMax}</span>
+              <span>{lineMin}</span>
+            </div>
+          </div>
+        )
+      case 'chart-pie':
+      case 'chart-donut':
+        const pieValue = comp.props.value as number
+        const isDonut = comp.type === 'chart-donut'
+        const pieGradientId = `pie-grad-${comp.id}`
+        const radius = 15.915
+        const circumference = 2 * Math.PI * radius
+        const strokeDasharray = `${(pieValue / 100) * circumference} ${circumference}`
+
+        return (
+          <div className="flex items-center justify-center h-full w-full p-2">
+            <div className="relative">
+              <svg viewBox="0 0 40 40" className="w-full h-full max-w-[100px] max-h-[100px] transform -rotate-90">
+                <defs>
+                  <linearGradient id={pieGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="currentColor" stopOpacity="1" />
+                    <stop offset="100%" stopColor="currentColor" stopOpacity="0.7" />
+                  </linearGradient>
+                  <filter id={`pie-shadow-${comp.id}`}>
+                    <feDropShadow dx="0" dy="0" stdDeviation="1" floodOpacity="0.2" />
+                  </filter>
+                </defs>
+
+                {/* Track de fundo */}
+                <circle
+                  cx="20"
+                  cy="20"
+                  r={radius}
+                  fill="none"
+                  className="stroke-slate-100"
+                  strokeWidth={isDonut ? 4 : 15}
+                />
+
+                {/* Arco de progresso */}
+                <circle
+                  cx="20"
+                  cy="20"
+                  r={radius}
+                  fill="none"
+                  className={currentColor.text}
+                  stroke={`url(#${pieGradientId})`}
+                  strokeWidth={isDonut ? 4 : 15}
+                  strokeDasharray={strokeDasharray}
+                  strokeLinecap="round"
+                  filter={`url(#pie-shadow-${comp.id})`}
+                  style={{ transition: 'stroke-dasharray 0.5s ease' }}
+                />
+
+                {/* Segmentos decorativos para pizza */}
+                {!isDonut && pieValue < 100 && (
+                  <circle
+                    cx="20"
+                    cy="20"
+                    r={radius}
+                    fill="none"
+                    className="stroke-slate-200"
+                    strokeWidth={15}
+                    strokeDasharray={`${((100 - pieValue) / 100) * circumference} ${circumference}`}
+                    strokeDashoffset={-((pieValue / 100) * circumference)}
+                  />
+                )}
+              </svg>
+
+              {/* Valor central */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center">
+                  <span className={`text-lg font-bold ${currentColor.text}`}>{pieValue}</span>
+                  <span className="text-[10px] text-slate-400">%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      case 'chart-gauge':
+        const gaugeValue = comp.props.value as number
+        const gaugeMax = (comp.props.max as number) || 100
+        const gaugePercent = (gaugeValue / gaugeMax) * 100
+        const gaugeGradientId = `gauge-grad-${comp.id}`
+
+        // Gauge com arco de 180 graus
+        const gaugeRadius = 14
+        const gaugeCircumference = Math.PI * gaugeRadius // semicírculo
+        const gaugeDasharray = `${(gaugePercent / 100) * gaugeCircumference} ${gaugeCircumference}`
+
+        // Cor baseada no valor
+        const getGaugeColor = (pct: number) => {
+          if (pct >= 80) return 'text-emerald-500'
+          if (pct >= 50) return 'text-amber-500'
+          return 'text-rose-500'
+        }
+
+        return (
+          <div className="flex flex-col items-center justify-center h-full w-full p-2">
+            <div className="relative w-full max-w-[120px]">
+              <svg viewBox="0 0 36 22" className="w-full">
+                <defs>
+                  <linearGradient id={gaugeGradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#ef4444" />
+                    <stop offset="50%" stopColor="#f59e0b" />
+                    <stop offset="100%" stopColor="#22c55e" />
+                  </linearGradient>
+                  <filter id={`gauge-shadow-${comp.id}`}>
+                    <feDropShadow dx="0" dy="1" stdDeviation="0.5" floodOpacity="0.2" />
+                  </filter>
+                </defs>
+
+                {/* Track de fundo com gradiente */}
+                <path
+                  d="M 4 18 A 14 14 0 0 1 32 18"
+                  fill="none"
+                  stroke={`url(#${gaugeGradientId})`}
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  opacity="0.2"
+                />
+
+                {/* Track cinza */}
+                <path
+                  d="M 4 18 A 14 14 0 0 1 32 18"
+                  fill="none"
+                  className="stroke-slate-200"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+
+                {/* Arco de progresso */}
+                <path
+                  d="M 4 18 A 14 14 0 0 1 32 18"
+                  fill="none"
+                  className={comp.props.showGradient ? '' : getGaugeColor(gaugePercent)}
+                  stroke={comp.props.showGradient ? `url(#${gaugeGradientId})` : 'currentColor'}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  strokeDasharray={gaugeDasharray}
+                  filter={`url(#gauge-shadow-${comp.id})`}
+                  style={{ transition: 'stroke-dasharray 0.5s ease' }}
+                />
+
+                {/* Marcadores */}
+                <g className="text-slate-300">
+                  <line x1="4" y1="18" x2="4" y2="20" stroke="currentColor" strokeWidth="0.5" />
+                  <line x1="18" y1="4" x2="18" y2="6" stroke="currentColor" strokeWidth="0.5" />
+                  <line x1="32" y1="18" x2="32" y2="20" stroke="currentColor" strokeWidth="0.5" />
+                </g>
+
+                {/* Ponteiro */}
+                <g transform={`rotate(${-90 + (gaugePercent / 100) * 180}, 18, 18)`}>
+                  <line
+                    x1="18"
+                    y1="18"
+                    x2="18"
+                    y2="7"
+                    stroke="#334155"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="18" cy="18" r="2" fill="#334155" />
+                </g>
+              </svg>
+
+              {/* Labels */}
+              <div className="flex justify-between text-[8px] text-slate-400 px-1 -mt-1">
+                <span>0</span>
+                <span>{gaugeMax}</span>
+              </div>
+            </div>
+
+            {/* Valor */}
+            <div className="text-center mt-1">
+              <span className={`text-xl font-bold ${getGaugeColor(gaugePercent)}`}>{gaugeValue}</span>
+              <span className="text-xs text-slate-400 ml-0.5">/ {gaugeMax}</span>
+            </div>
+          </div>
+        )
+      case 'chart-bar-h':
+        // Gráfico de barras horizontais estilo Intercom
+        const barHData = comp.props.data as number[]
+        const barHLabels = (comp.props.labels as string[]) || barHData.map((_, i) => `Item ${i + 1}`)
+        const barHMax = Math.max(...barHData)
+        return (
+          <div className="flex flex-col w-full h-full p-2 gap-1">
+            {barHData.map((v, i) => {
+              const widthPct = (v / barHMax) * 100
+              return (
+                <div key={i} className="flex items-center gap-2 flex-1 min-h-0">
+                  <span className="text-[10px] text-slate-500 w-10 text-right truncate">{barHLabels[i]}</span>
+                  <div className="flex-1 h-full flex items-center">
+                    <div
+                      className={`h-[70%] rounded-r ${currentColor.bgSolid} transition-all relative group/bar`}
+                      style={{ width: `${widthPct}%`, minWidth: v > 0 ? '4px' : '0' }}
+                    >
+                      <span className="absolute right-1 top-1/2 -translate-y-1/2 text-[9px] font-medium text-white opacity-0 group-hover/bar:opacity-100 transition-opacity">
+                        {v}
+                      </span>
+                    </div>
+                    <span className="ml-2 text-[10px] font-medium text-slate-600">{v}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+      case 'chart-heatmap':
+        // Heatmap estilo Intercom (dia da semana x hora)
+        const heatmapData = comp.props.data as number[][]
+        const heatmapRows = (comp.props.rows as string[]) || ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+        const heatmapMax = Math.max(...heatmapData.flat())
+
+        // Função para cor baseada no valor
+        const getHeatColor = (val: number) => {
+          if (heatmapMax === 0) return 'bg-slate-100'
+          const intensity = val / heatmapMax
+          if (intensity === 0) return 'bg-blue-50'
+          if (intensity < 0.25) return 'bg-blue-100'
+          if (intensity < 0.5) return 'bg-blue-200'
+          if (intensity < 0.75) return 'bg-blue-400'
+          return 'bg-blue-600'
+        }
+
+        return (
+          <div className="flex flex-col w-full h-full p-2">
+            {/* Header com horas (apenas alguns) */}
+            <div className="flex mb-1">
+              <div className="w-8" />
+              <div className="flex-1 flex">
+                {[0, 6, 12, 18, 23].map(h => (
+                  <div key={h} className="text-[7px] text-slate-400" style={{ width: `${100 / 24}%`, marginLeft: h === 0 ? 0 : `${(h - (h === 6 ? 0 : h === 12 ? 6 : h === 18 ? 12 : 18)) * (100 / 24)}%` }}>
+                    {h}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Grid */}
+            <div className="flex-1 flex flex-col gap-[2px]">
+              {heatmapData.map((row, rowIdx) => (
+                <div key={rowIdx} className="flex items-center gap-1 flex-1 min-h-0">
+                  <span className="text-[8px] text-slate-500 w-7 text-right">{heatmapRows[rowIdx]}</span>
+                  <div className="flex-1 flex gap-[1px] h-full">
+                    {row.map((val, colIdx) => (
+                      <div
+                        key={colIdx}
+                        className={`flex-1 rounded-[2px] ${getHeatColor(val)} flex items-center justify-center group/cell relative`}
+                        title={`${heatmapRows[rowIdx]} ${colIdx}h: ${val}`}
+                      >
+                        {val > 0 && heatmapData[0].length <= 12 && (
+                          <span className="text-[7px] font-medium text-slate-700 opacity-0 group-hover/cell:opacity-100">
+                            {val}
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Legenda */}
+            <div className="flex items-center justify-end gap-1 mt-1">
+              <span className="text-[7px] text-slate-400">0</span>
+              <div className="flex gap-[1px]">
+                {['bg-blue-50', 'bg-blue-100', 'bg-blue-200', 'bg-blue-400', 'bg-blue-600'].map((c, i) => (
+                  <div key={i} className={`w-3 h-2 rounded-[1px] ${c}`} />
+                ))}
+              </div>
+              <span className="text-[7px] text-slate-400">{heatmapMax}</span>
+            </div>
+          </div>
+        )
+      case 'recharts-bar': {
+        const rechartsBarData = (comp.props.data as Array<{ name: string; value: number }>) || []
+        const barColors = (comp.props.chartColors as string[]) || ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899']
+        const showLegend = comp.props.showLegend !== false
+        const showTooltip = comp.props.showTooltip !== false
+        const showGrid = comp.props.showGrid !== false
+
+        if (!rechartsBarData || rechartsBarData.length === 0) {
+          return (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+              Sem dados
+            </div>
+          )
+        }
+
+        return (
+          <div className="w-full h-full p-1" style={{ minWidth: 100, minHeight: 100 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
+              <RechartsBarChart data={rechartsBarData} margin={{ top: 20, right: 20, left: 0, bottom: showLegend ? 10 : 5 }}>
+                {/* {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />} */}
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} stroke="#e5e7eb" axisLine={false} tickLine={false} />
+                <YAxis width={40} tick={{ fontSize: 9, fill: '#6b7280' }} stroke="#e5e7eb" axisLine={false} tickLine={false} tickFormatter={(value) => value.toLocaleString()} />
+                {showTooltip && (
+                  <RechartsTooltip
+                    cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                    contentStyle={{ backgroundColor: 'white', border: 'none', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', fontSize: '11px', padding: '8px 12px' }}
+                    formatter={(value: any) => [`${value.toLocaleString()}`, 'Valor']}
+                    labelFormatter={(label) => `📊 ${label}`}
+                  />
+                )}
+                {showLegend && (
+                  <RechartsLegend
+                    wrapperStyle={{ fontSize: '8px', paddingTop: '0px' }}
+                    iconType="circle"
+                    iconSize={6}
+                    verticalAlign="bottom"
+                    align="center"
+                  />
+                )}
+                <RechartsBar dataKey="value" name="Valor" radius={[4, 4, 0, 0]} animationDuration={0} animationEasing="ease-out">
+                  {rechartsBarData.map((_, index) => (
+                    <RechartsCell key={`cell-${index}`} fill={barColors[index % barColors.length]} />
+                  ))}
+                </RechartsBar>
+              </RechartsBarChart>
+            </ResponsiveContainer>
+          </div>
+        )
+      }
+      case 'recharts-line': {
+        const rechartsLineData = (comp.props.data as Array<{ name: string; value: number }>) || []
+        const lineColor = (comp.props.primaryColor as string) || '#8b5cf6'
+        const showLegendLine = comp.props.showLegend !== false
+        const showTooltipLine = comp.props.showTooltip !== false
+        const showGridLine = comp.props.showGrid !== false
+
+        if (!rechartsLineData || rechartsLineData.length === 0) {
+          return (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+              Sem dados
+            </div>
+          )
+        }
+
+        return (
+          <div className="w-full h-full p-1" style={{ minWidth: 100, minHeight: 100 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
+              <RechartsLineChart data={rechartsLineData} margin={{ top: 20, right: 20, left: 0, bottom: showLegendLine ? 10 : 5 }}>
+                {/* {showGridLine && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />} */}
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} stroke="#e5e7eb" axisLine={false} tickLine={false} />
+                <YAxis width={40} tick={{ fontSize: 9, fill: '#6b7280' }} stroke="#e5e7eb" axisLine={false} tickLine={false} tickFormatter={(value) => value.toLocaleString()} />
+                {showTooltipLine && (
+                  <RechartsTooltip
+                    cursor={{ stroke: lineColor, strokeDasharray: '5 5' }}
+                    contentStyle={{ backgroundColor: 'white', border: 'none', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', fontSize: '11px', padding: '8px 12px' }}
+                    formatter={(value: any) => [`${value.toLocaleString()}`, 'Valor']}
+                    labelFormatter={(label) => `📈 ${label}`}
+                  />
+                )}
+                {showLegendLine && (
+                  <RechartsLegend
+                    wrapperStyle={{ fontSize: '8px', paddingTop: '0px' }}
+                    iconType="line"
+                    iconSize={10}
+                    verticalAlign="bottom"
+                    align="center"
+                  />
+                )}
+                <RechartsLine
+                  type="monotone"
+                  dataKey="value"
+                  name="Valor"
+                  stroke={lineColor}
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: lineColor, strokeWidth: 2, stroke: '#fff' }}
+                  activeDot={{ r: 6, fill: lineColor, stroke: '#fff', strokeWidth: 2 }}
+                  animationDuration={0}
+                  animationEasing="ease-out"
+                />
+              </RechartsLineChart>
+            </ResponsiveContainer>
+          </div>
+        )
+      }
+      case 'recharts-area': {
+        const rechartsAreaData = (comp.props.data as Array<{ name: string; value: number }>) || []
+        const areaColor = (comp.props.primaryColor as string) || '#10b981'
+        const showLegendArea = comp.props.showLegend !== false
+        const showTooltipArea = comp.props.showTooltip !== false
+        const showGridArea = comp.props.showGrid !== false
+
+        if (!rechartsAreaData || rechartsAreaData.length === 0) {
+          return (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+              Sem dados
+            </div>
+          )
+        }
+
+        return (
+          <div className="w-full h-full p-1" style={{ minWidth: 100, minHeight: 100 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
+              <RechartsAreaChart data={rechartsAreaData} margin={{ top: 20, right: 20, left: 0, bottom: showLegendArea ? 10 : 5 }}>
+                <defs>
+                  <linearGradient id={`areaGrad-${comp.id}-${areaColor.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={areaColor} stopOpacity={0.8} />
+                    <stop offset="100%" stopColor={areaColor} stopOpacity={0.1} />
+                  </linearGradient>
+                </defs>
+                {/* {showGridArea && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />} */}
+                <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#6b7280' }} stroke="#e5e7eb" axisLine={false} tickLine={false} />
+                <YAxis width={40} tick={{ fontSize: 9, fill: '#6b7280' }} stroke="#e5e7eb" axisLine={false} tickLine={false} tickFormatter={(value) => value.toLocaleString()} />
+                {showTooltipArea && (
+                  <RechartsTooltip
+                    cursor={{ stroke: areaColor, strokeDasharray: '5 5' }}
+                    contentStyle={{ backgroundColor: 'white', border: 'none', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', fontSize: '11px', padding: '8px 12px' }}
+                    formatter={(value: any) => [`${value.toLocaleString()}`, 'Valor']}
+                    labelFormatter={(label) => `📉 ${label}`}
+                  />
+                )}
+                {showLegendArea && (
+                  <RechartsLegend
+                    wrapperStyle={{ fontSize: '8px', paddingTop: '0px' }}
+                    iconType="rect"
+                    iconSize={8}
+                    verticalAlign="bottom"
+                    align="center"
+                  />
+                )}
+                <RechartsArea
+                  type="monotone"
+                  dataKey="value"
+                  name="Valor"
+                  stroke={areaColor}
+                  fill={`url(#areaGrad-${comp.id}-${areaColor.replace('#', '')})`}
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: areaColor, strokeWidth: 2, stroke: '#fff' }}
+                  activeDot={{ r: 5, fill: areaColor, stroke: '#fff', strokeWidth: 2 }}
+                  animationDuration={0}
+                  animationEasing="ease-out"
+                />
+              </RechartsAreaChart>
+            </ResponsiveContainer>
+          </div>
+        )
+      }
+      case 'recharts-pie': {
+        const rechartsPieData = (comp.props.data as Array<{ name: string; value: number }>) || []
+        const defaultPieColors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899']
+        const pieColors = (comp.props.chartColors as string[]) || defaultPieColors
+        const showLegendPie = comp.props.showLegend !== false
+        const showTooltipPie = comp.props.showTooltip !== false
+
+        if (!rechartsPieData || rechartsPieData.length === 0) {
+          return (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+              Sem dados
+            </div>
+          )
+        }
+
+        // Componente responsivo que adapta ao tamanho do container
+        const ResponsivePieChart = () => {
+          const containerRef = React.useRef<HTMLDivElement>(null)
+          const [dimensions, setDimensions] = React.useState({ width: 200, height: 200 })
+
+          React.useEffect(() => {
+            const updateDimensions = () => {
+              if (containerRef.current) {
+                setDimensions({
+                  width: containerRef.current.offsetWidth,
+                  height: containerRef.current.offsetHeight
+                })
+              }
+            }
+            updateDimensions()
+            const resizeObserver = new ResizeObserver(updateDimensions)
+            if (containerRef.current) {
+              resizeObserver.observe(containerRef.current)
+            }
+            return () => resizeObserver.disconnect()
+          }, [])
+
+          const minDim = Math.min(dimensions.width, dimensions.height)
+          const isSmall = minDim < 150
+          const isMedium = minDim >= 150 && minDim < 300
+          const isLarge = minDim >= 300
+
+          // Ajustar configurações baseado no tamanho
+          const outerRadius = isSmall ? "88%" : isMedium ? "58%" : "88%"
+          const innerRadius = isSmall ? "42%" : isMedium ? "28%" : "42%"
+          const labelFontSize = isSmall ? 9 : isMedium ? 13 : 18
+          const legendFontSize = isSmall ? 9 : isMedium ? 12 : 13
+          const legendIconSize = isSmall ? 5 : isMedium ? 8 : 10
+          const cy = showLegendPie ? (isSmall ? "46%" : "48%") : "52%"
+
+          return (
+            <div ref={containerRef} className="w-full h-full p-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsPieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
+                  <RechartsPie
+                    data={rechartsPieData}
+                    cx="50%"
+                    cy={cy}
+                    innerRadius={innerRadius}
+                    outerRadius={outerRadius}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ percent = 0, cx: labelCx = 0, cy: labelCy = 0, midAngle = 0, outerRadius: or = 0, index }) => {
+                      const RADIAN = Math.PI / 180
+                      const radius = (or as number) * 1.06
+                      const x = (labelCx as number) + radius * Math.cos(-midAngle * RADIAN)
+                      const y = (labelCy as number) + radius * Math.sin(-midAngle * RADIAN)
+                      const color = pieColors[(index as number) % pieColors.length]
+                      return (
+                        <text x={x} y={y} fill={color} textAnchor={x > (labelCx as number) ? 'start' : 'end'} dominantBaseline="central" fontSize={labelFontSize} fontWeight="600">
+                          {`${(percent * 100).toFixed(0)}%`}
+                        </text>
+                      )
+                    }}
+                    labelLine={false}
+                    animationDuration={0}
+                    animationEasing="ease-out"
+                  >
+                    {rechartsPieData.map((_, index) => {
+                      const cellColor = pieColors[index] || defaultPieColors[index % defaultPieColors.length]
+                      return (
+                        <RechartsCell
+                          key={`pie-cell-${index}`}
+                          fill={cellColor}
+                          stroke="#fff"
+                          strokeWidth={2}
+                        />
+                      )
+                    })}
+                  </RechartsPie>
+                  {showTooltipPie && (
+                    <RechartsTooltip
+                      contentStyle={{ backgroundColor: 'white', border: 'none', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', fontSize: '11px', padding: '8px 12px' }}
+                      formatter={(value: any, name: any) => [`${value.toLocaleString()}`, name]}
+                    />
+                  )}
+                  {showLegendPie && (
+                    <RechartsLegend
+                      wrapperStyle={{ fontSize: `${legendFontSize}px`, marginTop: '-8px' }}
+                      iconType="circle"
+                      iconSize={legendIconSize}
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                      align="center"
+                    />
+                  )}
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </div>
+          )
+        }
+
+        return <ResponsivePieChart />
+      }
+      case 'recharts-radar': {
+        const radarData = (comp.props.data as Array<{ subject: string; A: number; B: number; fullMark: number }>) || []
+        const colorA = (comp.props.colorA as string) || '#3b82f6'
+        const colorB = (comp.props.colorB as string) || '#8b5cf6'
+        const showLegendRadar = comp.props.showLegend !== false
+        const showTooltipRadar = comp.props.showTooltip !== false
+
+        if (!radarData || radarData.length === 0) {
+          return (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+              Sem dados
+            </div>
+          )
+        }
+
+        return (
+          <div className="w-full h-full p-1" style={{ minWidth: 100, minHeight: 100 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
+              <RechartsRadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData} margin={{ top: 0, right: 5, bottom: showLegendRadar ? 10 : 0, left: 5 }}>
+                <defs>
+                  <linearGradient id={`radarGradA-${comp.id}-${colorA.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={colorA} stopOpacity={0.8} />
+                    <stop offset="100%" stopColor={colorA} stopOpacity={0.2} />
+                  </linearGradient>
+                  <linearGradient id={`radarGradB-${comp.id}-${colorB.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={colorB} stopOpacity={0.6} />
+                    <stop offset="100%" stopColor={colorB} stopOpacity={0.1} />
+                  </linearGradient>
+                </defs>
+                <PolarGrid stroke="#e5e7eb" strokeDasharray="3 3" />
+                <PolarAngleAxis
+                  dataKey="subject"
+                  tick={{ fontSize: 8, fill: '#6b7280' }}
+                  tickLine={false}
+                />
+                <PolarRadiusAxis
+                  tick={{ fontSize: 7, fill: '#9ca3af' }}
+                  axisLine={false}
+                  tickCount={5}
+                />
+                <RechartsRadar
+                  name="Série A"
+                  dataKey="A"
+                  stroke={colorA}
+                  fill={`url(#radarGradA-${comp.id}-${colorA.replace('#', '')})`}
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: colorA }}
+                  animationDuration={0}
+                />
+                <RechartsRadar
+                  name="Série B"
+                  dataKey="B"
+                  stroke={colorB}
+                  fill={`url(#radarGradB-${comp.id}-${colorB.replace('#', '')})`}
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: colorB }}
+                  animationDuration={0}
+                />
+                {showTooltipRadar && (
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      fontSize: '11px',
+                      padding: '8px 12px'
+                    }}
+                  />
+                )}
+                {showLegendRadar && (
+                  <RechartsLegend
+                    wrapperStyle={{ fontSize: '8px', paddingTop: '0px' }}
+                    iconType="circle"
+                    iconSize={6}
+                    verticalAlign="bottom"
+                    align="center"
+                  />
+                )}
+              </RechartsRadarChart>
+            </ResponsiveContainer>
+          </div>
+        )
+      }
+      case 'recharts-radial': {
+        const radialData = (comp.props.data as Array<{ name: string; value: number; fill: string }>) || []
+        const defaultRadialColors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899']
+        const radialColors = (comp.props.chartColors as string[]) || defaultRadialColors
+        const showLegendRadial = comp.props.showLegend !== false
+        const showTooltipRadial = comp.props.showTooltip !== false
+
+        if (!radialData || radialData.length === 0) {
+          return (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+              Sem dados
+            </div>
+          )
+        }
+
+        // Map colors to data
+        const radialDataWithColors = radialData.map((item, index) => ({
+          ...item,
+          fill: radialColors[index] || defaultRadialColors[index % defaultRadialColors.length]
+        }))
+        return (
+          <div className="w-full h-full p-1" style={{ minWidth: 100, minHeight: 100 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
+              <RechartsRadialBarChart
+                cx="50%"
+                cy={showLegendRadial ? "50%" : "55%"}
+                innerRadius="25%"
+                outerRadius="85%"
+                barSize={18}
+                data={radialDataWithColors}
+                startAngle={180}
+                endAngle={0}
+              >
+                <RechartsRadialBar
+                  background={{ fill: '#f1f5f9' }}
+                  dataKey="value"
+                  cornerRadius={15}
+                  animationDuration={0}
+                  animationEasing="ease-out"
+                />
+                {showTooltipRadial && (
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      fontSize: '11px',
+                      padding: '8px 12px'
+                    }}
+                  />
+                )}
+                {showLegendRadial && (
+                  <RechartsLegend
+                    wrapperStyle={{ fontSize: '8px', paddingTop: '0px' }}
+                    iconType="circle"
+                    iconSize={6}
+                    layout="horizontal"
+                    align="center"
+                    verticalAlign="bottom"
+                  />
+                )}
+              </RechartsRadialBarChart>
+            </ResponsiveContainer>
+          </div>
+        )
+      }
+      case 'recharts-scatter': {
+        const scatterData = (comp.props.data as Array<{ x: number; y: number; z: number }>) || []
+        const scatterColor = (comp.props.primaryColor as string) || '#8b5cf6'
+        const showLegendScatter = comp.props.showLegend !== false
+        const showTooltipScatter = comp.props.showTooltip !== false
+        const showGridScatter = comp.props.showGrid !== false
+
+        if (!scatterData || scatterData.length === 0) {
+          return (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+              Sem dados
+            </div>
+          )
+        }
+
+        return (
+          <div className="w-full h-full p-1" style={{ minWidth: 100, minHeight: 100 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
+              <RechartsScatterChart margin={{ top: 5, right: 10, bottom: showLegendScatter ? 10 : 5, left: 0 }}>
+                <defs>
+                  <linearGradient id={`scatterGrad-${comp.id}-${scatterColor.replace('#', '')}`} x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor={scatterColor} stopOpacity={1} />
+                    <stop offset="100%" stopColor={scatterColor} stopOpacity={0.6} />
+                  </linearGradient>
+                </defs>
+                {showGridScatter && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />}
+                <XAxis
+                  type="number"
+                  dataKey="x"
+                  name="X"
+                  tick={{ fontSize: 9, fill: '#6b7280' }}
+                  stroke="#e5e7eb"
+                  axisLine={{ stroke: '#e5e7eb' }}
+                  tickLine={false}
+                />
+                <YAxis
+                  type="number"
+                  dataKey="y"
+                  name="Y"
+                  tick={{ fontSize: 9, fill: '#6b7280' }}
+                  stroke="#e5e7eb"
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <ZAxis type="number" dataKey="z" range={[60, 400]} name="Tamanho" />
+                {showTooltipScatter && (
+                  <RechartsTooltip
+                    cursor={{ strokeDasharray: '3 3', stroke: scatterColor }}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      fontSize: '11px',
+                      padding: '8px 12px'
+                    }}
+                  />
+                )}
+                {showLegendScatter && (
+                  <RechartsLegend
+                    wrapperStyle={{ fontSize: '8px', paddingTop: '0px' }}
+                    iconType="circle"
+                    iconSize={6}
+                    verticalAlign="bottom"
+                    align="center"
+                  />
+                )}
+                <RechartsScatter
+                  name="Dados"
+                  data={scatterData}
+                  fill={`url(#scatterGrad-${comp.id}-${scatterColor.replace('#', '')})`}
+                  animationDuration={0}
+                />
+              </RechartsScatterChart>
+            </ResponsiveContainer>
+          </div>
+        )
+      }
+      case 'recharts-composed': {
+        const composedData = (comp.props.data as Array<{ name: string; bar: number; line: number }>) || []
+        const composedBarColor = (comp.props.barColor as string) || '#3b82f6'
+        const composedLineColor = (comp.props.lineColor as string) || '#ef4444'
+        const showLegendComposed = comp.props.showLegend !== false
+        const showTooltipComposed = comp.props.showTooltip !== false
+        const showGridComposed = comp.props.showGrid !== false
+
+        if (!composedData || composedData.length === 0) {
+          return (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+              Sem dados
+            </div>
+          )
+        }
+
+        return (
+          <div className="w-full h-full p-1" style={{ minWidth: 100, minHeight: 100 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
+              <RechartsComposedChart data={composedData} margin={{ top: 5, right: 10, left: -10, bottom: showLegendComposed ? 10 : 5 }}>
+                <defs>
+                  <linearGradient id={`composedBarGrad-${comp.id}-${composedBarColor.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={composedBarColor} stopOpacity={1} />
+                    <stop offset="100%" stopColor={composedBarColor} stopOpacity={0.6} />
+                  </linearGradient>
+                </defs>
+                {showGridComposed && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />}
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 9, fill: '#6b7280' }}
+                  stroke="#e5e7eb"
+                  axisLine={{ stroke: '#e5e7eb' }}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 9, fill: '#6b7280' }}
+                  stroke="#e5e7eb"
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(value) => value.toLocaleString()}
+                />
+                {showTooltipComposed && (
+                  <RechartsTooltip
+                    cursor={{ fill: `${composedBarColor}20` }}
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      fontSize: '11px',
+                      padding: '8px 12px'
+                    }}
+                  />
+                )}
+                {showLegendComposed && (
+                  <RechartsLegend
+                    wrapperStyle={{ fontSize: '8px', paddingTop: '0px' }}
+                    iconSize={8}
+                    verticalAlign="bottom"
+                    align="center"
+                  />
+                )}
+                <RechartsBar
+                  dataKey="bar"
+                  name="Barras"
+                  fill={`url(#composedBarGrad-${comp.id}-${composedBarColor.replace('#', '')})`}
+                  radius={[4, 4, 0, 0]}
+                  animationDuration={0}
+                />
+                <RechartsLine
+                  type="monotone"
+                  dataKey="line"
+                  name="Linha"
+                  stroke={composedLineColor}
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: composedLineColor, stroke: '#fff', strokeWidth: 2 }}
+                  activeDot={{ r: 6 }}
+                  animationDuration={0}
+                />
+              </RechartsComposedChart>
+            </ResponsiveContainer>
+          </div>
+        )
+      }
+      case 'recharts-treemap': {
+        const treemapData = (comp.props.data as Array<{ name: string; size: number; color: string }>) || []
+        const defaultTreemapColors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899']
+        const treemapColors = (comp.props.chartColors as string[]) || defaultTreemapColors
+
+        if (!treemapData || treemapData.length === 0) {
+          return (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+              Sem dados
+            </div>
+          )
+        }
+
+        // Map colors to data
+        const treemapDataWithColors = treemapData.map((item, index) => ({
+          ...item,
+          color: treemapColors[index] || defaultTreemapColors[index % defaultTreemapColors.length]
+        }))
+        return (
+          <div className="w-full h-full p-1" style={{ minWidth: 100, minHeight: 100 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
+              <RechartsTreemap
+                data={treemapDataWithColors}
+                dataKey="size"
+                aspectRatio={4 / 3}
+                stroke="#fff"
+                animationDuration={0}
+                content={({ x, y, width, height, name, color, size, index: itemIndex }: any) => {
+                  const fillColor = color || treemapColors[itemIndex] || '#3b82f6'
+                  return (
+                    <g>
+                      <rect
+                        x={x}
+                        y={y}
+                        width={width}
+                        height={height}
+                        fill={fillColor}
+                        stroke="#fff"
+                        strokeWidth={3}
+                        rx={6}
+                        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
+                      />
+                      {width > 50 && height > 30 && (
+                        <>
+                          <text
+                            x={x + width / 2}
+                            y={y + height / 2 - 6}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fill="#fff"
+                            fontSize={11}
+                            fontWeight="600"
+                          >
+                            {name}
+                          </text>
+                          <text
+                            x={x + width / 2}
+                            y={y + height / 2 + 8}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fill="rgba(255,255,255,0.8)"
+                            fontSize={9}
+                          >
+                            {size?.toLocaleString()}
+                          </text>
+                        </>
+                      )}
+                    </g>
+                  )
+                }}
+              />
+            </ResponsiveContainer>
+          </div>
+        )
+      }
+      case 'recharts-funnel': {
+        const funnelData = (comp.props.data as Array<{ name: string; value: number; fill: string }>) || []
+        const defaultFunnelColors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#ec4899']
+        const funnelColors = (comp.props.chartColors as string[]) || defaultFunnelColors
+        const showTooltipFunnel = comp.props.showTooltip !== false
+
+        if (!funnelData || funnelData.length === 0) {
+          return (
+            <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">
+              Sem dados
+            </div>
+          )
+        }
+
+        // Map colors to data
+        const funnelDataWithColors = funnelData.map((item, index) => ({
+          ...item,
+          fill: funnelColors[index] || defaultFunnelColors[index % defaultFunnelColors.length]
+        }))
+        return (
+          <div className="w-full h-full p-1" style={{ minWidth: 100, minHeight: 100 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
+              <RechartsFunnelChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
+                {showTooltipFunnel && (
+                  <RechartsTooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      fontSize: '11px',
+                      padding: '8px 12px'
+                    }}
+                  />
+                )}
+                <RechartsFunnel
+                  dataKey="value"
+                  data={funnelDataWithColors}
+                  isAnimationActive={false}
+                  animationDuration={0}
+                  animationEasing="ease-out"
+                >
+                  <LabelList
+                    position="right"
+                    fill="#374151"
+                    stroke="none"
+                    fontSize={9}
+                    dataKey="name"
+                    formatter={(value: string) => value}
+                  />
+                  <LabelList
+                    position="center"
+                    fill="#fff"
+                    stroke="none"
+                    fontSize={11}
+                    fontWeight="bold"
+                    dataKey="value"
+                    formatter={(value: number) => value.toLocaleString()}
+                  />
+                </RechartsFunnel>
+              </RechartsFunnelChart>
+            </ResponsiveContainer>
+          </div>
+        )
+      }
+      case 'table':
+        return <CanvasTable props={comp.props} scale={1} />
+      case 'divider':
+        return <div className="w-full h-px bg-slate-200 my-auto" />
+      case 'spacer':
+        return <div className="w-full h-full" />
+      default:
+        return null
+    }
+  }

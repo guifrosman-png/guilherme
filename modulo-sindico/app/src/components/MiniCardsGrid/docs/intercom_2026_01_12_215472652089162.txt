@@ -1,0 +1,344 @@
+Conversation with Intercom
+Started on January 12, 2026 at 05:25 PM Pacific Time (US & Canada) time PST (GMT-0800)
+
+--- January 12, 2026 ---
+
+05:25 PM | Thiago Fiuza: [Attachment: "pago_x_recebido_2025.csv"]
+
+05:25 PM | Fin: Thanks for sharing the file. Could you please explain what you need help with regarding the CSV upload?
+
+05:26 PM | Thiago Fiuza: em uma tabela assim, qual seria um bom sistema de metricas e view by para estrair bons graficos para relatorios? a partir da logica dos nossos graficos, metricas, filtros e view by
+
+05:26 PM | Fin: Para criar relatórios eficazes com seus dados CSV, recomendo estas métricas e visualizações: 
+ Métricas principais: 
+ - Volume de conversas (novas vs. resolvidas) 
+- Tempo de resposta e resolução 
+- Satisfação do cliente (CSAT) 
+- Performance por equipe/agente (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ Tipos de gráfico recomendados: 
+ - Gráfico de colunas: Compare volumes entre períodos ou equipes 
+- Gráfico de linhas: Visualize tendências ao longo do tempo 
+- Tabelas: Liste dados detalhados e ordenáveis 
+- Gráficos combo: Compare duas métricas com eixos Y diferentes (https://www.intercom.com/help/en/articles/8870221-custom-report-chart-types-and-options) 
+ View by (segmentação): 
+ - Por período (dia, semana, mês) 
+- Por canal de atendimento 
+- Por equipe ou agente 
+- Por região/país (https://www.intercom.com/help/en/articles/3008200-holistic-overview-report) 
+ Filtros úteis: 
+ - Intervalo de datas personalizado 
+- Filtros por equipe específica 
+- Filtros por canal 
+- Condições AND/OR para análises mais precisas 
+ Você pode usar gráficos multi-métrica para comparar diferentes indicadores numa única visualização, facilitando a análise de correlações . 
+ [Image "CleanShot+2024-09-11+at+16_55_52%402x.png?expires=1768326300&signature=fc614f6c7c477cae00840c1d7035e4133772019cdd91fd6e8af8451322d243b4&req=dSEgEM99mIBZWfMW1HO4zdAIyLXbePmbsum6dft%2F1t7oPG8%2BxZWm55ULNH1W%0AtLXQsLpovN4E%2FFvTNlU%3D%0A"] [Image "CleanShot+2024-09-11+at+16_56_31%402x.png?expires=1768326300&signature=cfc1e9c81e7634861a2b1850c98a1d2c5db0ab8b4ff2f30591abad82bb5b07df&req=dSEgEM99m4BWUfMW1HO4zUkSxhRsLjDUSB95Xn0h008%2F%2FyaTM%2Bm8xVqCktgQ%0ABvI6B6FuUQUpZrtFMC8%3D%0A"] [Image "CleanShot+2024-09-11+at+16_01_18%402x.png?expires=1768326300&signature=6657a5c641c62a7a80f146bd07f87bb81cc5fa4e4c7daaa9799fc46c6e11ae0b&req=dSEgEMx6lIJYW%2FMW1HO4zWNfaCiDrvsHtaXsxwmPTXupOyr5mrEQIeFJwrKV%0ALjy8rrn%2FHHo%2F77Dllj8%3D%0A"] 
+Sources:
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+Custom report chart types and options (https://www.intercom.com/help/en/articles/8870221-custom-report-chart-types-and-options)
+Intercom reports explained (https://www.intercom.com/help/en/articles/200-intercom-reports-explained)
+Holistic overview report (https://www.intercom.com/help/en/articles/3008200-holistic-overview-report)
+
+05:26 PM | Fin: Era o que você estava procurando?
+
+05:30 PM | Fin: Se ainda precisar de ajuda para definir as métricas e visualizações ideais para seus relatórios, estou à disposição para ajudar. Gostaria de compartilhar mais detalhes sobre o que está tentando analisar ou entender?
+
+06:01 PM | Thiago Fiuza: mas pensando no csv que mandei para vc
+
+06:02 PM | Fin: Não consigo visualizar o conteúdo específico do seu arquivo CSV, mas posso te orientar sobre como criar relatórios eficazes com dados de conversas exportados do Intercom. (https://www.intercom.com/help/en/articles/2046229-export-your-conversations-data) 
+ Para dados de conversas, as métricas mais úteis incluem: 
+ - Volume de conversas (novas vs resolvidas) 
+- Tempo de resposta e resolução 
+- Taxa de satisfação (CSAT) 
+- Performance por equipe ou agente (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ Os filtros mais comuns são: 
+ - Intervalo de datas personalizado 
+- Filtros por equipe específica 
+- Filtros por canal de atendimento 
+- Condições AND/OR para análises mais precisas 
+ Para "view by" (segmentação), recomendo: 
+ - Por período (dia, semana, mês) 
+- Por canal de atendimento 
+- Por equipe ou agente 
+- Por região/país 
+ Que tipo de dados específicos estão no seu CSV - são dados de conversas, usuários, ou outro tipo de informação? 
+ 
+Sources:
+Export your conversations data (https://www.intercom.com/help/en/articles/2046229-export-your-conversations-data)
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+
+06:06 PM | Fin: Se ainda precisar de ajuda para entender como usar os dados do seu CSV para criar relatórios, estou aqui para ajudar. Gostaria de compartilhar mais detalhes sobre o tipo de dados que você está tentando analisar?
+
+--- January 13, 2026 ---
+
+08:51 AM | Thiago Fiuza: no editar um grafico, achima do metrics tem uma data ali, e um compare to
+
+08:52 AM | Fin: Exato! Quando você está editando um gráfico, acima das métricas você vê: 
+ Data: Define o período que será analisado no gráfico - pode ser um intervalo específico ou relativo (como "últimas 4 semanas"). (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ Compare to: É a funcionalidade "Compare to previous period" que permite comparar visualmente uma métrica entre dois períodos diferentes. (https://www.intercom.com/help/en/articles/8870221-custom-report-chart-types-and-options) 
+ Por exemplo, se você está analisando dados das últimas 12 semanas e ativa o "Compare to", o gráfico mostrará tanto os dados das 12 semanas mais recentes quanto os dados das 12 semanas anteriores a essas. 
+ Importante: a comparação de períodos só funciona quando você visualiza por tempo - não funciona quando segmenta por outros atributos. 
+ 
+Sources:
+Custom report chart types and options (https://www.intercom.com/help/en/articles/8870221-custom-report-chart-types-and-options)
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+
+08:52 AM | Fin: Respondeu à sua pergunta?
+
+08:54 AM | Thiago Fiuza: mas o que é isso? é um filtro? 
+ qual a diferença desse filtro para o add filter?
+
+08:54 AM | Fin: Não, o "Compare to" não é um filtro - é uma funcionalidade de comparação de períodos. (https://www.intercom.com/help/en/articles/8870221-custom-report-chart-types-and-options) 
+ Compare to: Permite comparar visualmente uma métrica entre dois períodos diferentes. Por exemplo, se você está analisando as últimas 12 semanas e ativa essa opção, o gráfico mostra tanto os dados das 12 semanas recentes quanto das 12 semanas anteriores. 
+ Add filter: São filtros que definem quais dados serão incluídos no relatório - como filtrar por equipe, canal, ou outras condições específicas. (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ A diferença principal: 
+ - Compare to = mostra os mesmos dados em dois períodos para comparação 
+ - Add filter = define quais dados aparecem no gráfico 
+ Importante: a comparação de períodos só funciona quando você visualiza por tempo, não por outros atributos. 
+ 
+Sources:
+Custom report chart types and options (https://www.intercom.com/help/en/articles/8870221-custom-report-chart-types-and-options)
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+Troubleshooting custom reports (https://www.intercom.com/help/en/articles/4957124-troubleshooting-custom-reports)
+
+08:54 AM | Fin: Era o que você estava procurando?
+
+08:54 AM | Thiago Fiuza: eu digo a data ali em cima
+
+08:55 AM | Fin: Ah, entendi! A data que aparece ali em cima é o seletor de período do gráfico. (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ Essa data define qual período será analisado no seu gráfico - pode ser um intervalo específico (como "1º a 31 de janeiro") ou relativo (como "últimas 4 semanas"). 
+ Se você escolher um período relativo como "últimas 4 semanas", o gráfico sempre mostrará as 4 semanas mais recentes. Se escolher datas específicas, sempre mostrará dados daquelas datas exatas. 
+ É diferente dos filtros porque: 
+ - Data = define o período de tempo analisado 
+- Add filter = define quais dados específicos aparecem (por equipe, canal, etc.) 
+ A data trabalha junto com o "Compare to" para mostrar comparações entre períodos diferentes. (https://www.intercom.com/help/en/articles/8870221-custom-report-chart-types-and-options) 
+ 
+Sources:
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+Custom report chart types and options (https://www.intercom.com/help/en/articles/8870221-custom-report-chart-types-and-options)
+
+08:55 AM | Fin: Isso ajudou a esclarecer?
+
+08:56 AM | Thiago Fiuza: bom o banco de dados tem varias tabelas... 
+ e você tem querys que leem essas tabelas.. 
+ onde se aplica esse seletor de periodo? 
+ como você faz para ter os dados de forma tão rápida?
+Me explique de maneira tecnica
+
+08:56 AM | Fin: O seletor de período funciona aplicando filtros WHERE nas queries SQL que consultam nossas tabelas de dados. (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ Quando você escolhe um período, o sistema: 
+ 1. Aplica timestamp filters: As queries incluem condições WHERE baseadas nos timestamps das tabelas - por exemplo, filtrando conversas onde a primeira mensagem do cliente foi recebida no período selecionado. (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes) 
+ 2. Usa índices otimizados: As tabelas têm índices em campos de data para acelerar as consultas por período. 
+ 3. Cache e pré-agregação: Dados frequentemente consultados são pré-calculados e armazenados em cache para resposta rápida. 
+ 4. Timezone handling: O sistema ajusta automaticamente os timestamps conforme o fuso horário configurado no workspace, garantindo que os dados sejam filtrados corretamente. (https://www.intercom.com/help/en/articles/9071694-intercom-developer-faqs) 
+ 5. Métricas calculadas: Algumas métricas são computadas em tempo real aplicando funções de agregação (SUM, AVG, etc.) nos dados filtrados pelo período. 
+ A velocidade vem da combinação de índices bem estruturados, cache inteligente e queries otimizadas que aplicam os filtros de data diretamente no banco, evitando processar dados desnecessários. 
+ 
+Sources:
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+Reporting metrics & attributes (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes)
+Intercom developer FAQs (https://www.intercom.com/help/en/articles/9071694-intercom-developer-faqs)
+
+08:56 AM | Fin: Isso foi útil?
+
+08:56 AM | Thiago Fiuza: A velocidade vem da combinação de índices bem estruturados, cache inteligente e queries otimizadas que aplicam os filtros de data diretamente no banco, evitando processar dados desnecessários. 
+ pode me explicar mais tecnicamente isso?
+
+08:57 AM | Fin: Tecnicamente, a otimização funciona assim: 
+ Índices estruturados: Campos de timestamp têm índices B-tree que permitem busca logarítmica O(log n) em vez de varredura completa O(n). (https://developers.intercom.com/docs/references/2.13/rest-api/api.intercom.io/conversations/manageconversation) 
+ Query optimization: Usamos operadores AND/OR para combinar filtros e aplicamos paginação (padrão 20, máximo 150 resultados) para limitar processamento. 
+ Cursor-based pagination: Em vez de OFFSET/LIMIT, usamos cursores que mantêm posição sem recalcular resultados anteriores, especialmente eficiente para grandes datasets. (https://www.intercom.com/help/en/articles/9071694-intercom-developer-faqs) 
+ Filtros no banco: Condições WHERE são aplicadas diretamente nas queries SQL - por exemplo, created_at > timestamp AND created_at < timestamp - evitando carregar dados desnecessários na memória. (https://developers.intercom.com/docs/build-an-integration/learn-more/rest-apis/build-your-own-reports) 
+ Agregações otimizadas: Métricas como mediana, percentil e soma são calculadas usando funções nativas do banco, não em código de aplicação. 
+ Isso resulta em queries que processam apenas dados relevantes ao período selecionado, com índices acelerando a busca e paginação controlando o volume de dados transferidos. 
+ 
+Sources:
+Manage a conversation (https://developers.intercom.com/docs/references/2.13/rest-api/api.intercom.io/conversations/manageconversation)
+Creates a conversation (https://developers.intercom.com/docs/references/rest-api/api.intercom.io/conversations/createconversation)
+Build your own reports (https://developers.intercom.com/docs/build-an-integration/learn-more/rest-apis/build-your-own-reports)
+Intercom developer FAQs (https://www.intercom.com/help/en/articles/9071694-intercom-developer-faqs)
+
+08:57 AM | Fin: Era o que você estava procurando?
+
+09:01 AM | Fin: Se ainda precisar de mais detalhes técnicos ou ajuda para entender melhor o funcionamento das queries e otimizações, estou à disposição para ajudar. Gostaria de compartilhar mais sobre o que exatamente deseja aprofundar ou esclarecer?
+
+09:03 AM | Thiago Fiuza: como funciona as querys das metricas?
+
+09:03 AM | Fin: As queries das métricas funcionam através de estruturas JSON que definem filtros e condições específicas. (https://developers.intercom.com/docs/build-an-integration/learn-more/rest-apis/build-your-own-reports) 
+ Estrutura básica: 
+ - Operadores: AND/OR para combinar múltiplas condições 
+- Campos: Como created_at, team_assignee_id, admin_assignee_id 
+- Valores: Timestamps, IDs específicos, ou ranges de dados 
+ Exemplo prático: 
+ {
+ "query": {
+ "operator": "AND",
+ "value": [{
+ "field": "created_at",
+ "operator": ">",
+ "value": "1666414800"
+ }, {
+ "field": "team_assignee_id", 
+ "operator": "=",
+ "value": 12345
+ }]
+ },
+ "pagination": {
+ "per_page": 5
+ }
+} 
+ Agregações: 
+ As métricas podem ser agregadas por média, mediana, percentil, mínimo, máximo ou soma. Por exemplo, para tempo médio de resolução de tickets. (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ Timestamps: 
+ Cada métrica usa um timestamp específico - como "Conversation started at" ou "Action time" - que determina quando os dados são filtrados e calculados. (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes) 
+ As queries aplicam filtros diretamente no banco usando condições WHERE, processando apenas dados relevantes ao período e critérios selecionados. (https://www.intercom.com/help/en/articles/200-intercom-reports-explained) 
+ 
+Sources:
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+Build your own reports (https://developers.intercom.com/docs/build-an-integration/learn-more/rest-apis/build-your-own-reports)
+Reporting metrics & attributes (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes)
+Intercom reports explained (https://www.intercom.com/help/en/articles/200-intercom-reports-explained)
+
+09:03 AM | Fin: Respondeu à sua pergunta?
+
+09:04 AM | Thiago Fiuza: então cada métrica tem uma query>
+
+09:04 AM | Fin: Sim, cada métrica tem sua própria estrutura de query específica. (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ Cada métrica é definida por: 
+ - Dataset específico: As métricas são organizadas em datasets que agrupam métricas relacionadas (https://www.intercom.com/help/en/articles/8825260-reporting-datasets) 
+ - Timestamp único: Cada métrica usa um timestamp específico - como "Conversation started at" ou "Action time" (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes) 
+ - Agregação própria: Podem ser agregadas por média, mediana, percentil, mínimo, máximo ou soma 
+ - Filtros específicos: Cada métrica pode ter filtros próprios além dos filtros gerais do relatório 
+ Por exemplo, "First response time" usa o timestamp "Conversation started at" e calcula o tempo até a primeira resposta do teammate, enquanto "Response time" usa "Reply sent at" e inclui todas as respostas. 
+ Isso permite que cada métrica tenha sua lógica de cálculo otimizada e específica para o que está medindo. 
+ 
+Sources:
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+Reporting metrics & attributes (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes)
+Reporting datasets (https://www.intercom.com/help/en/articles/8825260-reporting-datasets)
+
+09:04 AM | Fin: Isso foi útil?
+
+09:07 AM | Thiago Fiuza: sim, mas a cada metrica nova há uma nova consulta no banco de dados?
+
+09:07 AM | Fin: Não necessariamente. O sistema otimiza as consultas de várias formas: (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ Multi-metric charts: Quando você adiciona múltiplas métricas no mesmo gráfico, elas podem compartilhar a mesma consulta base se usarem o mesmo dataset e timestamp. 
+ Datasets organizados: As métricas são agrupadas em datasets que compartilham estruturas relacionadas, permitindo consultas mais eficientes. (https://www.intercom.com/help/en/articles/8825260-reporting-datasets) 
+ Timestamps específicos: Cada métrica usa um timestamp específico (como "Conversation started at" ou "Action time"), mas métricas com o mesmo timestamp podem ser calculadas na mesma query. (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes) 
+ Filtros compartilhados: Quando métricas usam os mesmos filtros de período e condições, o sistema pode otimizar para reduzir consultas duplicadas. 
+ Então, embora cada métrica tenha sua lógica específica, o sistema é inteligente o suficiente para combinar consultas quando possível, especialmente em gráficos multi-métrica onde há até 20 métricas no mesmo chart. 
+ 
+Sources:
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+Reporting datasets (https://www.intercom.com/help/en/articles/8825260-reporting-datasets)
+Reporting metrics & attributes (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes)
+
+09:07 AM | Fin: Era o que você estava procurando?
+
+09:08 AM | Thiago Fiuza: se você pudesse me explicar passo a passo o processo tecnico, como seria?
+
+09:08 AM | Fin: Aqui está o processo técnico passo a passo: (https://developers.intercom.com/docs/build-an-integration/learn-more/rest-apis/build-your-own-reports) 
+ 1. Definição da Query 
+ - Sistema recebe parâmetros: métrica, período, filtros 
+- Constrói estrutura JSON com operadores AND/OR 
+- Define campos específicos como created_at, team_assignee_id 
+ 2. Processamento do Timestamp 
+ - Cada métrica usa timestamp específico (ex: "Conversation started at") (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes) 
+- Converte período selecionado para UNIX timestamps 
+- Aplica filtros WHERE: created_at > 1666414800 AND created_at < 1673589599 
+ 3. Otimização da Query 
+ - Verifica se múltiplas métricas podem compartilhar mesma consulta base 
+- Aplica índices B-tree nos campos de data 
+- Usa paginação (per_page: 5-150) para controlar volume 
+ 4. Execução no Banco 
+ - Query SQL executa com filtros aplicados diretamente 
+- Processa apenas dados relevantes ao período 
+- Calcula agregações (média, mediana, soma) usando funções nativas 
+ 5. Processamento dos Resultados 
+ - Extrai valores como statistics.first_admin_reply_at 
+- Aplica cálculos específicos da métrica 
+- Retorna dados estruturados para visualização (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ 6. Cache e Otimização 
+ - Armazena resultados frequentes em cache 
+- Usa cursor-based pagination para datasets grandes 
+- Mantém índices otimizados para consultas futuras 
+ Isso garante que cada gráfico seja gerado rapidamente, processando apenas dados necessários. (https://www.intercom.com/help/en/articles/200-intercom-reports-explained) 
+ 
+Sources:
+Build your own reports (https://developers.intercom.com/docs/build-an-integration/learn-more/rest-apis/build-your-own-reports)
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+Reporting metrics & attributes (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes)
+Intercom reports explained (https://www.intercom.com/help/en/articles/200-intercom-reports-explained)
+
+09:08 AM | Fin: Respondeu à sua pergunta?
+
+09:09 AM | Thiago Fiuza: sim, mas primeiro define-se uma data ? é isso? 
+ ai depois faz o que? 
+ ao definir uma data esta se definindo o que tecnincamente?
+
+09:10 AM | Fin: Exato! Primeiro define-se a data, que tecnicamente estabelece os limites temporais da consulta. (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ Ao definir uma data, você está definindo: 
+ Timestamps UNIX: A data é convertida para timestamps UNIX (ex: 1527811200) que definem created_at_after e created_at_before. (https://developers.intercom.com/docs/references/2.7/rest-api/api.intercom.io/models/close_conversation_request) 
+ Filtro WHERE principal: Isso cria a condição WHERE fundamental - todas as queries terão algo como WHERE created_at >= timestamp_inicio AND created_at <= timestamp_fim. (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes) 
+ Depois da data definida: 
+ 1. Sistema identifica qual timestamp específico cada métrica usa ("Conversation started at", "Reply sent at", etc.) 
+2. Aplica os filtros de data nos campos corretos de cada métrica 
+3. Executa as queries otimizadas apenas nos dados desse período 
+4. Calcula agregações (média, soma, etc.) só nos registros filtrados 
+ Timezone handling: O sistema ajusta automaticamente conforme o fuso do workspace, garantindo que os timestamps sejam interpretados corretamente. (https://www.intercom.com/help/en/articles/9071694-intercom-developer-faqs) 
+ Então a data é literalmente o "portão de entrada" - define qual subset dos dados será processado antes de qualquer cálculo de métrica. 
+ 
+Sources:
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+Reporting metrics & attributes (https://www.intercom.com/help/en/articles/7022438-reporting-metrics-attributes)
+Close Conversation Request (https://developers.intercom.com/docs/references/2.7/rest-api/api.intercom.io/models/close_conversation_request)
+Intercom developer FAQs (https://www.intercom.com/help/en/articles/9071694-intercom-developer-faqs)
+
+09:10 AM | Fin: Isso ajudou a esclarecer?
+
+09:14 AM | Fin: Se ainda precisar de ajuda para entender melhor o funcionamento das queries e métricas, estou à disposição para continuar explicando. Gostaria de compartilhar mais detalhes sobre o que deseja aprofundar?
+
+09:14 AM | Thiago Fiuza: interessante e como funciona o adicionar metricas juntas?
+
+09:14 AM | Fin: Quando você adiciona múltiplas métricas juntas, o sistema usa multi-metric charts que otimizam as consultas de forma inteligente. (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ Como funciona tecnicamente: 
+ Consultas compartilhadas: Se as métricas usam o mesmo dataset e timestamp, elas podem compartilhar a mesma consulta base - evitando múltiplas queries desnecessárias. 
+ Filtros independentes: Cada métrica pode ter seus próprios filtros específicos, além dos filtros gerais do gráfico. 
+ Processamento otimizado: O sistema executa uma query principal com os filtros de data/período, depois calcula as diferentes agregações (média, soma, mediana) para cada métrica nos mesmos dados filtrados. 
+ Limitações técnicas: 
+ - Máximo 20 métricas por gráfico 
+- Gráficos de coluna/linha/área precisam ter o mesmo eixo Y 
+- Tabelas suportam qualquer combinação de métricas 
+ Exemplo prático: Se você adiciona "Volume de conversas" e "Tempo médio de resposta" no mesmo período, o sistema faz uma consulta base filtrando por data, depois calcula COUNT(*) para volume e AVG(response_time) para tempo médio nos mesmos registros. 
+ Isso é muito mais eficiente que fazer duas consultas separadas. 
+ 
+Source:
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+
+09:14 AM | Fin: Era o que você estava procurando?
+
+09:16 AM | Thiago Fiuza: e como funciona o view by... e o segment by seguindo essa linha?
+
+09:16 AM | Fin: O "View By" e "Segment By" funcionam como dimensões adicionais nas queries, criando agrupamentos nos dados já filtrados por data. (https://www.intercom.com/help/en/articles/8870221-custom-report-chart-types-and-options) 
+ View By (Agrupar por): 
+ Tecnicamente aplica GROUP BY na query SQL. Por exemplo, se você escolhe "View by Week", a query adiciona GROUP BY WEEK(created_at), criando buckets temporais. (https://www.intercom.com/help/en/articles/8921906-reporting-faqs) 
+ Segment By: 
+ Adiciona uma segunda dimensão de agrupamento. Com "View by Week" + "Segment by Team", a query fica algo como: 
+ GROUP BY WEEK(created_at), team_assignee_id 
+ Comportamento técnico importante: 
+ Cada conversa conta apenas uma vez por período. Se uma conversa tem múltiplas respostas ao longo de vários dias, ela aparece só uma vez quando agrupada por semana, mas aparece em cada dia quando agrupada por dia. 
+ Processamento: 
+ 1. Query base com filtros de data 
+2. Aplica GROUP BY nas dimensões escolhidas 
+3. Calcula agregações (COUNT, AVG, SUM) para cada grupo 
+4. Retorna dados estruturados para visualização em colunas/segmentos 
+ Isso permite visualizar dados em duas dimensões - tempo + atributo específico - mantendo a eficiência da consulta. (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report) 
+ 
+Sources:
+Custom report chart types and options (https://www.intercom.com/help/en/articles/8870221-custom-report-chart-types-and-options)
+Reporting FAQs (https://www.intercom.com/help/en/articles/8921906-reporting-faqs)
+Create a custom report (https://www.intercom.com/help/en/articles/4549035-create-a-custom-report)
+
+09:16 AM | Fin: Respondeu à sua pergunta?
+
+---
+Exported from Intercom on January 13, 2026 at 09:17 AM Pacific Time (US & Canada) time PST (GMT-0800)

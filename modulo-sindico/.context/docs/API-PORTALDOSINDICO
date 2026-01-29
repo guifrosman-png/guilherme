@@ -1,0 +1,100 @@
+curl --location 'https: //expressfoods.mercatus.net.br/api/vendas/listagem?pagina=1&quantidade=1000' \
+--header 'X-Cliente-Id: 19' \
+--header 'X-Produto: mercado-app' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer Qu,TdD6?
+}rQyG\Wja@;;4,BsF4L={
+[h*' \
+--header 'Cookie: PHPSESSID=opj0se08218mgtko7bfinbshjh' \
+--data '{
+        "unidade": 12,
+        "dataInicial": "2025-12-01 00:00:00",
+        "dataFinal": "2025-12-30 23:59:59",
+        "portalSindico": "S"
+    }'
+
+
+{
+        "paginacao": {
+            "qtdTotalRegistros": 71,
+            "qtdTotalPaginas": 1,
+            "qtdPorPagina": 1000,
+            "primeiraPagina": 1,
+            "paginaAnterior": null,
+            "paginaAtual": 1,
+            "paginaProxima": null,
+            "paginaUltima": 1
+        },
+        "registros": [
+            {
+                "id": "2225334",
+                "cupom": "402474455",
+                "clienteId": "3770",
+                "dataInicio": "2026-01-26 04:15:36",
+                "dataFim": "2026-01-26 04:16:28",
+                "dataEfetivacao": "2026-01-26 04:16:11",
+                "email": null,
+                "nfceNumero": "00039307",
+                "nfceSerie": "011",
+                "nfceDocumento": "38797239828",
+                "nfceChave": "35260143060772000121650110000393071024744550",
+                "nfceSituacao": "1",
+                "nfceSituacaoNome": "Autorizado",
+                "nfceSituacaoCodigo": "100",
+                "valorTotal": 7.99,
+                "valorDesconto": 0,
+                "valorAcrescimo": 0,
+                "valorLiquido": 7.99,
+                "valorTroco": 0,
+                "cancelado": false,
+                "unidadeId": "12",
+                "unidadeCodigo": "12",
+                "unidadeNome": "FLEX SACOMA",
+                "pdvId": "8",
+                "pdvCodigo": "1",
+                "produtos": [
+                    {
+                        "id": "610",
+                        "categoriaId": "1693",
+                        "ean": "07891962051338",
+                        "codigo": "0109095-0",
+                        "descricaoReduzida": "PÃO DE FORMA TRADICIONAL VISCONTI PACOTE 400G",
+                        "descricaoComercial": "PÃO DE FORMA TRADICIONAL VISCONTI PACOTE 400G",
+                        "sequencia": "1",
+                        "quantidade": 1,
+                        "cancelado": false,
+                        "valorVarejo": 9.69,
+                        "valorUnitario": 7.99,
+                        "valorTotal": 7.99,
+                        "valorDesconto": 0,
+                        "valorAcrescimo": 0,
+                        "valorLiquido": 7.99,
+                        "unidadeMedidaId": "34",
+                        "unidadeMedidaCodigo": "Un",
+                        "unidadeMedidaDescricao": "Unidade",
+                        "tipoPrecoId": "4",
+                        "tipoPrecoCodigo": "4",
+                        "tipoPrecoDescricao": "Preço Oferta"
+                    }
+                ],
+                "finalizadoras": [
+                    {
+                        "id": "6",
+                        "codigo": "104",
+                        "descricao": "DÉBITO",
+                        "formaPagamentoCodigo": "3",
+                        "formaPagamentoDescricao": "Cartão Debito",
+                        "clienteId": null,
+                        "convenioId": "12",
+                        "valorTroco": 0,
+                        "valorPago": 7.99,
+                        "cupomDescontoId": null,
+                        "bandeiraId": "1",
+                        "bandeiraCodigo": "20001",
+                        "bandeiraDescricao": "Débito - Mastercard",
+                        "tipoOperadoraCartaoId": "16",
+                        "tipoOperadoraCartaoCodigo": null,
+                        "tipoOperadoraCartaoDescricao": "STONE"
+                    }
+                ]
+            },

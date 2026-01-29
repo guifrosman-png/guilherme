@@ -1,0 +1,3 @@
+id,unidade_id,data_competencia,data_processamento,valor_bruto_vendas,valor_comissao,valor_liquido_repasse,status,arquivo_comprovante
+101,12,2026-01-01,2026-01-28 10:00:00,1830.00,5.0,91.50,ABERTO,
+98,12,2025-12-01,2026-01-05 10:00:00,12500.00,5.0,625.00,PAGO,comprovante_dez_25.pdf
