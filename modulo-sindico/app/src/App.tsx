@@ -241,17 +241,8 @@ function AppContent() {
               }
         `}>
               <div className="w-full h-full">
-                {currentPage === 'kanban' ? (
-                  <SalesView />
-                ) : currentPage === 'results' ? (
-                  <div className="h-[calc(100vh-140px)]">
-                    <ReportsView />
-                  </div>
-                ) : currentPage === 'charts' ? (
-                  <ChartLibrariesPage />
-                ) : currentPage === 'support' ? (
-                  <UnitSupportTab />
-                ) : currentPage === 'home' ? (
+                {/* 1. DASHBOARD HOME */}
+                <div className={clsx("w-full h-full", currentPage !== 'home' && "hidden")}>
                   <MiniCardsGrid
                     key="dashboard-sindico"
                     variant="flat"
@@ -328,11 +319,29 @@ function AppContent() {
                       </div>
                     }
                   />
-                ) : (
-                  <div className="bg-white/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl shadow-black/10 p-6">
-                    {/* Placeholder Content */}
+                </div>
+
+                {/* 2. VENDAS (INBOX) - Mantenho montado para persistência */}
+                <div className={clsx("w-full h-full", currentPage !== 'kanban' && "hidden")}>
+                  <SalesView />
+                </div>
+
+                {/* 3. FECHAMENTOS (REPORTS) */}
+                <div className={clsx("w-full h-full", currentPage !== 'results' && "hidden")}>
+                  <div className="h-[calc(100vh-140px)]">
+                    <ReportsView />
                   </div>
-                )}
+                </div>
+
+                {/* 4. SUPORTE */}
+                <div className={clsx("w-full h-full", currentPage !== 'support' && "hidden")}>
+                  <UnitSupportTab />
+                </div>
+
+                {/* 5. CHARTS (SHOWCASE) */}
+                <div className={clsx("w-full h-full", currentPage !== 'charts' && "hidden")}>
+                  <ChartLibrariesPage />
+                </div>
               </div>
             </main>
 

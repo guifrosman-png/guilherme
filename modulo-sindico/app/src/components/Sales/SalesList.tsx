@@ -1,11 +1,9 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Search,
     Calendar,
     ShoppingBag,
     TrendingUp,
-    CheckCircle2,
     AlertCircle,
     Eye,
     EyeOff,
@@ -13,13 +11,14 @@ import {
     ChevronLeft,
     ChevronRight,
     ChevronsLeft,
-    ChevronsRight
+    ChevronsRight,
+    Plus
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { clsx } from 'clsx';
 import { mercatusService } from '../../services/mercatusService';
 import { MercatusSale } from '../../types/mercatus';
-import { useSindicoData } from '../MiniCardsGrid/context/SindicoDataContext';
 
 // --- TIPOS ---
 type SalesStatus = 'concluido' | 'cancelado';
@@ -29,10 +28,12 @@ interface SaleDisplay {
     id: string;
     originalId: string;
     date: string;
+    time: string; // Adicionado para facilitar filtro de turnos
     itemsCount: number;
     totalValue: number;
     status: SalesStatus;
     ticketNumber: string; // Ex: Cupom 123
+    raw: MercatusSale; // Guardar dado bruto
 }
 
 // Configuração visual simples
@@ -42,16 +43,22 @@ const STATUS_CONFIG: Record<SalesStatus, { color: string; border: string }> = {
 };
 
 // Função para adaptar dados da API para o formato de exibição
-const adaptSaleToDisplay = (apiSale: any): SaleDisplay => {
+const adaptSaleToDisplay = (apiSale: MercatusSale): SaleDisplay => {
     const totalItems = apiSale.produtos?.reduce((acc: number, curr: any) => acc + curr.quantidade, 0) || 0;
+
+    // apiSale.dataInicio format: "2024-03-20 14:30:00"
+    const [datePart, timePart] = (apiSale.dataInicio || "").split(' ');
+
     return {
         id: apiSale.id,
         originalId: apiSale.id,
-        date: apiSale.dataEfetivacao || apiSale.dataInicio,
+        date: datePart, // YYYY-MM-DD
+        time: timePart || "00:00:00",
         ticketNumber: apiSale.cupom || apiSale.id,
         totalValue: apiSale.valorTotal || 0,
         itemsCount: totalItems,
-        status: apiSale.cancelado ? 'cancelado' : 'concluido'
+        status: (apiSale as any).cancelado ? 'cancelado' : 'concluido',
+        raw: apiSale
     };
 };
 
@@ -105,7 +112,7 @@ const SalesListCard = ({ sale, onClick }: { sale: SaleDisplay; onClick?: () => v
                 {/* Colunas */}
                 <div className="flex-1 grid grid-cols-12 gap-4 items-center">
 
-                    {/* Protocolo */}
+                    {/* N. Vendas */}
                     <div className="col-span-3">
                         <span className="text-xs font-mono font-semibold text-gray-900">#{sale.ticketNumber}</span>
                     </div>
@@ -115,16 +122,16 @@ const SalesListCard = ({ sale, onClick }: { sale: SaleDisplay; onClick?: () => v
                         <div className="flex items-center gap-2">
                             <Calendar className="w-3.5 h-3.5 text-gray-400" />
                             <span className="text-sm font-medium text-gray-700">
-                                {sale.date ? new Date(sale.date).toLocaleDateString() : '-'}
+                                {sale.date ? sale.date.split('-').reverse().join('/') : '-'}
                             </span>
                         </div>
                     </div>
 
                     {/* Itens */}
                     <div className="col-span-3">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 text-gray-600">
                             <ShoppingBag className="w-3.5 h-3.5 text-gray-400" />
-                            <span className="text-sm text-gray-600">{sale.itemsCount} itens</span>
+                            <span className="text-sm">{sale.itemsCount} itens</span>
                         </div>
                     </div>
 
@@ -143,14 +150,19 @@ const SalesListCard = ({ sale, onClick }: { sale: SaleDisplay; onClick?: () => v
 
 
 // --- COMPONENTE PRINCIPAL ---
-export function SalesList({ onSelectSale }: { onSelectSale?: (id: string, sale: any) => void }) {
+interface SalesListProps {
+    onSelectSale?: (id: string, sale: any) => void;
+    activeFilter?: string; // Filtro vindo da sidebar
+    onCountsChange?: (counts: any) => void; // Notificar pai sobre os contadores
+}
+
+export function SalesList({ onSelectSale, activeFilter = 'todas', onCountsChange }: SalesListProps) {
     const [showKPIs, setShowKPIs] = useState(true);
-    const [activeTab, setActiveTab] = useState('todas');
     const [searchTerm, setSearchTerm] = useState('');
 
     // Estados de Dados e Controle
-    const [sales, setSales] = useState<SaleDisplay[]>([]);
-    const [rawSales, setRawSales] = useState<MercatusSale[]>([]); // Guarda os dados originais para detalhes
+    const [sales, setSales] = useState<SaleDisplay[]>([]); // Vendas da página atual
+    const [allSalesForCounting, setAllSalesForCounting] = useState<SaleDisplay[]>([]); // Todas as vendas para o Inbox
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -159,47 +171,146 @@ export function SalesList({ onSelectSale }: { onSelectSale?: (id: string, sale: 
     const [totalPages, setTotalPages] = useState(1);
     const LIMIT = 50;
 
-    // --- CONTEXTO DO SÍNDICO (Dados já carregados pelo Dashboard) ---
-    let contextData: any = null;
-    try {
-        const ctx = useSindicoData();
-        contextData = ctx.data;
-    } catch (e) {
-        // Fora do provider, fallback para API direta
-    }
+    // Ref para evitar carregamento duplicado
+    const hasLoadedRef = React.useRef(false);
 
-    // --- INICIALIZAÇÃO COM DADOS DO CONTEXTO ---
-    useEffect(() => {
-        // Se o contexto já tem dados de vendas, usar eles imediatamente
-        if (contextData && contextData.registrosVendas && contextData.registrosVendas.length > 0 && !contextData.loading) {
-            const adaptedSales = contextData.registrosVendas.map(adaptSaleToDisplay);
-            setSales(adaptedSales);
-            setRawSales(contextData.registrosVendas);
-            setTotalPages(Math.ceil(contextData.registrosVendas.length / LIMIT));
-            setLoading(false);
-        } else if (contextData && contextData.loading) {
-            // Contexto ainda carregando, aguardar
-            setLoading(true);
-        } else {
-            // Sem dados no contexto, buscar via API
-            fetchSalesData(1);
+    // --- CÁLCULO DE CONTADORES E FILTRAGEM ---
+    const { filteredSales, counts, kpiLabels, filterTotals } = useMemo(() => {
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+        // 1. Calcular contadores
+        const stats = {
+            todas: allSalesForCounting.length,
+            hoje: 0,
+            ontem: 0,
+            mes: allSalesForCounting.length,
+            manha: 0,
+            tarde: 0,
+            noite: 0
+        };
+
+        allSalesForCounting.forEach(sale => {
+            const hour = parseInt(sale.time.split(':')[0]);
+            if (sale.date === todayStr) stats.hoje++;
+            else if (sale.date === yesterdayStr) stats.ontem++;
+
+            if (hour >= 0 && hour < 12) stats.manha++;
+            else if (hour >= 12 && hour < 18) stats.tarde++;
+            else if (hour >= 18 && hour < 24) stats.noite++;
+        });
+
+        // 2. Definir a Base de Dados para os Totais (Sempre a base completa do filtro)
+        let fullFilteredList = allSalesForCounting;
+        let labels = {
+            title: "Faturamento Total",
+            subtitle: `Todas as vendas de ${todayStr.split('-')[1]}/${todayStr.split('-')[0]}`,
+            qtyTitle: "Vendas Totais",
+            qtySubtitle: "Volume total de transações"
+        };
+
+        if (activeFilter === 'hoje') {
+            fullFilteredList = allSalesForCounting.filter(s => s.date === todayStr);
+            labels = {
+                title: "Total de Hoje",
+                subtitle: `Vendas do dia ${todayStr.split('-').reverse().join('/')}`,
+                qtyTitle: "Qtd. Hoje",
+                qtySubtitle: "Total de transações hoje"
+            };
+        } else if (activeFilter === 'ontem') {
+            fullFilteredList = allSalesForCounting.filter(s => s.date === yesterdayStr);
+            labels = {
+                title: "Total de Ontem",
+                subtitle: `Vendas de ${yesterdayStr.split('-').reverse().join('/')}`,
+                qtyTitle: "Qtd. Ontem",
+                qtySubtitle: "Total de transações ontem"
+            };
+        } else if (activeFilter === 'este mes') {
+            fullFilteredList = allSalesForCounting;
+            labels = {
+                title: "Total do Mês",
+                subtitle: "Vendas acumuladas mensais",
+                qtyTitle: "Qtd. Mês",
+                qtySubtitle: "Volume total mensal"
+            };
+        } else if (activeFilter.startsWith('shift-')) {
+            const shift = activeFilter.replace('shift-', '');
+            const shiftName = shift === 'manha' ? 'Manhã' : shift === 'tarde' ? 'Tarde' : 'Noite';
+            fullFilteredList = allSalesForCounting.filter(s => {
+                const hour = parseInt(s.time.split(':')[0]);
+                if (shift === 'manha') return hour >= 0 && hour < 12;
+                if (shift === 'tarde') return hour >= 12 && hour < 18;
+                if (shift === 'noite') return hour >= 18 && hour < 24;
+                return false;
+            });
+            labels = {
+                title: `Total Caixa ${shiftName}`,
+                subtitle: `Vendas globais no turno da ${shiftName.toLowerCase()}`,
+                qtyTitle: `Qtd. ${shiftName}`,
+                qtySubtitle: "Transações acumuladas no turno"
+            };
         }
-    }, [contextData?.registrosVendas, contextData?.loading]);
 
-    // --- BUSCA DE DADOS (Fallback via API) ---
+        // 3. Aplicar busca se houver
+        if (searchTerm) {
+            fullFilteredList = fullFilteredList.filter(s =>
+                s.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                s.totalValue.toString().includes(searchTerm)
+            );
+        }
+
+        // 4. Definir o que mostrar na LISTA (Se for 'todas', mantemos a paginação das 50 para performance)
+        const listToShow = activeFilter === 'todas' && !searchTerm ? sales : fullFilteredList;
+
+        // 5. Calcular valores dos KPIs (Sempre baseados na lista completa filtrada)
+        const totalRevenue = fullFilteredList.reduce((acc, curr) => acc + curr.totalValue, 0);
+        const totalCount = fullFilteredList.length;
+
+        return {
+            filteredSales: listToShow,
+            counts: stats,
+            kpiLabels: labels,
+            filterTotals: { revenue: totalRevenue, count: totalCount }
+        };
+    }, [allSalesForCounting, sales, activeFilter, searchTerm, page]);
+
+    // Notificar pai sobre mudanças nos contadores
+    useEffect(() => {
+        if (onCountsChange && allSalesForCounting.length > 0) {
+            onCountsChange(counts);
+        }
+    }, [counts, onCountsChange, allSalesForCounting.length]);
+
+    // --- INICIALIZAÇÃO ---
+    React.useEffect(() => {
+        if (hasLoadedRef.current) return;
+        hasLoadedRef.current = true;
+
+        const init = async () => {
+            await fetchSalesData(1); // Carrega primeira página
+            fetchAllSalesForInbox(); // Carrega tudo para o Inbox em background
+        };
+
+        if ('requestIdleCallback' in window) {
+            (window as any).requestIdleCallback(init, { timeout: 500 });
+        } else {
+            init();
+        }
+    }, []);
+
+    // --- BUSCA DE DADOS DA PÁGINA ---
     const fetchSalesData = async (pageNum: number) => {
         setLoading(true);
         setError(null);
         try {
-            const now = new Date();
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            const startDate = startOfMonth.toISOString().slice(0, 19).replace('T', ' ');
-            const endDate = now.toISOString().slice(0, 19).replace('T', ' ');
-
             const data = await mercatusService.getSales({
                 unidadeId: 12,
-                dataInicial: startDate,
-                dataFinal: endDate,
+                dataInicial: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 19).replace('T', ' '),
+                dataFinal: new Date().toISOString().slice(0, 19).replace('T', ' '),
                 portalSindico: 'S',
                 pagina: pageNum,
                 quantidade: LIMIT
@@ -208,12 +319,12 @@ export function SalesList({ onSelectSale }: { onSelectSale?: (id: string, sale: 
             const newRawSales = data.registros || [];
             const newAdaptedSales: SaleDisplay[] = newRawSales.map(adaptSaleToDisplay);
 
-            setRawSales(newRawSales);
-            setSales(newAdaptedSales);
-
-            if (data.paginacao) {
-                setTotalPages(data.paginacao.qtdTotalPaginas || 1);
-            }
+            React.startTransition(() => {
+                setSales(newAdaptedSales);
+                if (data.paginacao) {
+                    setTotalPages(data.paginacao.qtdTotalPaginas || 1);
+                }
+            });
 
         } catch (err) {
             console.error(err);
@@ -223,7 +334,31 @@ export function SalesList({ onSelectSale }: { onSelectSale?: (id: string, sale: 
         }
     };
 
-    // 2. Mudança de Página (usa API direta para paginação)
+    // --- BUSCA GLOBAL (SIDEBAR) ---
+    const fetchAllSalesForInbox = async () => {
+        try {
+            // Buscamos um número maior (ou todas do mês) apenas para os contadores e filtros de turno
+            const data = await mercatusService.getSales({
+                unidadeId: 12,
+                dataInicial: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 19).replace('T', ' '),
+                dataFinal: new Date().toISOString().slice(0, 19).replace('T', ' '),
+                portalSindico: 'S',
+                pagina: 1,
+                quantidade: 1000 // Aumentamos para pegar o volume real do mês
+            });
+
+            const allRaw = data.registros || [];
+            const allAdapted = allRaw.map(adaptSaleToDisplay);
+
+            React.startTransition(() => {
+                setAllSalesForCounting(allAdapted);
+            });
+        } catch (e) {
+            console.warn("Erro ao buscar total de vendas para Inbox:", e);
+        }
+    };
+
+    // 2. Mudança de Página
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setPage(newPage);
@@ -231,15 +366,9 @@ export function SalesList({ onSelectSale }: { onSelectSale?: (id: string, sale: 
         }
     };
 
-    // --- CÁLCULOS TOTAIS ---
-    const totalRevenue = sales.reduce((acc, curr) => acc + curr.totalValue, 0);
-    const totalCount = sales.length; // Quantidade carregada
-
-    // --- FILTRAGEM LOCA ---
-    const filteredSales = sales.filter(s => {
-        const matchesSearch = s.ticketNumber.includes(searchTerm) || s.totalValue.toString().includes(searchTerm);
-        return matchesSearch;
-    });
+    // --- CÁLCULOS FINAIS PARA DISPLAY ---
+    const totalRevenueDisplay = filterTotals.revenue;
+    const totalCountDisplay = filterTotals.count;
 
     return (
         <div className="space-y-6 pb-20">
@@ -247,7 +376,7 @@ export function SalesList({ onSelectSale }: { onSelectSale?: (id: string, sale: 
             {/* 1. SEÇÃO DE MÉTRICAS */}
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-gray-700">Visão Geral (Página Atual)</h2>
+                    <h2 className="text-sm font-semibold text-gray-700">Visão Geral</h2>
                     <button
                         onClick={() => setShowKPIs(!showKPIs)}
                         className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -259,16 +388,16 @@ export function SalesList({ onSelectSale }: { onSelectSale?: (id: string, sale: 
                 {showKPIs && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <KPICard
-                            title="Total da Página"
-                            value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalRevenue)}
-                            subtitle={`Vendas da página ${page}`}
+                            title={kpiLabels.title}
+                            value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalRevenueDisplay)}
+                            subtitle={kpiLabels.subtitle}
                             icon={TrendingUp}
                             variant="default"
                         />
                         <KPICard
-                            title="Qtd. Página"
-                            value={totalCount}
-                            subtitle="Transações nesta página"
+                            title={kpiLabels.qtyTitle}
+                            value={totalCountDisplay}
+                            subtitle={kpiLabels.qtySubtitle}
                             icon={ShoppingBag}
                             variant="muted"
                         />
@@ -287,27 +416,6 @@ export function SalesList({ onSelectSale }: { onSelectSale?: (id: string, sale: 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                </div>
-
-                {/* Pílulas de Filtro (Tabs) */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-                    {['Todas', 'Hoje', 'Ontem', 'Este Mês'].map((tab) => {
-                        const isActive = activeTab === tab.toLowerCase();
-                        return (
-                            <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab.toLowerCase())}
-                                className={clsx(
-                                    "px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border",
-                                    isActive
-                                        ? "bg-[#525a52]/10 text-[#525a52] border-[#525a52]/20"
-                                        : "bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100"
-                                )}
-                            >
-                                {tab}
-                            </button>
-                        );
-                    })}
                 </div>
             </div>
 
@@ -362,12 +470,14 @@ export function SalesList({ onSelectSale }: { onSelectSale?: (id: string, sale: 
             )}
 
             {/* 4. HEADER DA TABELA */}
-            <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 flex items-center gap-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 flex items-center gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                 <div className="w-5" />
-                <div className="col-span-3 w-24">Protocolo</div>
-                <div className="col-span-3 flex-1">Data</div>
-                <div className="col-span-3 w-32">Itens</div>
-                <div className="col-span-3 w-32 text-right">Valor Total</div>
+                <div className="flex-1 grid grid-cols-12 gap-4 items-center">
+                    <div className="col-span-3">N. VENDAS</div>
+                    <div className="col-span-3">DATA</div>
+                    <div className="col-span-3">ITENS</div>
+                    <div className="col-span-3 text-right">VALOR TOTAL</div>
+                </div>
             </div>
 
             {/* 4. LISTA REAL */}
@@ -393,9 +503,8 @@ export function SalesList({ onSelectSale }: { onSelectSale?: (id: string, sale: 
                                 key={sale.id}
                                 sale={sale}
                                 onClick={() => {
-                                    const originalData = rawSales.find(r => r.id === sale.originalId);
-                                    if (originalData && onSelectSale) {
-                                        onSelectSale(originalData.id, originalData);
+                                    if (onSelectSale) {
+                                        onSelectSale(sale.id, sale.raw);
                                     }
                                 }}
                             />
@@ -411,6 +520,12 @@ export function SalesList({ onSelectSale }: { onSelectSale?: (id: string, sale: 
                 </div>
             )}
 
+            {/* Botão Flutuante de Adicionar */}
+            <Button
+                className="absolute bottom-4 left-4 z-20 h-12 w-12 rounded-full bg-[#525a52] hover:bg-[#525a52]/90 text-white shadow-lg border-2 border-white transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center p-0"
+            >
+                <Plus className="h-6 w-6" />
+            </Button>
         </div>
     );
 }

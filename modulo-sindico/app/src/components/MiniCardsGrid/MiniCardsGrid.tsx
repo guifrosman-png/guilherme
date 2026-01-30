@@ -328,19 +328,16 @@ export function MiniCardsGrid({
   // Determinar se deve salvar automaticamente
   const shouldAutoSave = autoSave ?? (dashboardId !== undefined)
 
-  // Carregar métricas do localStorage (se dashboardId definido) ou usar initialMetrics
-  const getInitialMetrics = (): MetricaAtiva[] => {
-    if (dashboardId) {
-      const saved = loadDashboard(dashboardId)
-      if (saved && saved.length > 0) {
-        return saved
-      }
-    }
-    return initialMetrics
-  }
+  // ===== OTIMIZAÇÃO: Carregar dados de forma lazy =====
+  // Usar refs para armazenar dados carregados sem bloquear
+  const initialLoadDoneRef = useRef(false)
 
-  // Estados principais
-  const [metricasAtivas, setMetricasAtivas] = useState<MetricaAtiva[]>(getInitialMetrics)
+  // Estados principais - iniciar com valores mínimos para renderização rápida
+  const [metricasAtivas, setMetricasAtivas] = useState<MetricaAtiva[]>(() => {
+    // Carregamento lazy - usar initialMetrics por padrão
+    // Os dados do localStorage serão carregados em useEffect
+    return initialMetrics
+  })
   const [showMetricasModal, setShowMetricasModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -366,18 +363,48 @@ export function MiniCardsGrid({
   const [explorarCardId, setExplorarCardId] = useState<string | null>(null)
   const [isCreatingNewCard, setIsCreatingNewCard] = useState(false)
 
-  // Estado para cards personalizados criados pelo usuário
-  // Carrega cards salvos do localStorage se dashboardId estiver definido
-  const getInitialCustomCards = (): MetricaConfig[] => {
-    if (dashboardId) {
-      return loadCustomCards(dashboardId)
-    }
-    return []
-  }
-  const [customCards, setCustomCards] = useState<MetricaConfig[]>(getInitialCustomCards)
+  // Estado para cards personalizados - iniciar vazio
+  const [customCards, setCustomCards] = useState<MetricaConfig[]>([])
 
   // Estado para armazenar modificações em cards padrão (persistência)
   const [modifiedStandardCards, setModifiedStandardCards] = useState<Record<string, MetricaConfig>>({})
+
+  // ===== CARREGAR DADOS DO LOCALSTORAGE DE FORMA ASSÍNCRONA =====
+  useEffect(() => {
+    if (initialLoadDoneRef.current || !dashboardId) return
+    initialLoadDoneRef.current = true
+
+    // Usar requestIdleCallback para não bloquear a UI
+    const loadSavedData = () => {
+      try {
+        // Carregar métricas salvas
+        const saved = loadDashboard(dashboardId)
+        if (saved && saved.length > 0) {
+          // Usar startTransition para atualização não-bloqueante
+          React.startTransition(() => {
+            setMetricasAtivas(saved)
+          })
+        }
+
+        // Carregar custom cards
+        const savedCustom = loadCustomCards(dashboardId)
+        if (savedCustom && savedCustom.length > 0) {
+          React.startTransition(() => {
+            setCustomCards(savedCustom)
+          })
+        }
+      } catch (e) {
+        console.warn('Erro ao carregar dados salvos:', e)
+      }
+    }
+
+    // Adiar carregamento para quando a UI estiver ociosa
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(loadSavedData, { timeout: 500 })
+    } else {
+      setTimeout(loadSavedData, 100)
+    }
+  }, [dashboardId, initialMetrics])
 
   // Combinar métricas disponíveis com cards personalizados
   const allMetrics = useMemo(() => {
@@ -399,13 +426,21 @@ export function MiniCardsGrid({
 
   const gridRef = useRef<HTMLDivElement>(null)
 
-  // Notificar mudanças e auto-save
+  // Notificar mudanças e auto-save (com debounce implícito via requestIdleCallback)
   useEffect(() => {
     onMetricsChange?.(metricasAtivas)
 
-    // Auto-save no localStorage se habilitado
+    // Auto-save no localStorage se habilitado (de forma assíncrona)
     if (shouldAutoSave && dashboardId) {
-      saveDashboard(dashboardId, metricasAtivas)
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(() => {
+          saveDashboard(dashboardId, metricasAtivas)
+        }, { timeout: 1000 })
+      } else {
+        setTimeout(() => {
+          saveDashboard(dashboardId, metricasAtivas)
+        }, 100)
+      }
     }
   }, [metricasAtivas, onMetricsChange, shouldAutoSave, dashboardId])
 
@@ -416,10 +451,18 @@ export function MiniCardsGrid({
     return () => window.removeEventListener('open-card-creator', handleOpenCreator)
   }, [])
 
-  // Auto-save de custom cards quando mudam
+  // Auto-save de custom cards quando mudam (de forma assíncrona)
   useEffect(() => {
     if (shouldAutoSave && dashboardId && customCards.length > 0) {
-      saveCustomCards(dashboardId, customCards)
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(() => {
+          saveCustomCards(dashboardId, customCards)
+        }, { timeout: 1000 })
+      } else {
+        setTimeout(() => {
+          saveCustomCards(dashboardId, customCards)
+        }, 100)
+      }
     }
   }, [customCards, shouldAutoSave, dashboardId])
 
