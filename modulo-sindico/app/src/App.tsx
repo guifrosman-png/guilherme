@@ -25,10 +25,14 @@ import { UnitSupportTab } from './components/UnitSupport/UnitSupportTab';
 import { useSindicoDashboard } from './hooks/useSindicoDashboard';
 import { MetricaConfig } from './components/MiniCardsGrid/types';
 
+import { ViewModeProvider, useViewMode } from './contexts/ViewModeContext';
+
 export default function App() {
   return (
     <SidebarProvider>
-      <AppContent />
+      <ViewModeProvider>
+        <AppContent />
+      </ViewModeProvider>
     </SidebarProvider>
   );
 }
@@ -44,7 +48,7 @@ const SINDICO_METRICS_CONFIG: MetricaConfig[] = [
     borderColor: 'border-green-500',
     categoria: 'financeiro',
     context: 'sindico',
-    getValue: (data) => 0, // Fallback (usado apenas em modo legado)
+    getValue: (_data) => 0, // Fallback (usado apenas em modo legado)
     canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'green' },
     canvasComponents: [{
       id: 'kpi-fat', type: 'kpi-unified', x: 0, y: 0, width: 1, height: 1,
@@ -64,7 +68,7 @@ const SINDICO_METRICS_CONFIG: MetricaConfig[] = [
     borderColor: 'border-blue-500',
     categoria: 'financeiro',
     context: 'sindico',
-    getValue: (data) => 0,
+    getValue: (_data) => 0,
     canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'blue' },
     canvasComponents: [{
       id: 'kpi-rep', type: 'kpi-unified', x: 0, y: 0, width: 1, height: 1,
@@ -84,7 +88,7 @@ const SINDICO_METRICS_CONFIG: MetricaConfig[] = [
     borderColor: 'border-purple-500',
     categoria: 'financeiro',
     context: 'sindico',
-    getValue: (data) => 0,
+    getValue: (_data) => 0,
     canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'purple' },
     canvasComponents: [{
       id: 'kpi-qtd', type: 'kpi-unified', x: 0, y: 0, width: 1, height: 1,
@@ -106,6 +110,7 @@ function AppContent() {
   const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
   const [newReportModalOpen, setNewReportModalOpen] = useState(false);
   const [reportCreationModule, setReportCreationModule] = useState<string>('all');
+  const { isSindicoView } = useViewMode();
 
   // Dashboard filters
   const [dashboardSearchQuery, setDashboardSearchQuery] = useState('');
@@ -125,9 +130,9 @@ function AppContent() {
       if (filter.field === 'Data' || filter.field === 'data') {
         const filterDate = filter.value ? new Date(filter.value as string) : undefined;
 
-        if (filter.operator === 'after' || filter.operator === 'greater_than') {
+        if (filter.operator === 'after') {
           dataInicial = filterDate;
-        } else if (filter.operator === 'before' || filter.operator === 'less_than') {
+        } else if (filter.operator === 'before') {
           dataFinal = filterDate;
         } else if (filter.operator === 'between' && filter.valueTo) {
           dataInicial = filterDate;
@@ -248,6 +253,7 @@ function AppContent() {
                     variant="flat"
                     dashboardId="sindico-home"
                     contextFilter="all"
+                    readOnly={isSindicoView}
                     filterContent={
                       <FilterCapsules
                         filters={dashboardFilters}
@@ -260,12 +266,7 @@ function AppContent() {
                       { id: 'sind-repasse', size: '2x1', row: 0, col: 2 },
                       { id: 'sind-vendas-qtd', size: '2x1', row: 0, col: 4 },
                     ]}
-                    data={{
-                      faturamentoBruto: sindicoMetrics.faturamentoBruto,
-                      repasseLiquido: sindicoMetrics.repasseLiquido,
-                      vendasQtd: sindicoMetrics.vendasQtd,
-                      ...sindicoMetrics
-                    }}
+                    data={sindicoMetrics}
                     onPanelToggle={setCardsPanelOpen}
                     toolbarContent={
                       <div className="flex items-center justify-between w-full">
@@ -309,12 +310,14 @@ function AppContent() {
                             )}
                           </div>
 
-                          <button
-                            className="flex items-center gap-2 px-3 py-2 text-sm font-medium border border-gray-200 rounded-lg text-gray-600 bg-white hover:bg-gray-50 transition-colors"
-                          >
-                            <Settings2 className="w-4 h-4" />
-                            <span>Visualização</span>
-                          </button>
+                          {!isSindicoView && (
+                            <button
+                              className="flex items-center gap-2 px-3 py-2 text-sm font-medium border border-gray-200 rounded-lg text-gray-600 bg-white hover:bg-gray-50 transition-colors"
+                            >
+                              <Settings2 className="w-4 h-4" />
+                              <span>Visualização</span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     }
@@ -451,7 +454,7 @@ function AppContent() {
             isOpen={newReportModalOpen}
             contextFilter={reportCreationModule}
             onClose={() => setNewReportModalOpen(false)}
-            onSelectTemplate={(template) => {
+            onSelectTemplate={(_template: any) => {
               setNewReportModalOpen(false);
               setCurrentPage('results');
             }}

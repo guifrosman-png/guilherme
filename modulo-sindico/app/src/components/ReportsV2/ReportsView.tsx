@@ -3,75 +3,99 @@ import { useState, useEffect } from 'react';
 import { SidebarProvider } from './contexts/SidebarContext';
 import { ReportsSidebar } from './ReportsSidebar';
 import { FinancialStatementView } from './FinancialStatementView';
+import { mercatusService } from '../../services/mercatusService';
+import { repasseService } from '../../services/repasseService';
+import { Loader2 } from 'lucide-react';
 
-// ==================== DADOS MOCKADOS (SERVIÇO FUTURO) ====================
-
-const MOCK_STATEMENTS: Record<string, any> = {
-    // 2026
-    'current-month': {
-        month: 'Janeiro', year: 2026, status: 'OPEN', grossSales: 12450.90, contractRate: 5.0, netValue: 622.54,
-        paymentDate: null, documents: { reportPdfUrl: 'mock', proofImageUrl: null }
-    },
-    'report-jan-26': {
-        month: 'Janeiro', year: 2026, status: 'OPEN', grossSales: 12450.90, contractRate: 5.0, netValue: 622.54,
-        paymentDate: null, documents: { reportPdfUrl: 'mock', proofImageUrl: null }
-    },
-
-    // 2025
-    'report-dez-25': {
-        month: 'Dezembro', year: 2025, status: 'PAID', grossSales: 18950.00, contractRate: 5.0, netValue: 947.50,
-        paymentDate: '05/01/2026', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
-    },
-    'report-nov-25': {
-        month: 'Novembro', year: 2025, status: 'PAID', grossSales: 14200.50, contractRate: 5.0, netValue: 710.02,
-        paymentDate: '05/12/2025', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
-    },
-    'report-out-25': {
-        month: 'Outubro', year: 2025, status: 'PAID', grossSales: 13800.20, contractRate: 5.0, netValue: 690.01,
-        paymentDate: '05/11/2025', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
-    },
-    'report-set-25': {
-        month: 'Setembro', year: 2025, status: 'PAID', grossSales: 12100.00, contractRate: 5.0, netValue: 605.00,
-        paymentDate: '05/10/2025', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
-    },
-    'report-ago-25': {
-        month: 'Agosto', year: 2025, status: 'PAID', grossSales: 11500.50, contractRate: 5.0, netValue: 575.02,
-        paymentDate: '05/09/2025', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
-    },
-    'report-jul-25': {
-        month: 'Julho', year: 2025, status: 'PAID', grossSales: 15200.00, contractRate: 5.0, netValue: 760.00,
-        paymentDate: '05/08/2025', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
-    },
-    'report-jun-25': {
-        month: 'Junho', year: 2025, status: 'PAID', grossSales: 14100.80, contractRate: 5.0, netValue: 705.04,
-        paymentDate: '05/07/2025', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
-    },
-    'report-mai-25': {
-        month: 'Maio', year: 2025, status: 'PAID', grossSales: 13500.20, contractRate: 5.0, netValue: 675.01,
-        paymentDate: '05/06/2025', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
-    },
-    'report-abr-25': {
-        month: 'Abril', year: 2025, status: 'PAID', grossSales: 12800.00, contractRate: 5.0, netValue: 640.00,
-        paymentDate: '05/05/2025', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
-    },
-    'report-mar-25': {
-        month: 'Março', year: 2025, status: 'PAID', grossSales: 11200.50, contractRate: 5.0, netValue: 560.02,
-        paymentDate: '05/04/2025', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
-    },
-    'report-fev-25': {
-        month: 'Fevereiro', year: 2025, status: 'PAID', grossSales: 10500.00, contractRate: 5.0, netValue: 525.00,
-        paymentDate: '05/03/2025', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
-    },
-    'report-jan-25': {
-        month: 'Janeiro', year: 2025, status: 'PAID', grossSales: 9800.00, contractRate: 5.0, netValue: 490.00,
-        paymentDate: '05/02/2025', documents: { reportPdfUrl: 'mock', proofImageUrl: 'mock' }
+// Auxiliar para converter ID de relatório em objeto de data
+// Ex: 'report-jan-26' -> { month: 1, year: 2026 }
+const parseReportId = (id: string) => {
+    if (id === 'current-month') {
+        const now = new Date();
+        return { month: now.getMonth() + 1, year: now.getFullYear() };
     }
+
+    // Mapeamento manual para IDs de meses conforme ReportsSidebar
+    const map: Record<string, { month: number, year: number }> = {
+        'report-jan-26': { month: 1, year: 2026 },
+        'report-dez-25': { month: 12, year: 2025 },
+        'report-nov-25': { month: 11, year: 2025 },
+        'report-out-25': { month: 10, year: 2025 },
+        'report-set-25': { month: 9, year: 2025 },
+        'report-ago-25': { month: 8, year: 2025 },
+        'report-jul-25': { month: 7, year: 2025 },
+        'report-jun-25': { month: 6, year: 2025 },
+        'report-mai-25': { month: 5, year: 2025 },
+        'report-abr-25': { month: 4, year: 2025 },
+        'report-mar-25': { month: 3, year: 2025 },
+        'report-fev-25': { month: 2, year: 2025 },
+        'report-jan-25': { month: 1, year: 2025 },
+    };
+
+    return map[id] || { month: 1, year: 2026 };
 };
+
+const MONTH_NAMES = [
+    '', 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
 
 export function ReportsView() {
     // Estado
     const [activeSidebarItem, setActiveSidebarItem] = useState('current-month');
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [reportData, setReportData] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    // Carregamento de dados REAIS
+    useEffect(() => {
+        async function loadData() {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const { month, year } = parseReportId(activeSidebarItem);
+
+                // 1. Busca dados de vendas REAIS da API
+                const apiTotals = await mercatusService.getFinancialTotals(month, year);
+
+                // 2. Busca dados de repasse (Alíquota/Status) do Banco/CSV
+                // Aqui estamos simulando a busca por unidadeId = 12 conforme docs
+                const repasseInfo = await repasseService.getRepasseAtual(12);
+
+                // 3. Monta o objeto final
+                setReportData({
+                    month: MONTH_NAMES[month],
+                    year: year,
+                    status: repasseInfo?.status || 'OPEN',
+                    grossSales: apiTotals.grossSales,
+                    contractRate: repasseInfo?.valor_comissao || 5.0,
+                    netValue: (apiTotals.grossSales * (repasseInfo?.valor_comissao || 5.0)) / 100,
+                    paymentDate: repasseInfo?.data_processamento ? new Date(repasseInfo.data_processamento).toLocaleDateString() : null,
+                    documents: {
+                        reportPdfUrl: repasseInfo?.arquivo_comprovante ? `/docs/${repasseInfo.arquivo_comprovante}` : null,
+                        proofImageUrl: repasseInfo?.arquivo_comprovante ? `/docs/${repasseInfo.arquivo_comprovante}` : null
+                    },
+                    calculationDetail: {
+                        credito: apiTotals.detail.credito,
+                        debito: apiTotals.detail.debito,
+                        pix: apiTotals.detail.pix,
+                        outros: apiTotals.detail.outros,
+                        cancellations: apiTotals.cancellations
+                    }
+                });
+
+            } catch (err) {
+                console.error('Erro ao carregar dados reais:', err);
+                setError('Não foi possível carregar as informações reais deste período.');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadData();
+    }, [activeSidebarItem]);
 
     // Handlers
     const handleSidebarClick = (itemId: string) => {
@@ -82,13 +106,9 @@ export function ReportsView() {
         setSidebarCollapsed(prev => !prev);
     };
 
-    // Selecionar dados baseados no item da sidebar
-    const currentData = MOCK_STATEMENTS[activeSidebarItem];
-
     return (
         <SidebarProvider>
             <div className="flex h-full gap-3 p-3 bg-transparent overflow-hidden">
-                {/* Sidebar com navegação de meses */}
                 <ReportsSidebar
                     activeItem={activeSidebarItem}
                     onItemClick={handleSidebarClick}
@@ -96,11 +116,25 @@ export function ReportsView() {
                     onToggleCollapse={handleToggleSidebar}
                 />
 
-                {/* Area Principal */}
                 <main className="flex-1 flex flex-col bg-white rounded-2xl border border-gray-200 overflow-hidden relative">
-                    {currentData ? (
+                    {loading ? (
+                        <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
+                            <Loader2 className="h-8 w-8 animate-spin text-[#525a52]" />
+                            <p className="animate-pulse">Buscando dados reais na API...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="flex flex-col items-center justify-center h-full text-red-400 p-6 text-center">
+                            <p>{error}</p>
+                            <button
+                                onClick={() => setActiveSidebarItem(activeSidebarItem)}
+                                className="mt-4 text-sm underline hover:text-red-500"
+                            >
+                                Tentar novamente
+                            </button>
+                        </div>
+                    ) : reportData ? (
                         <div className="h-full overflow-y-auto">
-                            <FinancialStatementView data={currentData} />
+                            <FinancialStatementView data={reportData} />
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center h-full text-gray-400">
@@ -114,3 +148,4 @@ export function ReportsView() {
 }
 
 export default ReportsView;
+

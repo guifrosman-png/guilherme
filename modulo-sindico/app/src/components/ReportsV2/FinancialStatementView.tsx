@@ -1,7 +1,7 @@
 
-import React from 'react';
 import {
     Download,
+
     FileText,
     DollarSign,
     Calendar,
@@ -25,6 +25,13 @@ interface FinancialStatementData {
     documents: {
         reportPdfUrl?: string;
         proofImageUrl?: string;
+    };
+    calculationDetail?: {
+        credito: number;
+        debito: number;
+        pix: number;
+        outros: number;
+        cancellations: number;
     };
 }
 
@@ -143,11 +150,35 @@ export function FinancialStatementView({ data }: FinancialStatementViewProps) {
                     <div className="divide-y divide-gray-100">
                         <div className="flex justify-between py-3 px-6 hover:bg-gray-50 transition-colors">
                             <span className="text-gray-600">(+) Vendas Totais (Crédito + Débito + Pix)</span>
-                            <span className="font-medium text-gray-900">{formatCurrency(data.grossSales)}</span>
+                            <span className="font-medium text-gray-900">
+                                {data.calculationDetail
+                                    ? formatCurrency(data.calculationDetail.credito + data.calculationDetail.debito + data.calculationDetail.pix + data.calculationDetail.outros)
+                                    : formatCurrency(data.grossSales)}
+                            </span>
                         </div>
+
+                        {data.calculationDetail && (
+                            <div className="bg-gray-50/30 px-10 py-2 space-y-1 text-xs text-gray-500">
+                                <div className="flex justify-between">
+                                    <span>• Crédito</span>
+                                    <span>{formatCurrency(data.calculationDetail.credito)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>• Débito</span>
+                                    <span>{formatCurrency(data.calculationDetail.debito)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span>• Pix</span>
+                                    <span>{formatCurrency(data.calculationDetail.pix)}</span>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="flex justify-between py-3 px-6 hover:bg-gray-50 transition-colors">
                             <span className="text-gray-600">(-) Estornos / Cancelamentos</span>
-                            <span className="font-medium text-red-600">{formatCurrency(0)}</span>
+                            <span className="font-medium text-red-600">
+                                {formatCurrency(data.calculationDetail?.cancellations || 0)}
+                            </span>
                         </div>
                         <div className="flex justify-between py-3 px-6 hover:bg-gray-50 transition-colors bg-gray-50/30">
                             <span className="text-gray-800 font-medium">(=) Base de Cálculo Oficial</span>
@@ -164,6 +195,7 @@ export function FinancialStatementView({ data }: FinancialStatementViewProps) {
                     </div>
                 </CardContent>
             </Card>
+
 
             {/* 4. Área de Documentos e Comprovantes */}
             <div>

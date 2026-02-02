@@ -6,4 +6,5 @@ export interface FilterCondition {
     field: FilterField;
     operator: FilterOperator;
     value: any;
+    valueTo?: any;
 }

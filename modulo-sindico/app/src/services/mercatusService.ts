@@ -1,42 +1,40 @@
-import { MercatusResponse, MercatusQueryParams } from '../types/mercatus';
 
-// TODO: Variáveis de ambiente
-const DEFAULT_API_URL = 'https://expressfoods.mercatus.net.br/api';
-// OBS: Token temporário para desenvolvimento
-const TEMP_TOKEN = 'Qu,TdD6?}rQyG\\Wja@;;4,BsF4L={[h*';
+/**
+ * SERVIÇO DE INTEGRAÇÃO - MERCATUS API
+ * Responsável por buscar vendas reais e calcular métricas para o fechamento.
+ */
 
-interface MercatusServiceConfig {
-    baseUrl?: string;
-    token?: string;
-    clientId?: string;
+interface MercatusSaleResponse {
+    paginacao?: {
+        qtdTotalRegistros: number;
+    };
+    registros: Array<{
+        valorTotal: number;
+        cancelado: boolean;
+        finalizadoras: Array<{
+            descricao: string;
+            valorPago: number;
+        }>;
+    }>;
 }
 
-export class MercatusService {
-    private baseUrl: string;
-    private token: string;
-    private clientId: string;
+const API_URL = 'https://expressfoods.mercatus.net.br/api/vendas/listagem';
+const HEADERS = {
+    'X-Cliente-Id': '19',
+    'X-Produto': 'mercado-app',
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer Qu,TdD6?}rQyG\\Wja@;;4,BsF4L={[h*'
+};
 
-    constructor(config: MercatusServiceConfig = {}) {
-        this.baseUrl = config.baseUrl || DEFAULT_API_URL;
-        this.token = config.token || TEMP_TOKEN;
-        this.clientId = config.clientId || '19';
-    }
-
-    async getSales(params: MercatusQueryParams): Promise<MercatusResponse> {
-        const endpoint = `${this.baseUrl}/vendas/listagem`;
-        const page = params.pagina || 1;
-        const limit = params.quantidade || 50; // Default mais seguro: 50 itens
-        const queryUrl = `${endpoint}?pagina=${page}&quantidade=${limit}`;
-
+export const mercatusService = {
+    /**
+     * Método genérico para buscar vendas (compatível com o dashboard antigo)
+     */
+    async getSales(params: { unidadeId: number; dataInicial: string; dataFinal: string; portalSindico: string }) {
         try {
-            const response = await fetch(queryUrl, {
+            const response = await fetch(`${API_URL}?pagina=1&quantidade=1000`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.token}`,
-                    'X-Cliente-Id': this.clientId,
-                    'X-Produto': 'mercado-app'
-                },
+                headers: HEADERS,
                 body: JSON.stringify({
                     unidade: params.unidadeId,
                     dataInicial: params.dataInicial,
@@ -45,18 +43,69 @@ export class MercatusService {
                 })
             });
 
-            if (!response.ok) {
-                throw new Error(`Erro na API Mercatus: ${response.status} ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error('Erro ao buscar dados da API Mercatus');
+            return await response.json() as MercatusSaleResponse;
+        } catch (error) {
+            console.error('Erro no mercatusService.getSales:', error);
+            throw error;
+        }
+    },
 
-            const data: MercatusResponse = await response.json();
-            return data;
+    /**
+     * Busca vendas de um período e calcula os totais formatados para o fechamento
+     */
+    async getFinancialTotals(month: number, year: number, unidadeId: number = 12) {
+        try {
+            const dataInicial = `${year}-${String(month).padStart(2, '0')}-01 00:00:00`;
+            const lastDay = new Date(year, month, 0).getDate();
+            const dataFinal = `${year}-${String(month).padStart(2, '0')}-${lastDay} 23:59:59`;
+
+            const data = await this.getSales({
+                unidadeId,
+                dataInicial,
+                dataFinal,
+                portalSindico: "S"
+            });
+
+            // Inicializar acumuladores
+            let cancellations = 0;
+
+            let detail = {
+                credito: 0,
+                debito: 0,
+                pix: 0,
+                outros: 0
+            };
+
+            let totalSales = 0;
+            data.registros.forEach(venda => {
+                const valor = Number(venda.valorTotal || 0);
+                totalSales += valor;
+                if (venda.cancelado) {
+                    cancellations += valor;
+                } else {
+                    // Detalhamento por finalizadora
+                    venda.finalizadoras?.forEach(f => {
+                        const desc = f.descricao?.toUpperCase() || '';
+                        const valorPago = Number(f.valorPago || 0);
+                        if (desc.includes('CRÉDITO') || desc.includes('CREDITO')) detail.credito += valorPago;
+                        else if (desc.includes('DÉBITO') || desc.includes('DEBITO')) detail.debito += valorPago;
+                        else if (desc.includes('PIX')) detail.pix += valorPago;
+                        else detail.outros += valorPago;
+                    });
+                }
+            });
+
+            return {
+                grossSales: totalSales,
+                cancellations,
+                netBase: totalSales - cancellations,
+                detail
+            };
 
         } catch (error) {
-            console.error('Falha ao buscar vendas:', error);
+            console.error('Erro no mercatusService.getFinancialTotals:', error);
             throw error;
         }
     }
-}
-
-export const mercatusService = new MercatusService();
+};

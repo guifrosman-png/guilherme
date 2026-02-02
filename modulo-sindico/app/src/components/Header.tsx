@@ -1,6 +1,8 @@
 import { ReactNode } from 'react';
-import { Search, Bell, Settings, Building } from 'lucide-react';
+import { Search, Bell, Settings, Building, Eye, Edit3, ChevronDown, Check } from 'lucide-react';
 import { useMobile } from '../hooks/useMobile';
+import { useViewMode } from '../contexts/ViewModeContext';
+import { useState, useRef, useEffect } from 'react';
 
 interface HeaderProps {
   title?: string;
@@ -22,6 +24,21 @@ export function Header({
   notificationCount = 0,
 }: HeaderProps) {
   const isMobile = useMobile();
+  const { viewMode, setViewMode } = useViewMode();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className={`fixed top-4 left-4 z-40 ${className}`}>
@@ -42,6 +59,73 @@ export function Header({
               {isMobile ? 'Portal' : 'Portal do Síndico'}
             </span>
           </div>
+
+          {!isMobile && (
+            <div className="relative ml-6" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className={`
+                  flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all border
+                  ${viewMode === 'owner'
+                    ? 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                    : 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100'}
+                `}
+              >
+                {viewMode === 'owner' ? (
+                  <>
+                    <div className="p-1 bg-blue-100 rounded-md">
+                      <Edit3 className="w-3.5 h-3.5 text-blue-600" />
+                    </div>
+                    <span className="text-sm font-medium text-blue-900">Modo Editor</span>
+                  </>
+                ) : (
+                  <>
+                    <div className="p-1 bg-emerald-100 rounded-md">
+                      <Eye className="w-3.5 h-3.5 text-emerald-600" />
+                    </div>
+                    <span className="text-sm font-medium text-emerald-900">Visão Síndico</span>
+                  </>
+                )}
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                  <div className="px-4 py-2 border-b border-gray-50 mb-1">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Alternar Visualização</span>
+                  </div>
+
+                  <button
+                    onClick={() => { setViewMode('owner'); setIsDropdownOpen(false); }}
+                    className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors ${viewMode === 'owner' ? 'bg-blue-50/30' : ''}`}
+                  >
+                    <div className={`p-2 rounded-lg ${viewMode === 'owner' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
+                      <Edit3 className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${viewMode === 'owner' ? 'text-blue-900' : 'text-gray-700'}`}>Dono da Loja</p>
+                      <p className="text-xs text-gray-500">Visualização completa com edição</p>
+                    </div>
+                    {viewMode === 'owner' && <Check className="w-4 h-4 text-blue-600" />}
+                  </button>
+
+                  <button
+                    onClick={() => { setViewMode('sindico'); setIsDropdownOpen(false); }}
+                    className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition-colors ${viewMode === 'sindico' ? 'bg-emerald-50/30' : ''}`}
+                  >
+                    <div className={`p-2 rounded-lg ${viewMode === 'sindico' ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
+                      <Eye className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${viewMode === 'sindico' ? 'text-emerald-900' : 'text-gray-700'}`}>Síndico</p>
+                      <p className="text-xs text-gray-500">Visualização somente leitura</p>
+                    </div>
+                    {viewMode === 'sindico' && <Check className="w-4 h-4 text-emerald-600" />}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Center - Spacer */}
           <div className="flex-1 min-w-0" />

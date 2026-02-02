@@ -309,6 +309,10 @@ interface MiniCardsGridProps {
    * @default true quando dashboardId está definido
    */
   autoSave?: boolean
+  /**
+   * Se true, desabilita edições (drag, resize, add, remove, edit).
+   */
+  readOnly?: boolean
 }
 
 export function MiniCardsGrid({
@@ -323,7 +327,8 @@ export function MiniCardsGrid({
   filterContent,
   dashboardId,
   contextFilter = 'all',
-  autoSave
+  autoSave,
+  readOnly = false
 }: MiniCardsGridProps) {
   // Determinar se deve salvar automaticamente
   const shouldAutoSave = autoSave ?? (dashboardId !== undefined)
@@ -538,6 +543,8 @@ export function MiniCardsGrid({
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  const activeSensors = readOnly ? [] : sensors
 
   // Verificar se uma célula está ocupada
   const isCellOccupied = useCallback((row: number, col: number, metricas: MetricaAtiva[], excludeId?: string) => {
@@ -1087,25 +1094,27 @@ export function MiniCardsGrid({
           </div>
 
           {/* Botões de Ação (lado direito - fixos) */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Botão de otimizar grid */}
-            <button
-              onClick={handleOptimizeGrid}
-              className="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 transition-all duration-200 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
-              title="Otimizar layout"
-              disabled={metricasAtivas.length === 0}
-            >
-              <LayoutGrid className="h-5 w-5" />
-            </button>
-            {/* Botão de adicionar */}
-            <button
-              onClick={() => setShowMetricasModal(true)}
-              className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-all duration-200 shrink-0"
-              title="Adicionar métrica"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-          </div>
+          {!readOnly && (
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Botão de otimizar grid */}
+              <button
+                onClick={handleOptimizeGrid}
+                className="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 transition-all duration-200 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                title="Otimizar layout"
+                disabled={metricasAtivas.length === 0}
+              >
+                <LayoutGrid className="h-5 w-5" />
+              </button>
+              {/* Botão de adicionar */}
+              <button
+                onClick={() => setShowMetricasModal(true)}
+                className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-all duration-200 shrink-0"
+                title="Adicionar métrica"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Filtros Ativos */}
@@ -1116,7 +1125,7 @@ export function MiniCardsGrid({
         )}
 
         <DndContext
-          sensors={sensors}
+          sensors={activeSensors}
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
           onDragMove={handleDragMove}
@@ -1236,6 +1245,7 @@ export function MiniCardsGrid({
                     opacity: isBeingDragged ? 0.3 : 1,
                     zIndex: isBeingRelocated ? 50 : isBeingDragged ? 1000 : 1
                   }}
+                  readOnly={readOnly}
                 />
               )
             })}
@@ -1752,7 +1762,7 @@ export function MiniCardsGrid({
           })()}
         </DndContext>
       </ContentWrapper>
-    </Wrapper>
+    </Wrapper >
   )
 }
 
@@ -1774,8 +1784,11 @@ interface SortableMetricCardProps {
   style?: React.CSSProperties
   isRelocating?: boolean
   useAbsolutePosition?: boolean
+  useAbsolutePosition?: boolean
   pixelPosition?: { x: number; y: number; width: number; height: number }
+  readOnly?: boolean
 }
+
 
 function SortableMetricCard({
   metrica,
@@ -1791,7 +1804,8 @@ function SortableMetricCard({
   style,
   isRelocating = false,
   useAbsolutePosition = false,
-  pixelPosition
+  pixelPosition,
+  readOnly = false
 }: SortableMetricCardProps) {
   const [isResizing, setIsResizing] = useState(false)
   const [resizePreview, setResizePreview] = useState<{ cols: number; rows: number } | null>(null)
@@ -2083,14 +2097,16 @@ function SortableMetricCard({
       )}
 
       {/* Drag handle (Esquerda) - Movido para o final para garantir z-index */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute top-2 left-2 p-1 rounded cursor-grab opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 z-50 bg-white/80"
-        title="Arraste para mover"
-      >
-        <GripVertical className="h-3 w-3 text-slate-400" />
-      </div>
+      {!readOnly && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute top-2 left-2 p-1 rounded cursor-grab opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 z-50 bg-white/80"
+          title="Arraste para mover"
+        >
+          <GripVertical className="h-3 w-3 text-slate-400" />
+        </div>
+      )}
 
       {/* Botões de ação no hover (Direita) */}
       <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-50">
@@ -2104,58 +2120,64 @@ function SortableMetricCard({
         >
           <Maximize2 className="h-3 w-3" />
         </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onEdit()
-          }}
-          className="p-1 rounded hover:bg-amber-100 text-slate-400 hover:text-amber-600 transition-colors bg-white/80"
-          title="Editar"
-        >
-          <Pencil className="h-3 w-3" />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onRemove()
-          }}
-          className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-500 transition-colors bg-white/80"
-          title="Remover"
-        >
-          <X className="h-3 w-3" />
-        </button>
+        {!readOnly && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit()
+              }}
+              className="p-1 rounded hover:bg-amber-100 text-slate-400 hover:text-amber-600 transition-colors bg-white/80"
+              title="Editar"
+            >
+              <Pencil className="h-3 w-3" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onRemove()
+              }}
+              className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-500 transition-colors bg-white/80"
+              title="Remover"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </>
+        )}
       </div>
 
       {/* Resize handle - canto inferior direito */}
-      <div
-        onMouseDown={handleResizeStart}
-        style={{
-          position: 'absolute',
-          bottom: '0px',
-          right: '0px',
-          width: '16px',
-          height: '16px',
-          cursor: 'se-resize',
-          zIndex: 50
-        }}
-        title="Arraste para redimensionar"
-      >
-        <svg
+      {!readOnly && (
+        <div
+          onMouseDown={handleResizeStart}
           style={{
-            width: '12px',
-            height: '12px',
             position: 'absolute',
-            bottom: '2px',
-            right: '2px',
-            pointerEvents: 'none'
+            bottom: '0px',
+            right: '0px',
+            width: '16px',
+            height: '16px',
+            cursor: 'se-resize',
+            zIndex: 50
           }}
-          className="text-slate-400 opacity-40"
-          viewBox="0 0 24 24"
-          fill="currentColor"
+          title="Arraste para redimensionar"
         >
-          <path d="M22 22H20V20H22V22ZM22 18H20V16H22V18ZM18 22H16V20H18V22ZM22 14H20V12H22V14ZM18 18H16V16H18V18ZM14 22H12V20H14V22Z" />
-        </svg>
-      </div>
+          <svg
+            style={{
+              width: '12px',
+              height: '12px',
+              position: 'absolute',
+              bottom: '2px',
+              right: '2px',
+              pointerEvents: 'none'
+            }}
+            className="text-slate-400 opacity-40"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M22 22H20V20H22V22ZM22 18H20V16H22V18ZM18 22H16V20H18V22ZM22 14H20V12H22V14ZM18 18H16V16H18V18ZM14 22H12V20H14V22Z" />
+          </svg>
+        </div>
+      )}
     </div>
   )
 }

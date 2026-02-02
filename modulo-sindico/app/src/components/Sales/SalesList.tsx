@@ -46,6 +46,10 @@ const STATUS_CONFIG: Record<SalesStatus, { color: string; border: string }> = {
 const adaptSaleToDisplay = (apiSale: MercatusSale): SaleDisplay => {
     const totalItems = apiSale.produtos?.reduce((acc: number, curr: any) => acc + curr.quantidade, 0) || 0;
 
+    // Cálculo real somando os itens e subtraindo descontos
+    const calculatedTotal = apiSale.produtos?.reduce((acc: number, curr: any) => acc + (curr.valorTotal || 0), 0) || 0;
+    const finalTotal = calculatedTotal - (apiSale.valorDesconto || 0);
+
     // apiSale.dataInicio format: "2024-03-20 14:30:00"
     const [datePart, timePart] = (apiSale.dataInicio || "").split(' ');
 
@@ -55,7 +59,7 @@ const adaptSaleToDisplay = (apiSale: MercatusSale): SaleDisplay => {
         date: datePart, // YYYY-MM-DD
         time: timePart || "00:00:00",
         ticketNumber: apiSale.cupom || apiSale.id,
-        totalValue: apiSale.valorTotal || 0,
+        totalValue: finalTotal,
         itemsCount: totalItems,
         status: (apiSale as any).cancelado ? 'cancelado' : 'concluido',
         raw: apiSale
@@ -112,9 +116,14 @@ const SalesListCard = ({ sale, onClick }: { sale: SaleDisplay; onClick?: () => v
                 {/* Colunas */}
                 <div className="flex-1 grid grid-cols-12 gap-4 items-center">
 
-                    {/* N. Vendas */}
-                    <div className="col-span-3">
-                        <span className="text-xs font-mono font-semibold text-gray-900">#{sale.ticketNumber}</span>
+                    {/* Contagem de Itens (Simplificação Máxima) */}
+                    <div className="col-span-6">
+                        <div className="flex items-center gap-2">
+                            <ShoppingBag className="w-3.5 h-3.5 text-[#525a52] flex-shrink-0" />
+                            <span className="text-sm font-semibold text-gray-900">
+                                {sale.itemsCount} {sale.itemsCount === 1 ? 'item' : 'itens'}
+                            </span>
+                        </div>
                     </div>
 
                     {/* Data */}
@@ -127,17 +136,9 @@ const SalesListCard = ({ sale, onClick }: { sale: SaleDisplay; onClick?: () => v
                         </div>
                     </div>
 
-                    {/* Itens */}
-                    <div className="col-span-3">
-                        <div className="flex items-center gap-1 text-gray-600">
-                            <ShoppingBag className="w-3.5 h-3.5 text-gray-400" />
-                            <span className="text-sm">{sale.itemsCount} itens</span>
-                        </div>
-                    </div>
-
                     {/* Valor */}
                     <div className="col-span-3 text-right">
-                        <span className="text-sm font-bold text-gray-900">
+                        <span className="text-sm font-bold text-gray-900 font-mono">
                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sale.totalValue)}
                         </span>
                     </div>
@@ -258,7 +259,7 @@ export function SalesList({ onSelectSale, activeFilter = 'todas', onCountsChange
         // 3. Aplicar busca se houver
         if (searchTerm) {
             fullFilteredList = fullFilteredList.filter(s =>
-                s.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (s.raw.produtos?.[0]?.descricaoReduzida || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
                 s.totalValue.toString().includes(searchTerm)
             );
         }
@@ -411,7 +412,7 @@ export function SalesList({ onSelectSale, activeFilter = 'todas', onCountsChange
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                         type="text"
-                        placeholder="Buscar por cupom ou valor..."
+                        placeholder="Buscar por item ou valor..."
                         className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-[#525a52]/30 focus:border-[#525a52] shadow-sm"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -473,9 +474,8 @@ export function SalesList({ onSelectSale, activeFilter = 'todas', onCountsChange
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 flex items-center gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                 <div className="w-5" />
                 <div className="flex-1 grid grid-cols-12 gap-4 items-center">
-                    <div className="col-span-3">N. VENDAS</div>
+                    <div className="col-span-6">ITENS</div>
                     <div className="col-span-3">DATA</div>
-                    <div className="col-span-3">ITENS</div>
                     <div className="col-span-3 text-right">VALOR TOTAL</div>
                 </div>
             </div>

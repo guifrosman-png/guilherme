@@ -42,24 +42,28 @@ export function SalesDetailsPanel({ saleId, sale, onClose }: SalesDetailsPanelPr
     const renderContent = (sectionId: string) => {
         switch (sectionId) {
             case 'resumo':
+                const subtotalReal = sale.produtos?.reduce((acc, item) => acc + (item.valorTotal || 0), 0) || 0;
+                const descontoReal = sale.valorDesconto || 0;
+                const totalReal = subtotalReal - descontoReal;
+
                 return (
                     <div className="space-y-3 p-1">
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-600">Subtotal</span>
-                            <span className="font-medium">
-                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sale.valorTotal - (sale.valorAcrescimo || 0) + (sale.valorDesconto || 0))}
+                            <span className="font-medium text-gray-900">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(subtotalReal)}
                             </span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-600">Descontos</span>
                             <span className="font-medium text-green-600">
-                                - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sale.valorDesconto || 0)}
+                                - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(descontoReal)}
                             </span>
                         </div>
                         <div className="flex justify-between items-center text-base pt-2 border-t border-gray-100">
                             <span className="font-bold text-gray-900">Total</span>
                             <span className="font-bold text-gray-900">
-                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sale.valorLiquido || sale.valorTotal)}
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalReal)}
                             </span>
                         </div>
                     </div>
@@ -178,8 +182,7 @@ export function SalesDetailsPanel({ saleId, sale, onClose }: SalesDetailsPanelPr
                         <ChevronDown className="h-4 w-4 text-gray-500 rotate-90" />
                     </Button>
                     <div>
-                        <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">DETALHES</h2>
-                        <p className="text-xs text-gray-500">Venda {sale.cupom || saleId}</p>
+                        <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">DETALHES DA VENDA</h2>
                     </div>
                 </div>
 
