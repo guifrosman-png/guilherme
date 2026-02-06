@@ -322,9 +322,6 @@ export function CardRenderer({ component: comp, currentColor, scale = 1, onExplo
                                 {displayTitle}
                             </span>
                             <div className="flex items-center gap-1">
-                                <div onClick={(e) => e.stopPropagation()}>
-                                    <ExploreButton onClick={onExplore} compact />
-                                </div>
                                 <IconComp className={currentColor.text}
                                     style={{
                                         width: `${Math.max(16, 24 * scale)}px`,

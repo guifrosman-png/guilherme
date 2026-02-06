@@ -8,6 +8,7 @@ import { NotificationPanel } from './components/NotificationPanel';
 import { SearchModal } from './components/SearchModal';
 import { FloatingButtons, FloatingAction } from './components/FloatingButtons';
 import { Modal, ModalFooter } from './components/Modal';
+import { ManagedFeature } from './components/ManagedFeature';
 
 import { UniversalFilterMenu } from './components/Filters/UniversalFilterMenu';
 import { FilterCapsules } from './components/Filters/FilterCapsules';
@@ -26,12 +27,18 @@ import { useSindicoDashboard } from './hooks/useSindicoDashboard';
 import { MetricaConfig } from './components/MiniCardsGrid/types';
 
 import { ViewModeProvider, useViewMode } from './contexts/ViewModeContext';
+import { PermissionsProvider } from './contexts/PermissionsContext';
+
+import { PermissionsPanel } from './components/PermissionsPanel';
 
 export default function App() {
   return (
     <SidebarProvider>
       <ViewModeProvider>
-        <AppContent />
+        <PermissionsProvider>
+          <AppContent />
+          <PermissionsPanel />
+        </PermissionsProvider>
       </ViewModeProvider>
     </SidebarProvider>
   );
@@ -248,97 +255,102 @@ function AppContent() {
               <div className="w-full h-full">
                 {/* 1. DASHBOARD HOME */}
                 <div className={clsx("w-full h-full", currentPage !== 'home' && "hidden")}>
-                  <MiniCardsGrid
-                    key="dashboard-sindico"
-                    variant="flat"
-                    dashboardId="sindico-home"
-                    contextFilter="all"
-                    readOnly={isSindicoView}
-                    filterContent={
-                      <FilterCapsules
-                        filters={dashboardFilters}
-                        setFilters={setDashboardFilters}
-                      />
-                    }
-                    availableMetrics={SINDICO_METRICS_CONFIG}
-                    initialMetrics={[
-                      { id: 'sind-faturamento', size: '2x1', row: 0, col: 0 },
-                      { id: 'sind-repasse', size: '2x1', row: 0, col: 2 },
-                      { id: 'sind-vendas-qtd', size: '2x1', row: 0, col: 4 },
-                    ]}
-                    data={sindicoMetrics}
-                    onPanelToggle={setCardsPanelOpen}
-                    toolbarContent={
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-3">
-                          <div className="relative">
-                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                            <input
-                              type="text"
-                              placeholder="Buscar métricas..."
-                              value={dashboardSearchQuery}
-                              onChange={(e) => setDashboardSearchQuery(e.target.value)}
-                              className="pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-64 transition-all"
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <div className="relative">
-                            <button
-                              onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
-                              className={clsx(
-                                "flex items-center gap-2 px-3 py-2 text-sm font-medium border border-gray-200 rounded-lg transition-colors",
-                                isFilterMenuOpen ? "bg-blue-50 text-blue-700 border-blue-200" : "text-gray-600 bg-white hover:bg-gray-50"
-                              )}
-                            >
-                              <Filter className="w-4 h-4" />
-                              <span>Filtros</span>
-                              {dashboardFilters.length > 0 && (
-                                <span className="flex h-2 w-2 rounded-full bg-blue-600" />
-                              )}
-                            </button>
-
-                            {isFilterMenuOpen && (
-                              <UniversalFilterMenu
-                                filters={dashboardFilters}
-                                setFilters={setDashboardFilters}
-                                availableTags={availableTags}
-                                availableMembers={availableMembers}
-                                onClose={() => setIsFilterMenuOpen(false)}
-                              />
-                            )}
+                  <ManagedFeature id="dashboard" label="Dashboard Inicial" className="h-full">
+                    <MiniCardsGrid
+                      key="dashboard-sindico"
+                      variant="flat"
+                      dashboardId="sindico-home"
+                      contextFilter="all"
+                      readOnly={false}
+                      filterContent={
+                        <FilterCapsules
+                          filters={dashboardFilters}
+                          setFilters={setDashboardFilters}
+                        />
+                      }
+                      availableMetrics={SINDICO_METRICS_CONFIG}
+                      initialMetrics={[
+                        { id: 'sind-faturamento', size: '2x1', row: 0, col: 0 },
+                        { id: 'sind-repasse', size: '2x1', row: 0, col: 2 },
+                        { id: 'sind-vendas-qtd', size: '2x1', row: 0, col: 4 },
+                      ]}
+                      data={sindicoMetrics}
+                      onPanelToggle={setCardsPanelOpen}
+                      toolbarContent={
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-3">
+                            <ManagedFeature id="dashboard.search" label="Busca">
+                              <div className="relative">
+                                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input
+                                  type="text"
+                                  placeholder="Buscar métricas..."
+                                  value={dashboardSearchQuery}
+                                  onChange={(e) => setDashboardSearchQuery(e.target.value)}
+                                  className="pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 w-64 transition-all"
+                                />
+                              </div>
+                            </ManagedFeature>
                           </div>
 
-                          {!isSindicoView && (
-                            <button
-                              className="flex items-center gap-2 px-3 py-2 text-sm font-medium border border-gray-200 rounded-lg text-gray-600 bg-white hover:bg-gray-50 transition-colors"
-                            >
-                              <Settings2 className="w-4 h-4" />
-                              <span>Visualização</span>
-                            </button>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <ManagedFeature id="dashboard.filters" label="Filtros">
+                              <div className="relative">
+                                <button
+                                  onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+                                  className={clsx(
+                                    "flex items-center gap-2 px-3 py-2 text-sm font-medium border border-gray-200 rounded-lg transition-colors",
+                                    isFilterMenuOpen ? "bg-blue-50 text-blue-700 border-blue-200" : "text-gray-600 bg-white hover:bg-gray-50"
+                                  )}
+                                >
+                                  <Filter className="w-4 h-4" />
+                                  <span>Filtros</span>
+                                  {dashboardFilters.length > 0 && (
+                                    <span className="flex h-2 w-2 rounded-full bg-blue-600" />
+                                  )}
+                                </button>
+
+                                {isFilterMenuOpen && (
+                                  <UniversalFilterMenu
+                                    filters={dashboardFilters}
+                                    setFilters={setDashboardFilters}
+                                    availableTags={availableTags}
+                                    availableMembers={availableMembers}
+                                    onClose={() => setIsFilterMenuOpen(false)}
+                                  />
+                                )}
+                              </div>
+                            </ManagedFeature>
+
+
+                          </div>
                         </div>
-                      </div>
-                    }
-                  />
+                      }
+                    />
+                  </ManagedFeature>
                 </div>
 
-                {/* 2. VENDAS (INBOX) - Mantenho montado para persistência */}
+                {/* 2. VENDAS (INBOX) */}
                 <div className={clsx("w-full h-full", currentPage !== 'kanban' && "hidden")}>
-                  <SalesView />
+                  <ManagedFeature id="sales" label="Aba de Vendas" className="h-full">
+                    <SalesView />
+                  </ManagedFeature>
                 </div>
 
                 {/* 3. FECHAMENTOS (REPORTS) */}
                 <div className={clsx("w-full h-full", currentPage !== 'results' && "hidden")}>
-                  <div className="h-[calc(100vh-140px)]">
-                    <ReportsView />
-                  </div>
+                  <ManagedFeature id="reports" label="Aba de Fechamentos" className="h-full">
+                    <div className="h-[calc(100vh-140px)]">
+                      <ReportsView />
+                    </div>
+                  </ManagedFeature>
                 </div>
 
                 {/* 4. SUPORTE */}
                 <div className={clsx("w-full h-full", currentPage !== 'support' && "hidden")}>
-                  <UnitSupportTab />
+                  <ManagedFeature id="support" label="Aba de Suporte" className="h-full">
+                    <UnitSupportTab />
+                  </ManagedFeature>
                 </div>
 
                 {/* 5. CHARTS (SHOWCASE) */}

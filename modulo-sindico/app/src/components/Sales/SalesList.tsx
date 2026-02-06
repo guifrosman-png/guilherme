@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { usePermissions } from '../../contexts/PermissionsContext';
 import {
     Search,
     Calendar,
@@ -19,8 +20,7 @@ import { Button } from '@/components/ui/button';
 import { clsx } from 'clsx';
 import { mercatusService } from '../../services/mercatusService';
 import { MercatusSale } from '../../types/mercatus';
-
-// --- TIPOS ---
+import { ManagedFeature } from '../ManagedFeature'; // Import component
 type SalesStatus = 'concluido' | 'cancelado';
 
 // Tipo visual usado pelo Card (simplificação do dado bruto da API)
@@ -113,34 +113,41 @@ const SalesListCard = ({ sale, onClick }: { sale: SaleDisplay; onClick?: () => v
                     />
                 </div>
 
+
                 {/* Colunas */}
                 <div className="flex-1 grid grid-cols-12 gap-4 items-center">
 
                     {/* Contagem de Itens (Simplificação Máxima) */}
                     <div className="col-span-6">
-                        <div className="flex items-center gap-2">
-                            <ShoppingBag className="w-3.5 h-3.5 text-[#525a52] flex-shrink-0" />
-                            <span className="text-sm font-semibold text-gray-900">
-                                {sale.itemsCount} {sale.itemsCount === 1 ? 'item' : 'itens'}
-                            </span>
-                        </div>
+                        <ManagedFeature id="sales.list.item_count" label="Coluna Itens">
+                            <div className="flex items-center gap-2">
+                                <ShoppingBag className="w-3.5 h-3.5 text-[#525a52] flex-shrink-0" />
+                                <span className="text-sm font-semibold text-gray-900">
+                                    {sale.itemsCount} {sale.itemsCount === 1 ? 'item' : 'itens'}
+                                </span>
+                            </div>
+                        </ManagedFeature>
                     </div>
 
                     {/* Data */}
                     <div className="col-span-3">
-                        <div className="flex items-center gap-2">
-                            <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                            <span className="text-sm font-medium text-gray-700">
-                                {sale.date ? sale.date.split('-').reverse().join('/') : '-'}
-                            </span>
-                        </div>
+                        <ManagedFeature id="sales.list.date" label="Coluna Data">
+                            <div className="flex items-center gap-2">
+                                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                                <span className="text-sm font-medium text-gray-700">
+                                    {sale.date ? sale.date.split('-').reverse().join('/') : '-'}
+                                </span>
+                            </div>
+                        </ManagedFeature>
                     </div>
 
                     {/* Valor */}
                     <div className="col-span-3 text-right">
-                        <span className="text-sm font-bold text-gray-900 font-mono">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sale.totalValue)}
-                        </span>
+                        <ManagedFeature id="sales.list.total_value" label="Coluna Valor Total">
+                            <span className="text-sm font-bold text-gray-900 font-mono">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(sale.totalValue)}
+                            </span>
+                        </ManagedFeature>
                     </div>
 
                 </div>
@@ -158,6 +165,7 @@ interface SalesListProps {
 }
 
 export function SalesList({ onSelectSale, activeFilter = 'todas', onCountsChange }: SalesListProps) {
+    const { getPermission } = usePermissions();
     const [showKPIs, setShowKPIs] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -375,108 +383,120 @@ export function SalesList({ onSelectSale, activeFilter = 'todas', onCountsChange
         <div className="space-y-6 pb-20">
 
             {/* 1. SEÇÃO DE MÉTRICAS */}
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-sm font-semibold text-gray-700">Visão Geral</h2>
-                    <button
-                        onClick={() => setShowKPIs(!showKPIs)}
-                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    >
-                        {showKPIs ? <><EyeOff className="w-3.5 h-3.5" /> Ocultar</> : <><Eye className="w-3.5 h-3.5" /> Mostrar</>}
-                    </button>
-                </div>
-
-                {showKPIs && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <KPICard
-                            title={kpiLabels.title}
-                            value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalRevenueDisplay)}
-                            subtitle={kpiLabels.subtitle}
-                            icon={TrendingUp}
-                            variant="default"
-                        />
-                        <KPICard
-                            title={kpiLabels.qtyTitle}
-                            value={totalCountDisplay}
-                            subtitle={kpiLabels.qtySubtitle}
-                            icon={ShoppingBag}
-                            variant="muted"
-                        />
+            <ManagedFeature id="sales.kpis" label="KPIs de Vendas">
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-sm font-semibold text-gray-700">Visão Geral</h2>
+                        <button
+                            onClick={() => setShowKPIs(!showKPIs)}
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                            {showKPIs ? <><EyeOff className="w-3.5 h-3.5" /> Ocultar</> : <><Eye className="w-3.5 h-3.5" /> Mostrar</>}
+                        </button>
                     </div>
-                )}
-            </div>
+
+                    {showKPIs && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <KPICard
+                                title={kpiLabels.title}
+                                value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalRevenueDisplay)}
+                                subtitle={kpiLabels.subtitle}
+                                icon={TrendingUp}
+                                variant="default"
+                            />
+                            <KPICard
+                                title={kpiLabels.qtyTitle}
+                                value={totalCountDisplay}
+                                subtitle={kpiLabels.qtySubtitle}
+                                icon={ShoppingBag}
+                                variant="muted"
+                            />
+                        </div>
+                    )}
+                </div>
+            </ManagedFeature>
 
             {/* 2. BARRA DE BUSCA E FILTROS */}
-            <div className="space-y-3">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Buscar por item ou valor..."
-                        className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-[#525a52]/30 focus:border-[#525a52] shadow-sm"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-            </div>
-
-            {/* 3. CONTROLES DE PAGINAÇÃO (TOPO) */}
-            {totalPages > 1 && (
-                <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-2">
-                    <span className="text-xs text-gray-500">
-                        Página <span className="font-medium text-gray-900">{page}</span> de <span className="font-medium text-gray-900">{totalPages}</span>
-                        <span className="ml-2 text-gray-400">({LIMIT} por página)</span>
-                    </span>
-
-                    <div className="flex items-center gap-1">
-                        <button
-                            onClick={() => handlePageChange(1)}
-                            disabled={page === 1 || loading}
-                            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            title="Primeira Página"
-                        >
-                            <ChevronsLeft className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => handlePageChange(page - 1)}
-                            disabled={page === 1 || loading}
-                            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            title="Página Anterior"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
-
-                        <span className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg min-w-[3rem] text-center">
-                            {page}
-                        </span>
-
-                        <button
-                            onClick={() => handlePageChange(page + 1)}
-                            disabled={page === totalPages || loading}
-                            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            title="Próxima Página"
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => handlePageChange(totalPages)}
-                            disabled={page === totalPages || loading}
-                            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            title="Última Página"
-                        >
-                            <ChevronsRight className="w-4 h-4" />
-                        </button>
+            <ManagedFeature id="sales.search" label="Busca de Vendas">
+                <div className="space-y-3">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por item ou valor..."
+                            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-[#525a52]/30 focus:border-[#525a52] shadow-sm"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
                 </div>
-            )}
+            </ManagedFeature>
+
+            {/* 3. CONTROLES DE PAGINAÇÃO (TOPO) */}
+            <ManagedFeature id="sales.pagination" label="Paginação">
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-4 py-2">
+                        <span className="text-xs text-gray-500">
+                            Página <span className="font-medium text-gray-900">{page}</span> de <span className="font-medium text-gray-900">{totalPages}</span>
+                            <span className="ml-2 text-gray-400">({LIMIT} por página)</span>
+                        </span>
+
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => handlePageChange(1)}
+                                disabled={page === 1 || loading}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                title="Primeira Página"
+                            >
+                                <ChevronsLeft className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => handlePageChange(page - 1)}
+                                disabled={page === 1 || loading}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                title="Página Anterior"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </button>
+
+                            <span className="px-3 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg min-w-[3rem] text-center">
+                                {page}
+                            </span>
+
+                            <button
+                                onClick={() => handlePageChange(page + 1)}
+                                disabled={page === totalPages || loading}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                title="Próxima Página"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => handlePageChange(totalPages)}
+                                disabled={page === totalPages || loading}
+                                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                title="Última Página"
+                            >
+                                <ChevronsRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </ManagedFeature>
 
             {/* 4. HEADER DA TABELA */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 flex items-center gap-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                 <div className="w-5" />
                 <div className="flex-1 grid grid-cols-12 gap-4 items-center">
-                    <div className="col-span-6">ITENS</div>
-                    <div className="col-span-3">DATA</div>
-                    <div className="col-span-3 text-right">VALOR TOTAL</div>
+                    <div className="col-span-6">
+                        <ManagedFeature id="sales.list.item_count" label="Cabeçalho Itens">ITENS</ManagedFeature>
+                    </div>
+                    <div className="col-span-3">
+                        <ManagedFeature id="sales.list.date" label="Cabeçalho Data">DATA</ManagedFeature>
+                    </div>
+                    <div className="col-span-3 text-right">
+                        <ManagedFeature id="sales.list.total_value" label="Cabeçalho Valor">VALOR TOTAL</ManagedFeature>
+                    </div>
                 </div>
             </div>
 
@@ -503,7 +523,8 @@ export function SalesList({ onSelectSale, activeFilter = 'todas', onCountsChange
                                 key={sale.id}
                                 sale={sale}
                                 onClick={() => {
-                                    if (onSelectSale) {
+                                    const canViewDetails = getPermission('sales.details.view');
+                                    if (canViewDetails && onSelectSale) {
                                         onSelectSale(sale.id, sale.raw);
                                     }
                                 }}
@@ -521,11 +542,12 @@ export function SalesList({ onSelectSale, activeFilter = 'todas', onCountsChange
             )}
 
             {/* Botão Flutuante de Adicionar */}
-            <Button
-                className="absolute bottom-4 left-4 z-20 h-12 w-12 rounded-full bg-[#525a52] hover:bg-[#525a52]/90 text-white shadow-lg border-2 border-white transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center p-0"
-            >
-                <Plus className="h-6 w-6" />
-            </Button>
-        </div>
+            <ManagedFeature id="sales.add_button" label="Botão Adicionar Venda">
+                <Button
+                    className="absolute bottom-4 left-4 z-20 h-12 w-12 rounded-full bg-[#525a52] hover:bg-[#525a52]/90 text-white shadow-lg border-2 border-white transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center p-0"
+                >
+                    <Plus className="h-6 w-6" />
+                </Button>
+            </ManagedFeature>        </div>
     );
 }

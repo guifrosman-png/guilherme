@@ -21,6 +21,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
+import { usePermissions } from '../../contexts/PermissionsContext'
 import {
   DndContext,
   DragOverlay,
@@ -34,6 +35,7 @@ import {
   type DragStartEvent,
   type DragMoveEvent
 } from '@dnd-kit/core'
+import { ManagedFeature } from '../ManagedFeature'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import {
   LayoutGrid,
@@ -532,6 +534,12 @@ export function MiniCardsGrid({
     }
   }, [metricasAtivas.length])
 
+  const { getPermission } = usePermissions()
+  const canMoveCards = getPermission('dashboard.actions.move_card')
+  const canResizeCards = getPermission('dashboard.actions.resize_card')
+  const canEditCards = getPermission('dashboard.actions.edit_card')
+  const canExploreCards = getPermission('dashboard.actions.explore')
+
   // Sensores para drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -544,7 +552,8 @@ export function MiniCardsGrid({
     })
   )
 
-  const activeSensors = readOnly ? [] : sensors
+  // Disable drag if readOnly OR if move permission is denied
+  const activeSensors = (readOnly || !canMoveCards) ? [] : sensors
 
   // Verificar se uma célula está ocupada
   const isCellOccupied = useCallback((row: number, col: number, metricas: MetricaAtiva[], excludeId?: string) => {
@@ -800,6 +809,8 @@ export function MiniCardsGrid({
 
   // Adicionar nova métrica
   const handleAddMetrica = (metricaId: string, targetRow?: number, targetCol?: number) => {
+    if (readOnly || !getPermission('dashboard.actions.add_card')) return
+
     if (!metricasAtivas.find(m => m.id === metricaId)) {
       // Calcular tamanho padrão baseado nos componentes do card
       const metricConfig = allMetrics.find(m => m.id === metricaId)
@@ -844,6 +855,7 @@ export function MiniCardsGrid({
 
   // Remover métrica
   const handleRemoveMetrica = (metricaId: string) => {
+    if (readOnly || !getPermission('dashboard.actions.remove_card')) return
     setMetricasAtivas(prev => prev.filter(m => m.id !== metricaId))
   }
 
@@ -906,6 +918,8 @@ export function MiniCardsGrid({
 
   // Resize handler
   const handleResizeMetrica = (metricaId: string, newSize: string) => {
+    if (readOnly || !getPermission('dashboard.actions.resize_card')) return
+
     if (resizePreviewMetricas) {
       setMetricasAtivas(resizePreviewMetricas)
       return
@@ -1094,9 +1108,9 @@ export function MiniCardsGrid({
           </div>
 
           {/* Botões de Ação (lado direito - fixos) */}
-          {!readOnly && (
-            <div className="flex items-center gap-2 shrink-0">
-              {/* Botão de otimizar grid */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Botão de otimizar grid */}
+            <ManagedFeature id="dashboard.layout_controls" label="Reorganizar">
               <button
                 onClick={handleOptimizeGrid}
                 className="p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 transition-all duration-200 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -1105,7 +1119,10 @@ export function MiniCardsGrid({
               >
                 <LayoutGrid className="h-5 w-5" />
               </button>
-              {/* Botão de adicionar */}
+            </ManagedFeature>
+
+            {/* Botão de adicionar */}
+            <ManagedFeature id="dashboard.add_card" label="Adicionar Card">
               <button
                 onClick={() => setShowMetricasModal(true)}
                 className="p-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-all duration-200 shrink-0"
@@ -1113,8 +1130,8 @@ export function MiniCardsGrid({
               >
                 <Plus className="h-5 w-5" />
               </button>
-            </div>
-          )}
+            </ManagedFeature>
+          </div>
         </div>
 
         {/* Filtros Ativos */}
@@ -1233,11 +1250,12 @@ export function MiniCardsGrid({
                   sizeConfig={sizeConfig}
                   row={metricaAtiva.row}
                   col={metricaAtiva.col}
-                  onRemove={() => handleRemoveMetrica(metrica.id)}
-                  onEdit={() => setEditCardId(metrica.id)}
-                  onExplorar={() => setExplorarCardId(metrica.id)}
-                  onResize={(newSize) => handleResizeMetrica(metrica.id, newSize)}
+                  onRemove={(!readOnly && canEditCards) ? () => handleRemoveMetrica(metrica.id) : undefined}
+                  onEdit={(!readOnly && canEditCards) ? () => setEditCardId(metrica.id) : undefined}
+                  onExplorar={(!readOnly && canExploreCards) ? () => setExplorarCardId(metrica.id) : undefined}
+                  onResize={(!readOnly && canResizeCards) ? (newSize) => handleResizeMetrica(metrica.id, newSize) : undefined}
                   onResizePreview={calculateResizePreview}
+                  canDrag={!readOnly && canMoveCards}
                   isRelocating={isBeingRelocated}
                   useAbsolutePosition={hasGridDimensions}
                   pixelPosition={hasGridDimensions ? { x, y, width, height } : undefined}
@@ -1414,13 +1432,15 @@ export function MiniCardsGrid({
                   </p>
                   {/* Botão Criar Novo Card + Caixa de Pesquisa */}
                   <div className="space-y-2">
-                    <button
-                      onClick={() => setIsCreatingNewCard(true)}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors shadow-sm"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Criar novo card
-                    </button>
+                    <ManagedFeature id="dashboard.actions.add_card" label="Botão Criar Card">
+                      <button
+                        onClick={() => setIsCreatingNewCard(true)}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors shadow-sm"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Criar novo card
+                      </button>
+                    </ManagedFeature>
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <input
@@ -1776,17 +1796,17 @@ interface SortableMetricCardProps {
   sizeConfig: CardSizeConfig
   row: number
   col: number
-  onRemove: () => void
-  onEdit: () => void
-  onExplorar: () => void
-  onResize: (newSize: string) => void
+  onRemove?: () => void
+  onEdit?: () => void
+  onExplorar?: () => void
+  onResize?: (newSize: string) => void
   onResizePreview?: (info: ResizeInfo | null) => void
   style?: React.CSSProperties
   isRelocating?: boolean
   useAbsolutePosition?: boolean
-  useAbsolutePosition?: boolean
   pixelPosition?: { x: number; y: number; width: number; height: number }
   readOnly?: boolean
+  canDrag?: boolean
 }
 
 
@@ -1805,7 +1825,8 @@ function SortableMetricCard({
   isRelocating = false,
   useAbsolutePosition = false,
   pixelPosition,
-  readOnly = false
+  readOnly = false,
+  canDrag = true
 }: SortableMetricCardProps) {
   const [isResizing, setIsResizing] = useState(false)
   const [resizePreview, setResizePreview] = useState<{ cols: number; rows: number } | null>(null)
@@ -2096,8 +2117,8 @@ function SortableMetricCard({
         </div>
       )}
 
-      {/* Drag handle (Esquerda) - Movido para o final para garantir z-index */}
-      {!readOnly && (
+      {/* Drag handle (Esquerda) */}
+      {canDrag && !readOnly && (
         <div
           {...attributes}
           {...listeners}
@@ -2110,44 +2131,50 @@ function SortableMetricCard({
 
       {/* Botões de ação no hover (Direita) */}
       <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-50">
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onExplorar?.()
-          }}
-          className="p-1 rounded hover:bg-blue-100 text-slate-400 hover:text-blue-600 transition-colors bg-white/80"
-          title="Explorar dados (Drill-in)"
-        >
-          <Maximize2 className="h-3 w-3" />
-        </button>
+        {onExplorar && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onExplorar()
+            }}
+            className="p-1 rounded hover:bg-blue-100 text-slate-400 hover:text-blue-600 transition-colors bg-white/80"
+            title="Explorar dados (Drill-in)"
+          >
+            <Maximize2 className="h-3 w-3" />
+          </button>
+        )}
         {!readOnly && (
           <>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onEdit()
-              }}
-              className="p-1 rounded hover:bg-amber-100 text-slate-400 hover:text-amber-600 transition-colors bg-white/80"
-              title="Editar"
-            >
-              <Pencil className="h-3 w-3" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onRemove()
-              }}
-              className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-500 transition-colors bg-white/80"
-              title="Remover"
-            >
-              <X className="h-3 w-3" />
-            </button>
+            {onEdit && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEdit()
+                }}
+                className="p-1 rounded hover:bg-amber-100 text-slate-400 hover:text-amber-600 transition-colors bg-white/80"
+                title="Editar"
+              >
+                <Pencil className="h-3 w-3" />
+              </button>
+            )}
+            {onRemove && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRemove()
+                }}
+                className="p-1 rounded hover:bg-red-100 text-slate-400 hover:text-red-500 transition-colors bg-white/80"
+                title="Remover"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
           </>
         )}
       </div>
 
       {/* Resize handle - canto inferior direito */}
-      {!readOnly && (
+      {!readOnly && onResize && (
         <div
           onMouseDown={handleResizeStart}
           style={{
