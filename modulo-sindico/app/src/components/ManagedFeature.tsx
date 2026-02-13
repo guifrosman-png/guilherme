@@ -23,24 +23,27 @@ export function ManagedFeature({
 
     const isVisibleForSindico = getPermission(id);
 
-    // MODO SÍNDICO: Se não tiver permissão, não renderiza NADA (ou null)
+    // MODO SÍNDICO: Se não tiver permissão, e estiver no modo síndico, oculta totalmente
     if (isSindicoView && !isVisibleForSindico) {
         return null;
     }
 
-    // MODO DONO (EDITOR): Renderiza com overlay se estiver "oculto"
-    if (isOwnerView) {
-        return (
-            <div className={`relative group/managed ${className} transition-all duration-300 ${!isVisibleForSindico ? 'opacity-50 grayscale contrast-125 border-2 border-dashed border-slate-300/50 rounded-lg p-1' : ''}`}>
-                {/* Visual indicator (optional, subtle) */}
-                {!isVisibleForSindico && (
-                    <div className="absolute top-0 right-0 -mt-1 -mr-1 w-3 h-3 bg-slate-400 rounded-full z-10 shadow-sm pointer-events-none" title="Item oculto para o síndico" />
-                )}
-                {children}
-            </div>
-        );
-    }
+    // Estrutura consistente para evitar unmount/remount ao trocar de modo
+    const isHiddenStyle = isOwnerView && !isVisibleForSindico;
 
-    // Fallback (deve ser visível se não for nenhum dos modos acima, embora improvável)
-    return <>{children}</>;
+    return (
+        <div
+            className={`
+                relative group/managed transition-all duration-300
+                ${className}
+                ${isHiddenStyle ? 'opacity-50 grayscale contrast-125 border-2 border-dashed border-slate-300/50 rounded-lg p-1' : ''}
+            `}
+        >
+            {/* Indicador visual apenas no modo editor quando oculto */}
+            {isHiddenStyle && (
+                <div className="absolute top-0 right-0 -mt-1 -mr-1 w-3 h-3 bg-slate-400 rounded-full z-10 shadow-sm pointer-events-none" title="Item oculto para o síndico" />
+            )}
+            {children}
+        </div>
+    );
 }

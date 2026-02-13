@@ -28,6 +28,7 @@ import { MetricaConfig } from './components/MiniCardsGrid/types';
 
 import { ViewModeProvider, useViewMode } from './contexts/ViewModeContext';
 import { PermissionsProvider } from './contexts/PermissionsContext';
+import { ReportsPermissionsProvider } from './components/ReportsV2/contexts/ReportsPermissionsContext';
 
 import { PermissionsPanel } from './components/PermissionsPanel';
 
@@ -36,8 +37,9 @@ export default function App() {
     <SidebarProvider>
       <ViewModeProvider>
         <PermissionsProvider>
-          <AppContent />
-          <PermissionsPanel />
+          <ReportsPermissionsProvider>
+            <AppContent />
+          </ReportsPermissionsProvider>
         </PermissionsProvider>
       </ViewModeProvider>
     </SidebarProvider>
@@ -471,6 +473,7 @@ function AppContent() {
               setCurrentPage('results');
             }}
           />
+          <PermissionsPanel activeTab={currentPage === 'kanban' ? 'sales' : currentPage === 'results' ? 'closing' : 'dashboard'} />
         </div>
       </FinancialDataProvider>
     </SindicoDataProvider>

@@ -7,7 +7,10 @@ import { SalesList } from './SalesList';
 import { SalesDetailsPanel } from './SalesDetailsPanel';
 import { MercatusSale } from '../../types/mercatus';
 
+import { usePermissions } from '../../contexts/PermissionsContext';
+
 export function SalesView() {
+    const { getPermission } = usePermissions();
     const [inboxFilter, setInboxFilter] = useState<string>('todas');
     const [inboxCollapsed, setInboxCollapsed] = useState(false);
     const [selectedSale, setSelectedSale] = useState<MercatusSale | null>(null);
@@ -21,6 +24,8 @@ export function SalesView() {
         noite: 0
     });
 
+    const isInboxVisible = getPermission('sales.inbox.visible');
+
     // Layout widths
     const inboxWidth = inboxCollapsed ? 'w-16' : 'w-64';
 
@@ -32,15 +37,17 @@ export function SalesView() {
         <div className="flex h-[calc(100vh-6rem)] gap-3 bg-transparent overflow-hidden">
 
             {/* 1. SIDEBAR INBOX (Esquerda) */}
-            <div className={`${inboxWidth} h-full flex-shrink-0 transition-all duration-300`}>
-                <SalesInboxPanel
-                    activeFilter={inboxFilter}
-                    onFilterChange={setInboxFilter}
-                    collapsed={inboxCollapsed}
-                    onToggleCollapse={handleToggleInbox}
-                    counts={counts}
-                />
-            </div>
+            {isInboxVisible && (
+                <div className={`${inboxWidth} h-full flex-shrink-0 transition-all duration-300`}>
+                    <SalesInboxPanel
+                        activeFilter={inboxFilter}
+                        onFilterChange={setInboxFilter}
+                        collapsed={inboxCollapsed}
+                        onToggleCollapse={handleToggleInbox}
+                        counts={counts}
+                    />
+                </div>
+            )}
 
             {/* 2. PAINEL CENTRAL (Apenas Lista) */}
             <div className="flex-1 h-full min-w-0 flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">

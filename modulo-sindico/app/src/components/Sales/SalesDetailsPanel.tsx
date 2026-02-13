@@ -13,6 +13,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { clsx } from 'clsx';
 import { MercatusSale } from '../../types/mercatus';
+import { usePermissions } from '../../contexts/PermissionsContext';
 
 interface SalesDetailsPanelProps {
     saleId: string | null;
@@ -21,8 +22,23 @@ interface SalesDetailsPanelProps {
 }
 
 export function SalesDetailsPanel({ saleId, sale, onClose }: SalesDetailsPanelProps) {
-    const [viewMode, setViewMode] = useState<'lista' | 'card'>('lista');
-    const [expandedSections, setExpandedSections] = useState<string[]>(['resumo', 'itens']); // Inicia ABERTO para visualizar melhor
+    const { getPermission } = usePermissions();
+    const canViewList = getPermission('sales.details.view_list');
+    const canViewCard = getPermission('sales.details.view_card');
+
+    const [viewMode, setViewMode] = useState<'lista' | 'card'>(() => {
+        if (canViewList) return 'lista';
+        if (canViewCard) return 'card';
+        return 'lista'; // Fallback
+    });
+
+    // Atualiza se permissões mudarem dinamicamente
+    React.useEffect(() => {
+        if (viewMode === 'lista' && !canViewList && canViewCard) setViewMode('card');
+        if (viewMode === 'card' && !canViewCard && canViewList) setViewMode('lista');
+    }, [canViewList, canViewCard, viewMode]);
+
+    const [expandedSections, setExpandedSections] = useState<string[]>(['resumo', 'itens']);
 
     if (!saleId || !sale) return null;
 
@@ -33,8 +49,8 @@ export function SalesDetailsPanel({ saleId, sale, onClose }: SalesDetailsPanelPr
     };
 
     const sections = [
-        { id: 'resumo', title: 'Resumo da Venda', icon: CreditCard, color: 'text-green-600', bg: 'bg-green-100' },
-        { id: 'itens', title: 'Itens da Venda', icon: ShoppingBag, color: 'text-[#525a52]', bg: 'bg-[#525a52]/10' },
+        { id: 'resumo', title: 'Resumo da Venda', icon: CreditCard, color: 'text-green-600', bg: 'bg-green-100', permissionId: 'sales.details.summary' },
+        { id: 'itens', title: 'Itens da Venda', icon: ShoppingBag, color: 'text-[#525a52]', bg: 'bg-[#525a52]/10', permissionId: 'sales.details.items' },
     ];
 
     // --- RENDERIZADORES ---
@@ -102,7 +118,9 @@ export function SalesDetailsPanel({ saleId, sale, onClose }: SalesDetailsPanelPr
         <div className="divide-y divide-gray-100">
             {sections.map(section => {
                 const isExpanded = expandedSections.includes(section.id);
-                // const Icon = section.icon; // Icon usage commented out to match user style or handled below
+                const hasPermission = getPermission(section.permissionId);
+
+                if (!hasPermission) return null;
 
                 return (
                     <div key={section.id} className="border-b border-gray-100 last:border-0">
@@ -136,6 +154,9 @@ export function SalesDetailsPanel({ saleId, sale, onClose }: SalesDetailsPanelPr
         <div className="p-4 grid grid-cols-2 gap-3">
             {sections.map(section => {
                 const Icon = section.icon;
+                const hasPermission = getPermission(section.permissionId);
+
+                if (!hasPermission) return null;
 
                 return (
                     <div
@@ -187,26 +208,32 @@ export function SalesDetailsPanel({ saleId, sale, onClose }: SalesDetailsPanelPr
                 </div>
 
                 {/* Toggle View Mode */}
-                <div className="flex bg-gray-100 p-1 rounded-lg">
-                    <button
-                        onClick={() => setViewMode('card')}
-                        className={clsx(
-                            "p-1.5 rounded-md transition-all",
-                            viewMode === 'card' ? "bg-white text-gray-800 shadow-sm" : "text-gray-400 hover:text-gray-600"
+                {(canViewList || canViewCard) && (
+                    <div className="flex bg-gray-100 p-1 rounded-lg">
+                        {canViewCard && (
+                            <button
+                                onClick={() => setViewMode('card')}
+                                className={clsx(
+                                    "p-1.5 rounded-md transition-all",
+                                    viewMode === 'card' ? "bg-white text-gray-800 shadow-sm" : "text-gray-400 hover:text-gray-600"
+                                )}
+                            >
+                                <LayoutGrid className="w-4 h-4" />
+                            </button>
                         )}
-                    >
-                        <LayoutGrid className="w-4 h-4" />
-                    </button>
-                    <button
-                        onClick={() => setViewMode('lista')}
-                        className={clsx(
-                            "p-1.5 rounded-md transition-all",
-                            viewMode === 'lista' ? "bg-white text-gray-800 shadow-sm" : "text-gray-400 hover:text-gray-600"
+                        {canViewList && (
+                            <button
+                                onClick={() => setViewMode('lista')}
+                                className={clsx(
+                                    "p-1.5 rounded-md transition-all",
+                                    viewMode === 'lista' ? "bg-white text-gray-800 shadow-sm" : "text-gray-400 hover:text-gray-600"
+                                )}
+                            >
+                                <List className="w-4 h-4" />
+                            </button>
                         )}
-                    >
-                        <List className="w-4 h-4" />
-                    </button>
-                </div>
+                    </div>
+                )}
             </div>
 
             {/* CONTEÚDO SCROLLÁVEL */}

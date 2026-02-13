@@ -124,12 +124,12 @@ export function SalesInboxPanel({
                                     )}
                                 >
                                     <div className="flex items-center gap-3">
-                                        <item.icon className={cn("h-4 w-4", activeFilter === item.id ? "text-[#525a52]" : (item.color || "text-gray-400"))} />
+                                        <item.icon className={cn("h-4 w-4", activeFilter === item.id ? "text-[#525a52]" : (item.color || "text-gray-600"))} />
                                         <span>{item.label}</span>
                                     </div>
                                     <span className={cn(
                                         "text-xs font-medium",
-                                        activeFilter === item.id ? "text-[#525a52]" : "text-gray-400"
+                                        activeFilter === item.id ? "text-[#525a52]" : "text-gray-700"
                                     )}>
                                         {item.count}
                                     </span>
@@ -141,7 +141,7 @@ export function SalesInboxPanel({
                     {/* Seção Agentes / Caixas */}
                     <div>
                         <div className="px-3 mb-2 flex items-center justify-between">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            <span className="text-[10px] font-bold text-gray-700 uppercase tracking-widest">
                                 TURNOS / CAIXAS
                             </span>
                         </div>
@@ -166,7 +166,7 @@ export function SalesInboxPanel({
                                         </div>
                                         <span className={cn(
                                             "text-xs font-medium",
-                                            activeFilter === item.id ? "text-[#525a52]" : "text-gray-400"
+                                            activeFilter === item.id ? "text-[#525a52]" : "text-gray-700"
                                         )}>
                                             {item.count}
                                         </span>

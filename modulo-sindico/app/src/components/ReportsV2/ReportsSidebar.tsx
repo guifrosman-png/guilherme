@@ -1,251 +1,178 @@
 
 import { useState } from 'react';
-import {
-  FileText,
-  History,
-  FileSearch,
-  ChevronRight,
-  ChevronLeft,
-  CalendarCheck,
-  File
-} from 'lucide-react';
-import { cn } from '../ui/utils';
-
-// ==================== INTERFACES ====================
-
-interface SidebarItem {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  count?: number;
-}
+import { ChevronLeft, ChevronRight, File, Calendar, List, ChevronDown, ChevronUp, History } from 'lucide-react';
+import { clsx } from 'clsx';
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { useReportsPermissions } from './contexts/ReportsPermissionsContext'; // Importe Contexto
 
 interface ReportsSidebarProps {
-  activeItem: string;
-  onItemClick: (itemId: string) => void;
-  onNewReport?: () => void; // Mantido para compatibilidade, mas pode ser removido depois
-  collapsed?: boolean;
-  onToggleCollapse?: () => void;
-  counts?: any; // Mantido para compatibilidade
+    activeItem: string;
+    onItemClick: (id: string) => void;
+    collapsed: boolean;
+    onToggleCollapse: () => void;
 }
 
-// ==================== ITENS DEFAULT ====================
+// Helper para gerar meses dinamicamente
+const generateMonths = () => {
+    const today = new Date();
+    const months = [];
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth(); // 0-11
 
-const getSidebarItems = (): SidebarItem[] => [
-  {
-    id: 'current-month',
-    label: 'Extrato Atual (Jan/26)',
-    icon: <CalendarCheck className="h-4 w-4" />,
-    count: 1
-  },
-  {
-    id: 'history',
-    label: 'Histórico Completo',
-    icon: <History className="h-4 w-4" />,
-  },
-  {
-    id: 'documents',
-    label: 'Documentos do Condomínio',
-    icon: <FileText className="h-4 w-4" />,
-  }
-];
+    // Gerar últimos 24 meses
+    for (let i = 0; i < 24; i++) {
+        const d = new Date(currentYear, currentMonth - i, 1);
+        months.push({
+            id: `report-${d.getMonth() + 1}-${d.getFullYear()}`, // ex: report-2-2026
+            year: d.getFullYear(),
+            month: d.getMonth() + 1,
+            monthName: d.toLocaleString('pt-BR', { month: 'long' }),
+            monthShort: d.toLocaleString('pt-BR', { month: 'short' }).toUpperCase(),
+        });
+    }
 
-// ==================== ITENS DE MESES (MOCK) ====================
-// Estrutura agrupada por ano
-const yearGroups = [
-  {
-    year: 2026,
-    months: [
-      { id: 'report-jan-26', label: 'Janeiro', icon: <FileSearch className="h-4 w-4" /> }
-    ]
-  },
-  {
-    year: 2025,
-    months: [
-      { id: 'report-dez-25', label: 'Dezembro', icon: <File className="h-4 w-4" /> },
-      { id: 'report-nov-25', label: 'Novembro', icon: <File className="h-4 w-4" /> },
-      { id: 'report-out-25', label: 'Outubro', icon: <File className="h-4 w-4" /> },
-      { id: 'report-set-25', label: 'Setembro', icon: <File className="h-4 w-4" /> },
-      { id: 'report-ago-25', label: 'Agosto', icon: <File className="h-4 w-4" /> },
-      { id: 'report-jul-25', label: 'Julho', icon: <File className="h-4 w-4" /> },
-      { id: 'report-jun-25', label: 'Junho', icon: <File className="h-4 w-4" /> },
-      { id: 'report-mai-25', label: 'Maio', icon: <File className="h-4 w-4" /> },
-      { id: 'report-abr-25', label: 'Abril', icon: <File className="h-4 w-4" /> },
-      { id: 'report-mar-25', label: 'Março', icon: <File className="h-4 w-4" /> },
-      { id: 'report-fev-25', label: 'Fevereiro', icon: <File className="h-4 w-4" /> },
-      { id: 'report-jan-25', label: 'Janeiro', icon: <File className="h-4 w-4" /> }
-    ]
-  }
-];
+    // Agrupar por ano
+    const grouped = months.reduce((acc, curr) => {
+        if (!acc[curr.year]) acc[curr.year] = [];
+        acc[curr.year].push(curr);
+        return acc;
+    }, {} as Record<number, typeof months>);
 
-// ==================== COMPONENTE COLAPSADO ====================
+    // Ordenar anos (decrescente)
+    const years = Object.keys(grouped).map(Number).sort((a, b) => b - a);
 
-function CollapsedSidebarItem({
-  item,
-  isActive = false,
-  onClick
-}: {
-  item: SidebarItem;
-  isActive?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "w-full flex items-center justify-center p-2 rounded-lg transition-colors relative group",
-        isActive
-          ? "bg-white text-[#525a52] shadow-sm"
-          : "hover:bg-white/50 text-gray-500 hover:text-gray-900"
-      )}
-      title={item.label}
-    >
-      <div className="flex-shrink-0">
-        {item.icon}
-      </div>
-      {/* Badge de contagem */}
-      {item.count !== undefined && item.count > 0 && (
-        <span className={cn(
-          "absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full",
-          isActive
-            ? "bg-[#525a52] text-white"
-            : "bg-gray-200 text-gray-600"
-        )}>
-          {item.count > 99 ? '99+' : item.count}
-        </span>
-      )}
-    </button>
-  );
-}
+    return { grouped, years };
+};
 
-// ==================== COMPONENTE PRINCIPAL (ATUALIZADO) ====================
+export function ReportsSidebar({ activeItem, onItemClick, collapsed, onToggleCollapse }: ReportsSidebarProps) {
+    const { grouped, years } = generateMonths();
+    // Acesse as permissões
+    const { permissions } = useReportsPermissions();
 
-export function ReportsSidebar({
-  activeItem,
-  onItemClick,
-  collapsed = false,
-  onToggleCollapse
-}: ReportsSidebarProps) {
-  const items = getSidebarItems();
+    const [expandedYears, setExpandedYears] = useState<number[]>([]);
 
-  // Modo RECOLHIDO - apenas ícones (simplificado)
-  if (collapsed) {
+    const toggleYear = (year: number) => {
+        setExpandedYears(prev =>
+            prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]
+        );
+    };
+
     return (
-      <aside className="w-16 flex-shrink-0 bg-gray-50 border border-gray-200 rounded-2xl transition-all duration-300 overflow-hidden">
-        <div className="flex flex-col h-full">
-          <div className="p-2 border-b border-gray-200 flex justify-center">
-            <button onClick={onToggleCollapse} className="p-1.5 rounded-lg hover:bg-white/50 text-gray-500 hover:text-gray-700 transition-colors">
-              <ChevronRight size={18} />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto py-2">
-            <div className="space-y-1 px-2">
-              {items.map((item) => (
-                <CollapsedSidebarItem key={item.id} item={item} isActive={activeItem === item.id} onClick={() => onItemClick(item.id)} />
-              ))}
-            </div>
-            {/* Ícones dos meses (apenas os primeiros para não poluir) */}
-            <div className="my-3 border-t border-gray-200 mx-2" />
-            <div className="space-y-1 px-2">
-              <CollapsedSidebarItem item={yearGroups[0].months[0]} isActive={activeItem === 'report-jan-26'} onClick={() => onItemClick('report-jan-26')} />
-            </div>
-          </div>
-        </div>
-      </aside>
-    );
-  }
+        <div className={clsx("flex flex-col bg-white border border-gray-200 rounded-2xl transition-all duration-300 overflow-hidden h-full z-20 shadow-sm", collapsed ? "w-16" : "w-72")}>
 
-  // Modo EXPANDIDO
-  return (
-    <aside className="w-64 flex-shrink-0 bg-gray-50 border border-gray-200 rounded-2xl transition-all duration-300 overflow-hidden">
-      <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-gray-800">FECHAMENTO</h1>
-          <button onClick={onToggleCollapse} className="p-1.5 rounded-lg hover:bg-white/50 text-gray-500 hover:text-gray-700 transition-colors">
-            <ChevronLeft size={18} />
-          </button>
-        </div>
-
-        <div className="p-4 flex-1 overflow-y-auto">
-
-          {/* Inbox / Recentes */}
-          <nav className="space-y-1">
-            {items.map((item) => {
-              const isActive = activeItem === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => onItemClick(item.id)}
-                  className={`
-                  w-full flex items-center justify-between px-3 py-2.5
-                  rounded-lg text-sm font-medium whitespace-nowrap
-                  transition-all duration-150
-                  ${isActive
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
-                    }
-                `}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <span className={`flex-shrink-0 ${isActive ? 'text-[#525a52]' : 'text-gray-400'}`}>
-                      {item.icon}
+            {/* Header da Sidebar */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50">
+                {!collapsed && (
+                    <span className="font-bold text-gray-800 flex items-center gap-2">
+                        <List className="w-5 h-5 text-gray-500" />
+                        INBOX
                     </span>
-                    <span className="truncate">{item.label}</span>
-                  </div>
-                  {item.count !== undefined && item.count > 0 && (
-                    <span className={`text-xs px-2 py-0.5 rounded-full ml-2 ${isActive ? 'bg-[#525a52]/10 text-[#525a52]' : 'bg-gray-200 text-gray-600'}`}>
-                      {item.count}
-                    </span>
-                  )}
+                )}
+                <button onClick={onToggleCollapse} className="p-1 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors">
+                    {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
                 </button>
-              );
-            })}
-          </nav>
-
-          {/* Separador */}
-          <div className="my-4 border-t border-gray-200" />
-
-          {/* Loop por Anos */}
-          {yearGroups.map((group) => (
-            <div key={group.year} className="mb-4">
-              <div className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                {group.year}
-              </div>
-              <nav className="space-y-1">
-                {group.months.map((item) => {
-                  const isActive = activeItem === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => onItemClick(item.id)}
-                      className={`
-                      w-full flex items-center justify-between px-3 py-2.5
-                      rounded-lg text-sm font-medium whitespace-nowrap
-                      transition-all duration-150
-                      ${isActive
-                          ? 'bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-600 hover:bg-white/50 hover:text-gray-900'
-                        }
-                    `}
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <span className={`flex-shrink-0 ${isActive ? 'text-[#525a52]' : 'text-gray-400'}`}>
-                          {item.icon}
-                        </span>
-                        <span className="truncate">{item.label}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </nav>
             </div>
-          ))}
 
+            <ScrollArea className="flex-1">
+                <div className="p-3 space-y-4">
+
+                    {/* SEÇÃO 1: Atalhos Principais - CONTROLADOS POR PERMISSÃO */}
+                    <div className="space-y-1">
+
+                        {/* Extrato Atual */}
+                        {permissions.inbox.showCurrentExtract && (
+                            <Button
+                                variant="ghost"
+                                className={clsx(
+                                    "w-full justify-start gap-3 h-10 text-sm transition-all",
+                                    activeItem === 'current-month'
+                                        ? "bg-gray-100 text-gray-900 font-semibold"
+                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium"
+                                )}
+                                onClick={() => onItemClick('current-month')}
+                                title={collapsed ? "Extrato Atual" : undefined}
+                            >
+                                <Calendar className="h-4 w-4 flex-shrink-0" />
+                                {!collapsed && <span>Extrato Atual</span>}
+                            </Button>
+                        )}
+
+                        {/* Histórico Completo */}
+                        {permissions.inbox.showHistoryButton && (
+                            <Button
+                                variant="ghost"
+                                className={clsx(
+                                    "w-full justify-start gap-3 h-10 text-sm transition-all",
+                                    activeItem === 'history'
+                                        ? "bg-gray-100 text-gray-900 font-semibold"
+                                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium"
+                                )}
+                                onClick={() => onItemClick('history')}
+                                title={collapsed ? "Histórico Completo" : undefined}
+                            >
+                                <History className="h-4 w-4 flex-shrink-0" />
+                                {!collapsed && <span>Histórico Completo</span>}
+                            </Button>
+                        )}
+                    </div>
+
+                    {!collapsed && <div className="h-px bg-gray-100 w-full my-2" />}
+
+                    {/* SEÇÃO 2: Dropdowns de Anos - CONTROLADOS POR PERMISSÃO */}
+                    <div className="space-y-3">
+                        {years
+                            // Filtra anos se visibilidade for false
+                            .filter(year => permissions.inbox.years[year]?.visible !== false)
+                            .map(year => (
+                                <div key={year} className="border border-gray-100 rounded-lg overflow-hidden">
+                                    {/* Header do Ano (Accordion) */}
+                                    <button
+                                        onClick={() => !collapsed && toggleYear(year)}
+                                        className={clsx(
+                                            "w-full flex items-center justify-between p-3 bg-white hover:bg-gray-50 transition-colors text-sm font-medium text-gray-700",
+                                            collapsed && "justify-center"
+                                        )}
+                                        title={collapsed ? `${year}` : undefined}
+                                    >
+                                        <span className={clsx(collapsed && "text-xs font-bold")}>{year} Fechamentos</span>
+                                        {!collapsed && (
+                                            expandedYears.includes(year) ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />
+                                        )}
+                                    </button>
+
+                                    {/* Lista de Meses */}
+                                    {(!collapsed && expandedYears.includes(year)) && (
+                                        <div className="bg-white divide-y divide-gray-50 border-t border-gray-100">
+                                            {grouped[year]
+                                                // Filtra meses se visibilidade for false
+                                                .filter(m => permissions.inbox.years[year]?.months?.[m.month] !== false)
+                                                .map(m => (
+                                                    <button
+                                                        key={m.id}
+                                                        onClick={() => onItemClick(m.id)}
+                                                        className={clsx(
+                                                            "w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors group",
+                                                            activeItem === m.id
+                                                                ? "bg-blue-50 text-blue-700 font-medium"
+                                                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <span className="w-8 text-[10px] font-bold text-gray-400 uppercase group-hover:text-gray-500">{m.monthShort}</span>
+                                                            <span className="capitalize">{m.monthName}</span>
+                                                        </div>
+                                                        {activeItem === m.id && <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />}
+                                                    </button>
+                                                ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                    </div>
+
+                </div>
+            </ScrollArea>
         </div>
-      </div>
-    </aside>
-  );
+    );
 }
-
-export default ReportsSidebar;
