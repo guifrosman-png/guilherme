@@ -81,17 +81,6 @@ export function SalesInboxPanel({
                     </ManagedFeature>
                 ))}
 
-                {/* Botão Flutuante Collapsed */}
-                <div className="mt-auto pb-2">
-                    <ManagedFeature id="sales.add_button" label="Botão Adicionar">
-                        <Button
-                            size="icon"
-                            className="h-10 w-10 rounded-full bg-[#525a52] hover:bg-[#525a52]/90 text-white shadow-lg transition-transform hover:scale-110 active:scale-95"
-                        >
-                            <Plus className="h-5 w-5" />
-                        </Button>
-                    </ManagedFeature>
-                </div>
             </div>
         );
     }
@@ -179,14 +168,6 @@ export function SalesInboxPanel({
                 </div>
             </ScrollArea>
 
-            {/* Botão Flutuante de Adicionar */}
-            <ManagedFeature id="sales.add_button" label="Botão Adicionar">
-                <Button
-                    className="absolute bottom-4 left-4 z-20 h-12 w-12 rounded-full bg-[#525a52] hover:bg-[#525a52]/90 text-white shadow-lg border-2 border-white transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center p-0"
-                >
-                    <Plus className="h-6 w-6" />
-                </Button>
-            </ManagedFeature>
         </div>
     );
 }

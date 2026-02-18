@@ -187,7 +187,7 @@ import { cardStockoutRisk } from './cards/estoque/StockoutRiskCard'
 // ============================================
 
 const GRID_COLS = 10
-const MAX_GRID_ROWS = 20
+const MAX_GRID_ROWS = 100
 
 /**
  * Obtém o contexto de uma métrica para filtragem.
@@ -387,10 +387,30 @@ export function MiniCardsGrid({
         // Carregar métricas salvas
         const saved = loadDashboard(dashboardId)
         if (saved && saved.length > 0) {
-          // Usar startTransition para atualização não-bloqueante
-          React.startTransition(() => {
-            setMetricasAtivas(saved)
+          // Validar layout salvo: verificar se cards estão em posições razoáveis
+          const maxAllowedRow = MAX_GRID_ROWS
+          const hasInvalidPositions = saved.some(m => {
+            const { rows } = parseCardSize(m.size)
+            return m.row < 0 || m.col < 0 || m.col >= GRID_COLS || (m.row + rows) > maxAllowedRow
           })
+
+          // Verificar se todos os IDs do initialMetrics estão presentes no layout salvo
+          const savedIds = new Set(saved.map(m => m.id))
+          const initialIds = initialMetrics.map(m => m.id)
+          const missingInitialCards = initialIds.filter(id => !savedIds.has(id))
+
+          if (hasInvalidPositions) {
+            console.warn('[MiniCardsGrid] Layout salvo descartado: posições inválidas detectadas', { dashboardId })
+            // Não sobrescrever - manter initialMetrics
+          } else if (missingInitialCards.length > initialIds.length * 0.5) {
+            console.warn('[MiniCardsGrid] Layout salvo descartado: muitos cards iniciais ausentes', { dashboardId, missingInitialCards })
+            // Não sobrescrever - manter initialMetrics
+          } else {
+            // Layout válido - usar layout salvo
+            React.startTransition(() => {
+              setMetricasAtivas(saved)
+            })
+          }
         }
 
         // Carregar custom cards
@@ -930,10 +950,8 @@ export function MiniCardsGrid({
 
     const { cols: newCols, rows: newRows } = parseCardSize(newSize)
 
-    // Validar tamanho mínimo baseado nos componentes do card
-    const metricConfig = allMetrics.find(m => m.id === metricaId)
-    const minSize = getMinCardSize(metricConfig?.canvasComponents)
-    if (newCols < minSize.cols || newRows < minSize.rows) return
+    // Removida validação de tamanho mínimo conforme pedido - agora o mínimo é sempre 1x1
+    if (newCols < 1 || newRows < 1) return
 
     if (metrica.col + newCols > GRID_COLS) return
     if (metrica.row + newRows > MAX_GRID_ROWS) return
@@ -1002,10 +1020,8 @@ export function MiniCardsGrid({
     const metrica = metricasAtivas.find(m => m.id === metricaId)
     if (!metrica) return
 
-    // Validar tamanho mínimo baseado nos componentes do card
-    const metricConfig = allMetrics.find(m => m.id === metricaId)
-    const minSize = getMinCardSize(metricConfig?.canvasComponents)
-    if (newCols < minSize.cols || newRows < minSize.rows) {
+    // Removida validação de tamanho mínimo conforme pedido - agora o mínimo é sempre 1x1
+    if (newCols < 1 || newRows < 1) {
       setResizePreviewMetricas(null)
       return
     }
@@ -2026,7 +2042,7 @@ function SortableMetricCard({
       document.removeEventListener('mouseup', handleMouseUp)
 
       const finalPreview = resizePreviewRef.current
-      if (finalPreview) {
+      if (finalPreview && onResize) {
         const newSize = createCardSize(finalPreview.cols, finalPreview.rows)
         onResize(newSize)
       }

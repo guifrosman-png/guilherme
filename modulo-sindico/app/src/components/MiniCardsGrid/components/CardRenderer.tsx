@@ -71,7 +71,6 @@ import { COLOR_OPTIONS } from '../constants'
 import { CanvasTable } from './CanvasTable'
 import { useMetricsBuilder } from '../hooks/useMetricsBuilder'
 import { Loader2, AlertCircle } from 'lucide-react'
-import { ExploreButton } from './ExploreButton'
 
 // Portal para Tooltip
 const PortalTooltip = ({ position, children }: { position: { x: number, y: number } | null, children: React.ReactNode }) => {
@@ -928,12 +927,6 @@ export function CardRenderer({ component: comp, currentColor, scale = 1, onExplo
 
                 return (
                     <div className="w-full h-full p-1 relative" style={{ minWidth: 100, minHeight: 100 }}>
-                        {/* Explore Button */}
-                        {onExplore && (
-                            <div className="absolute top-1 right-1 z-10">
-                                <ExploreButton onClick={onExplore} compact />
-                            </div>
-                        )}
                         <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
                             <RechartsBarChart data={rechartsBarData} margin={{ top: 20, right: 20, left: 0, bottom: showLegend ? 10 : 5 }}>
                                 <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#6b7280' }} stroke="#e5e7eb" axisLine={false} tickLine={false} />
@@ -1039,11 +1032,6 @@ export function CardRenderer({ component: comp, currentColor, scale = 1, onExplo
 
                 return (
                     <div className="w-full h-full p-1 relative flex flex-col overflow-visible">
-                        {onExplore && (
-                            <div className="absolute top-0 right-1 z-10">
-                                <ExploreButton onClick={onExplore} compact />
-                            </div>
-                        )}
 
                         {/* Tooltip Portal */}
                         {tooltipData && (
@@ -1164,11 +1152,6 @@ export function CardRenderer({ component: comp, currentColor, scale = 1, onExplo
 
                 return (
                     <div className="w-full h-full p-1 relative" style={{ minWidth: 100, minHeight: 100 }}>
-                        {onExplore && (
-                            <div className="absolute top-1 right-1 z-10">
-                                <ExploreButton onClick={onExplore} compact />
-                            </div>
-                        )}
                         <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
                             <RechartsLineChart data={rechartsLineData} margin={{ top: 20, right: 20, left: 0, bottom: showLegendLine ? 10 : 5 }}>
                                 <defs>
@@ -1276,11 +1259,6 @@ export function CardRenderer({ component: comp, currentColor, scale = 1, onExplo
 
                 return (
                     <div className="w-full h-full p-1 relative" style={{ minWidth: 100, minHeight: 100 }}>
-                        {onExplore && (
-                            <div className="absolute top-1 right-1 z-10">
-                                <ExploreButton onClick={onExplore} compact />
-                            </div>
-                        )}
                         <ResponsiveContainer width="100%" height="100%" minWidth={80} minHeight={80}>
                             <RechartsAreaChart data={rechartsAreaData} margin={{ top: 20, right: 20, left: 0, bottom: showLegendArea ? 10 : 5 }}>
                                 <defs>

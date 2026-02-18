@@ -9,11 +9,37 @@ interface MercatusSaleResponse {
         qtdTotalRegistros: number;
     };
     registros: Array<{
+        id: number | string;
+        dataInicio: string;     // Data início da venda (ex: "2026-02-01 00:57:43")
+        dataFim: string;        // Data fim da venda
+        dataEfetivacao: string; // Data efetivação
         valorTotal: number;
+        valorLiquido: number;
         cancelado: boolean;
+        unidadeId: string;
+        unidadeNome: string;
         finalizadoras: Array<{
+            id: string;
             descricao: string;
             valorPago: number;
+            formaPagamentoDescricao?: string;
+        }>;
+        produtos: Array<{
+            id: string;
+            descricaoReduzida: string;
+            descricaoComercial: string;
+            quantidade: number;
+            valorUnitario: number;
+            valorTotal: number;
+            cancelado: boolean;
+        }>;
+        // Legacy compatibility
+        dataMovimento?: string;
+        itens?: Array<{
+            produto: string;
+            quantidade: number;
+            valorUnitario: number;
+            valorTotal: number;
         }>;
     }>;
 }
@@ -78,29 +104,33 @@ export const mercatusService = {
             };
 
             let totalSales = 0;
-            data.registros.forEach(venda => {
-                const valor = Number(venda.valorTotal || 0);
-                totalSales += valor;
-                if (venda.cancelado) {
-                    cancellations += valor;
-                } else {
-                    // Detalhamento por finalizadora
-                    venda.finalizadoras?.forEach(f => {
-                        const desc = f.descricao?.toUpperCase() || '';
-                        const valorPago = Number(f.valorPago || 0);
-                        if (desc.includes('CRÉDITO') || desc.includes('CREDITO')) detail.credito += valorPago;
-                        else if (desc.includes('DÉBITO') || desc.includes('DEBITO')) detail.debito += valorPago;
-                        else if (desc.includes('PIX')) detail.pix += valorPago;
-                        else detail.outros += valorPago;
-                    });
-                }
-            });
+            // Safe check for registros array
+            if (data.registros && Array.isArray(data.registros)) {
+                data.registros.forEach(venda => {
+                    const valor = Number(venda.valorTotal || 0);
+                    totalSales += valor;
+                    if (venda.cancelado) {
+                        cancellations += valor;
+                    } else {
+                        // Detalhamento por finalizadora
+                        venda.finalizadoras?.forEach(f => {
+                            const desc = f.descricao?.toUpperCase() || '';
+                            const valorPago = Number(f.valorPago || 0);
+                            if (desc.includes('CRÉDITO') || desc.includes('CREDITO')) detail.credito += valorPago;
+                            else if (desc.includes('DÉBITO') || desc.includes('DEBITO')) detail.debito += valorPago;
+                            else if (desc.includes('PIX')) detail.pix += valorPago;
+                            else detail.outros += valorPago;
+                        });
+                    }
+                });
+            }
 
             return {
                 grossSales: totalSales,
                 cancellations,
                 netBase: totalSales - cancellations,
-                detail
+                detail,
+                rawData: data.registros || [] // Exposing raw data for detailed reports
             };
 
         } catch (error) {

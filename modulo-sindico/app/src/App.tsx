@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { LayoutDashboard, CreditCard, FileBarChart, FileText, Users, FolderPlus, ShoppingBag, Search, Filter, Settings2, LayoutGrid, FileCheck, LifeBuoy, TrendingUp, DollarSign } from 'lucide-react';
+import { LayoutDashboard, CreditCard, FileBarChart, FileText, Users, FolderPlus, ShoppingBag, Search, Filter, LayoutGrid, FileCheck, LifeBuoy, TrendingUp, DollarSign } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
 import { MobileTabBar } from './components/MobileTabBar';
 import { NotificationPanel } from './components/NotificationPanel';
 import { SearchModal } from './components/SearchModal';
-import { FloatingButtons, FloatingAction } from './components/FloatingButtons';
 import { Modal, ModalFooter } from './components/Modal';
 import { ManagedFeature } from './components/ManagedFeature';
+import { Toaster } from 'sonner';
 
 import { UniversalFilterMenu } from './components/Filters/UniversalFilterMenu';
 import { FilterCapsules } from './components/Filters/FilterCapsules';
@@ -26,7 +26,7 @@ import { UnitSupportTab } from './components/UnitSupport/UnitSupportTab';
 import { useSindicoDashboard } from './hooks/useSindicoDashboard';
 import { MetricaConfig } from './components/MiniCardsGrid/types';
 
-import { ViewModeProvider, useViewMode } from './contexts/ViewModeContext';
+import { ViewModeProvider } from './contexts/ViewModeContext';
 import { PermissionsProvider } from './contexts/PermissionsContext';
 import { ReportsPermissionsProvider } from './components/ReportsV2/contexts/ReportsPermissionsContext';
 
@@ -38,6 +38,7 @@ export default function App() {
       <ViewModeProvider>
         <PermissionsProvider>
           <ReportsPermissionsProvider>
+            <Toaster position="top-center" richColors />
             <AppContent />
           </ReportsPermissionsProvider>
         </PermissionsProvider>
@@ -46,32 +47,30 @@ export default function App() {
   );
 }
 
-// Configuração dos Cards Específicos do Síndico (Definida fora ou com useMemo para evitar re-renders)
+// Configuração dos Cards Específicos do Síndico
 const SINDICO_METRICS_CONFIG: MetricaConfig[] = [
+  // --- KPIs (Linha 1) ---
   {
     id: 'sind-faturamento',
     titulo: 'Faturamento Bruto',
     descricao: 'Vendas totais no período',
     icon: ShoppingBag,
-    cor: 'text-green-600',
-    borderColor: 'border-green-500',
+    cor: 'text-emerald-600',
+    borderColor: 'border-emerald-500',
     categoria: 'financeiro',
     context: 'sindico',
-    getValue: (_data) => 0, // Fallback (usado apenas em modo legado)
-    canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'green' },
+    getValue: (_data) => 0,
+    canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'emerald' },
     canvasComponents: [{
       id: 'kpi-fat', type: 'kpi-unified', x: 0, y: 0, width: 1, height: 1,
-      dataSource: {
-        type: 'metrics',
-        metricsQuery: { metric: 'sind-faturamento', aggregation: 'sum' }
-      },
+      dataSource: { type: 'metrics', metricsQuery: { metric: 'sind-faturamento', aggregation: 'sum' } },
       props: { title: 'Faturamento Bruto', iconName: 'shopping-bag', valueSize: '32', format: 'currency' }
     }]
   },
   {
     id: 'sind-repasse',
     titulo: 'Repasse Líquido',
-    descricao: 'Valor a receber (estimado)',
+    descricao: 'Valor estimado para o condomínio',
     icon: DollarSign,
     cor: 'text-blue-600',
     borderColor: 'border-blue-500',
@@ -81,10 +80,7 @@ const SINDICO_METRICS_CONFIG: MetricaConfig[] = [
     canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'blue' },
     canvasComponents: [{
       id: 'kpi-rep', type: 'kpi-unified', x: 0, y: 0, width: 1, height: 1,
-      dataSource: {
-        type: 'metrics',
-        metricsQuery: { metric: 'sind-repasse', aggregation: 'sum' }
-      },
+      dataSource: { type: 'metrics', metricsQuery: { metric: 'sind-repasse', aggregation: 'sum' } },
       props: { title: 'Repasse Líquido', iconName: 'dollar-sign', valueSize: '32', format: 'currency' }
     }]
   },
@@ -101,11 +97,108 @@ const SINDICO_METRICS_CONFIG: MetricaConfig[] = [
     canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'purple' },
     canvasComponents: [{
       id: 'kpi-qtd', type: 'kpi-unified', x: 0, y: 0, width: 1, height: 1,
-      dataSource: {
-        type: 'metrics',
-        metricsQuery: { metric: 'sind-vendas-qtd', aggregation: 'sum' }
-      },
-      props: { title: 'Qtd. Vendas', iconName: 'trending-up', valueSize: '32', format: 'number' }
+      dataSource: { type: 'metrics', metricsQuery: { metric: 'sind-vendas-qtd', aggregation: 'sum' } },
+      props: { title: 'Total Vendas (Qtd)', iconName: 'trending-up', valueSize: '32', format: 'number' }
+    }]
+  },
+  {
+    id: 'sind-itens-qtd',
+    titulo: 'Itens Vendidos',
+    descricao: 'Volume de produtos',
+    icon: ShoppingBag,
+    cor: 'text-orange-600',
+    borderColor: 'border-orange-500',
+    categoria: 'financeiro',
+    context: 'sindico',
+    getValue: (_data) => 0,
+    canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'orange' },
+    canvasComponents: [{
+      id: 'kpi-itens', type: 'kpi-unified', x: 0, y: 0, width: 1, height: 1,
+      dataSource: { type: 'metrics', metricsQuery: { metric: 'sind-itens-qtd', aggregation: 'sum' } },
+      props: { title: 'Itens Vendidos', iconName: 'package', valueSize: '32', format: 'number' }
+    }]
+  },
+
+  // --- Gráficos (Linha 2 e 3) ---
+  {
+    id: 'sind-evolucao-diaria',
+    titulo: 'Evolução Diária',
+    descricao: 'Vendas por dia no período',
+    icon: FileBarChart,
+    cor: 'text-emerald-600',
+    borderColor: 'border-emerald-500',
+    categoria: 'financeiro',
+    context: 'sindico',
+    getValue: (_data) => 0,
+    canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'emerald' },
+    canvasComponents: [{
+      id: 'chart-daily', type: 'recharts-bar', x: 0, y: 0, width: 1, height: 1,
+      dataSource: { type: 'metrics', metricsQuery: { metric: 'sind-evolucao-diaria', aggregation: 'sum' } },
+      props: {
+        title: 'Faturamento por Dia',
+        chartColors: ['#10b981'],
+        tooltipFormat: 'currency'
+      }
+    }]
+  },
+  {
+    id: 'sind-top-produtos',
+    titulo: 'Top Produtos',
+    descricao: 'Produtos mais vendidos',
+    icon: LayoutGrid,
+    cor: 'text-indigo-600',
+    borderColor: 'border-indigo-500',
+    categoria: 'financeiro',
+    context: 'sindico',
+    getValue: (_data) => 0,
+    canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'indigo' },
+    canvasComponents: [{
+      id: 'chart-top', type: 'recharts-bar-h', x: 0, y: 0, width: 1, height: 1,
+      dataSource: { type: 'metrics', metricsQuery: { metric: 'sind-top-produtos', aggregation: 'sum' } },
+      props: {
+        title: 'Top 5 Produtos',
+        chartColors: ['#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#e0e7ff']
+      }
+    }]
+  },
+  {
+    id: 'sind-formas-pagamento',
+    titulo: 'Formas de Pagamento',
+    descricao: 'Mix de pagamentos',
+    icon: CreditCard,
+    cor: 'text-cyan-600',
+    borderColor: 'border-cyan-500',
+    categoria: 'financeiro',
+    context: 'sindico',
+    getValue: (_data) => 0,
+    canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'cyan' },
+    canvasComponents: [{
+      id: 'chart-pay', type: 'recharts-pie', x: 0, y: 0, width: 1, height: 1,
+      dataSource: { type: 'metrics', metricsQuery: { metric: 'sind-formas-pagamento', aggregation: 'sum' } },
+      props: {
+        title: 'Meios de Pagamento',
+        chartColors: ['#0ea5e9', '#22c55e', '#eab308', '#f97316', '#ef4444', '#8b5cf6']
+      }
+    }]
+  },
+  {
+    id: 'sind-horarios',
+    titulo: 'Horários de Pico',
+    descricao: 'Movimento por hora',
+    icon: Filter,
+    cor: 'text-pink-600',
+    borderColor: 'border-pink-500',
+    categoria: 'financeiro',
+    context: 'sindico',
+    getValue: (_data) => 0,
+    canvasConfig: { gridCols: 1, gridRows: 1, colorScheme: 'pink' },
+    canvasComponents: [{
+      id: 'chart-hour', type: 'recharts-bar-h', x: 0, y: 0, width: 1, height: 1,
+      dataSource: { type: 'metrics', metricsQuery: { metric: 'sind-horarios', aggregation: 'sum' } },
+      props: {
+        title: 'Vendas por Hora',
+        chartColors: ['#ec4899']
+      }
     }]
   }
 ];
@@ -119,7 +212,6 @@ function AppContent() {
   const [quickAddModalOpen, setQuickAddModalOpen] = useState(false);
   const [newReportModalOpen, setNewReportModalOpen] = useState(false);
   const [reportCreationModule, setReportCreationModule] = useState<string>('all');
-  const { isSindicoView } = useViewMode();
 
   // Dashboard filters
   const [dashboardSearchQuery, setDashboardSearchQuery] = useState('');
@@ -254,14 +346,14 @@ function AppContent() {
                 : sidebarCollapsed ? 'pr-40' : 'pr-84'
               }
         `}>
-              <div className="w-full h-full">
+              <div className="w-full min-h-full">
                 {/* 1. DASHBOARD HOME */}
-                <div className={clsx("w-full h-full", currentPage !== 'home' && "hidden")}>
-                  <ManagedFeature id="dashboard" label="Dashboard Inicial" className="h-full">
+                <div className={clsx("w-full min-h-full", currentPage !== 'home' && "hidden")}>
+                  <ManagedFeature id="dashboard" label="Dashboard Inicial" className="min-h-full">
                     <MiniCardsGrid
-                      key="dashboard-sindico"
+                      key="dashboard-sindico-v6"
                       variant="flat"
-                      dashboardId="sindico-home"
+                      dashboardId="sindico-home-v6"
                       contextFilter="all"
                       readOnly={false}
                       filterContent={
@@ -272,9 +364,19 @@ function AppContent() {
                       }
                       availableMetrics={SINDICO_METRICS_CONFIG}
                       initialMetrics={[
-                        { id: 'sind-faturamento', size: '2x1', row: 0, col: 0 },
-                        { id: 'sind-repasse', size: '2x1', row: 0, col: 2 },
-                        { id: 'sind-vendas-qtd', size: '2x1', row: 0, col: 4 },
+                        // Linha 1: KPIs (2x2)
+                        { id: 'sind-faturamento', size: '2x2', row: 0, col: 0 },
+                        { id: 'sind-repasse', size: '2x2', row: 0, col: 2 },
+                        { id: 'sind-vendas-qtd', size: '2x2', row: 0, col: 4 },
+                        { id: 'sind-itens-qtd', size: '2x2', row: 0, col: 6 },
+
+                        // Linha 2 e 3: Gráficos (4x4)
+                        { id: 'sind-evolucao-diaria', size: '4x4', row: 2, col: 0 },
+                        { id: 'sind-top-produtos', size: '4x4', row: 2, col: 4 },
+
+                        // Linha 4: Mais Gráficos
+                        { id: 'sind-formas-pagamento', size: '4x4', row: 6, col: 0 },
+                        { id: 'sind-horarios', size: '4x4', row: 6, col: 4 },
                       ]}
                       data={sindicoMetrics}
                       onPanelToggle={setCardsPanelOpen}
@@ -323,8 +425,6 @@ function AppContent() {
                                 )}
                               </div>
                             </ManagedFeature>
-
-
                           </div>
                         </div>
                       }
@@ -414,19 +514,6 @@ function AppContent() {
             }}
           />
 
-          <FloatingButtons
-            actions={floatingActions}
-            mainButtonLabel="Menu de ações"
-            onMainClick={() => setQuickAddModalOpen(true)}
-            contextModule={currentPage === 'financeiro' ? 'financeiro' : 'all'}
-            onCreateReport={(module) => {
-              setReportCreationModule(module);
-              setNewReportModalOpen(true);
-            }}
-            onCreateCard={() => {
-              window.dispatchEvent(new CustomEvent('open-card-creator'));
-            }}
-          />
 
           <Modal
             isOpen={quickAddModalOpen}

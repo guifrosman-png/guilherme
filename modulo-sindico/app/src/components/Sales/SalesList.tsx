@@ -682,13 +682,6 @@ export function SalesList({ onSelectSale, activeFilter = 'todas', onCountsChange
                 </div>
             )}
 
-            {/* Botão Flutuante de Adicionar */}
-            <ManagedFeature id="sales.add_button" label="Botão Adicionar Venda">
-                <Button
-                    className="absolute bottom-4 left-4 z-20 h-12 w-12 rounded-full bg-[#525a52] hover:bg-[#525a52]/90 text-white shadow-lg border-2 border-white transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center p-0"
-                >
-                    <Plus className="h-6 w-6" />
-                </Button>
-            </ManagedFeature>        </div>
+        </div>
     );
 }

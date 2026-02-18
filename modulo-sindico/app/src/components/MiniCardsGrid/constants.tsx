@@ -72,44 +72,37 @@ export const GRID_ROWS = 32
 
 // Tamanhos MÍNIMOS de card (não pode reduzir abaixo disso no resize)
 export const MIN_CARD_SIZES: Record<CanvasComponentType, CardSizeConfig> = {
-    // Componentes simples - podem ser 2x2 (era 1x1)
-    'title': { cols: 2, rows: 2 },
-    'value': { cols: 2, rows: 2 },
-    'description': { cols: 2, rows: 2 },
-    'icon': { cols: 2, rows: 2 },
-    'trend': { cols: 2, rows: 2 },
-    'divider': { cols: 4, rows: 1 },
-    'spacer': { cols: 1, rows: 4 },
-    'progress': { cols: 2, rows: 2 },
-    'badge': { cols: 2, rows: 2 },
-    'kpi-unified': { cols: 2, rows: 2 },
-
-    // Gráficos de barra/linha/área - mínimo 2x4 (era 1x2)
-    'chart-bar': { cols: 2, rows: 4 },
-    'chart-bar-h': { cols: 2, rows: 4 },
-    'chart-line': { cols: 2, rows: 4 },
-    'chart-area': { cols: 2, rows: 4 },
-    'recharts-bar': { cols: 2, rows: 4 },
-    'recharts-line': { cols: 2, rows: 4 },
-    'recharts-area': { cols: 2, rows: 4 },
-    'recharts-composed': { cols: 2, rows: 4 },
-    'recharts-scatter': { cols: 2, rows: 4 },
-
-    // Gráficos circulares/radiais - mínimo 2x4 (era 1x2)
-    'chart-pie': { cols: 2, rows: 4 },
-    'chart-donut': { cols: 2, rows: 4 },
-    'chart-gauge': { cols: 2, rows: 4 },
-    'recharts-pie': { cols: 2, rows: 4 },
-    'recharts-radar': { cols: 2, rows: 4 },
-    'recharts-radial': { cols: 2, rows: 4 },
-
-    // Gráficos especiais
-    'chart-heatmap': { cols: 4, rows: 4 }, // era 2x2
-    'recharts-treemap': { cols: 4, rows: 4 }, // era 2x2
-    'recharts-funnel': { cols: 4, rows: 4 }, // era 2x2
-
-    // Tabelas
-    'table': { cols: 4, rows: 4 }, // era 2x2
+    'title': { cols: 1, rows: 1 },
+    'value': { cols: 1, rows: 1 },
+    'description': { cols: 1, rows: 1 },
+    'icon': { cols: 1, rows: 1 },
+    'trend': { cols: 1, rows: 1 },
+    'divider': { cols: 1, rows: 1 },
+    'spacer': { cols: 1, rows: 1 },
+    'progress': { cols: 1, rows: 1 },
+    'badge': { cols: 1, rows: 1 },
+    'kpi-unified': { cols: 1, rows: 1 },
+    'chart-bar': { cols: 1, rows: 1 },
+    'chart-bar-h': { cols: 1, rows: 1 },
+    'chart-line': { cols: 1, rows: 1 },
+    'chart-area': { cols: 1, rows: 1 },
+    'recharts-bar': { cols: 1, rows: 1 },
+    'recharts-bar-h': { cols: 1, rows: 1 },
+    'recharts-line': { cols: 1, rows: 1 },
+    'recharts-area': { cols: 1, rows: 1 },
+    'recharts-composed': { cols: 1, rows: 1 },
+    'recharts-scatter': { cols: 1, rows: 1 },
+    'chart-pie': { cols: 1, rows: 1 },
+    'chart-donut': { cols: 1, rows: 1 },
+    'recharts-donut': { cols: 1, rows: 1 },
+    'chart-gauge': { cols: 1, rows: 1 },
+    'recharts-pie': { cols: 1, rows: 1 },
+    'recharts-radar': { cols: 1, rows: 1 },
+    'recharts-radial': { cols: 1, rows: 1 },
+    'chart-heatmap': { cols: 1, rows: 1 },
+    'recharts-treemap': { cols: 1, rows: 1 },
+    'recharts-funnel': { cols: 1, rows: 1 },
+    'table': { cols: 1, rows: 1 },
 }
 
 // Tamanhos PADRÃO de card (tamanho inicial ao adicionar)
@@ -132,6 +125,7 @@ export const DEFAULT_CARD_SIZES: Record<CanvasComponentType, CardSizeConfig> = {
     'chart-line': { cols: 4, rows: 6 },
     'chart-area': { cols: 4, rows: 6 },
     'recharts-bar': { cols: 4, rows: 6 },
+    'recharts-bar-h': { cols: 4, rows: 6 },
     'recharts-line': { cols: 4, rows: 6 },
     'recharts-area': { cols: 4, rows: 6 },
     'recharts-composed': { cols: 4, rows: 6 },
@@ -144,6 +138,7 @@ export const DEFAULT_CARD_SIZES: Record<CanvasComponentType, CardSizeConfig> = {
     'recharts-pie': { cols: 2, rows: 4 },
     'recharts-radar': { cols: 2, rows: 4 },
     'recharts-radial': { cols: 2, rows: 4 },
+    'recharts-donut': { cols: 2, rows: 4 },
 
     // Gráficos especiais
     'chart-heatmap': { cols: 6, rows: 4 }, // era 3x2

@@ -84,7 +84,8 @@ export function ReportsView() {
                         pix: apiTotals.detail.pix,
                         outros: apiTotals.detail.outros,
                         cancellations: apiTotals.cancellations
-                    }
+                    },
+                    sales: apiTotals.rawData || [] // Raw sales data for PDF
                 });
 
             } catch (err) {
@@ -140,7 +141,8 @@ export function ReportsView() {
             contractRate: 0,
             netValue: 0,
             paymentDate: '',
-            documents: { reportPdfUrl: null, proofImageUrl: null }
+            documents: { reportPdfUrl: null, proofImageUrl: null },
+            sales: []
         };
 
         return (

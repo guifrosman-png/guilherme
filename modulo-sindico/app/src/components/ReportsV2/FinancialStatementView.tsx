@@ -3,9 +3,10 @@ import { Calendar, DollarSign, Download, AlertCircle, FileText, CheckCircle2 } f
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ManagedFeature } from '../ManagedFeature'; // Controle de Permissões
-import { useReportsPermissions } from './contexts/ReportsPermissionsContext'; // Importar contexto
+import { ManagedFeature } from '../ManagedFeature';
+import { useReportsPermissions } from './contexts/ReportsPermissionsContext';
 import { clsx } from 'clsx';
+import { pdfService } from '../../services/pdfService';
 
 
 interface FinancialData {
@@ -27,6 +28,7 @@ interface FinancialData {
         outros: number;
         cancellations: number;
     };
+    sales?: any[]; // Raw sales data
 }
 
 interface FinancialStatementViewProps {
@@ -42,6 +44,31 @@ export function FinancialStatementView({ data, isLoading = false }: FinancialSta
     // Helpers de formatação
     const formatCurrency = (value: number) =>
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+
+    const handleDownloadPDF = () => {
+        if (!data.sales || data.sales.length === 0) {
+            // Se não tiver vendas, tenta gerar com dados vazios ou avisa
+            console.warn("Sem vendas para detalhar no PDF");
+        }
+
+        try {
+            pdfService.generateFinancialReport({
+                month: data.month,
+                year: data.year,
+                generatedAt: new Date().toLocaleString('pt-BR'),
+                grossSales: data.grossSales,
+                cancellations: data.calculationDetail?.cancellations || 0,
+                netBase: data.grossSales - (data.calculationDetail?.cancellations || 0),
+                contractRate: data.contractRate,
+                contractRateValue: ((data.grossSales - (data.calculationDetail?.cancellations || 0)) * data.contractRate) / 100,
+                finalRepasse: data.netValue,
+                sales: data.sales || []
+            });
+        } catch (error) {
+            console.error("Erro ao gerar PDF:", error);
+            // alert("Erro ao gerar o relatório PDF."); // Evitar alert intrusivo se possível, mas ok para feedback
+        }
+    };
 
     // Componente Skeleton
     const Skeleton = ({ className }: { className: string }) => (
@@ -86,9 +113,9 @@ export function FinancialStatementView({ data, isLoading = false }: FinancialSta
                         <Calendar className="h-6 w-6 text-[#525a52]" />
                         {isLoading ? <Skeleton className="h-8 w-64" /> : `Fechamento de ${data.month}/${data.year}`}
                     </h1>
-                    <p className="text-gray-500 mt-1 flex items-center gap-2">
+                    <div className="text-gray-500 mt-1 flex items-center gap-2">
                         {isLoading ? <Skeleton className="h-4 w-96" /> : `Referência do período de vendas de 01 a 31 de ${data.month}.`}
-                    </p>
+                    </div>
                 </div>
                 <div>
                     {getStatusBadge(data?.status || 'OPEN')}
@@ -289,8 +316,8 @@ export function FinancialStatementView({ data, isLoading = false }: FinancialSta
                                             <h4 className="font-semibold text-gray-900">Relatório Detalhado (PDF)</h4>
                                             <p className="text-sm text-gray-500 mb-3">Extrato completo de todas as vendas item a item para auditoria.</p>
                                             <Button variant="outline" size="sm" className="w-full gap-2 text-gray-700"
-                                                disabled={!data.documents.reportPdfUrl}
-                                                onClick={() => console.log("Download PDF")}
+                                                disabled={isLoading || (!data.sales || data.sales.length === 0)}
+                                                onClick={handleDownloadPDF}
                                             >
                                                 <Download className="h-4 w-4" />
                                                 Baixar Prestação de Contas

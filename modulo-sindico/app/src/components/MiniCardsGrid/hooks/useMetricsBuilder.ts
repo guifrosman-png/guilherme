@@ -49,6 +49,9 @@ export function useMetricsBuilder(
     sindicoContext = null
   }
 
+  // Extrair referência estável dos dados para usar como dependência
+  const sindicoData = sindicoContext?.data
+
   const buildData = useCallback(async () => {
     if (!query || !query.metric) {
       setData(null)
@@ -70,11 +73,12 @@ export function useMetricsBuilder(
       let rawData: ChartDataPoint[] = []
 
       // --- ESTRATÉGIA SÍNDICO (Context Data) ---
-      if (sindicoContext && (metric.context === 'sindico' || metric.id.startsWith('sind-'))) {
-        const { data: sData } = sindicoContext
+      if (sindicoData && (metric.context === 'sindico' || metric.id.startsWith('sind-'))) {
+        const sData = sindicoData
 
         if (sData) {
           switch (metric.id) {
+            // --- KPIs escalares ---
             case 'sind-faturamento':
             case 'sindico-gross-revenue':
               rawData = [{ label: 'Total', value: sData.faturamentoBruto || 0 }]
@@ -86,6 +90,39 @@ export function useMetricsBuilder(
             case 'sind-vendas-qtd':
               rawData = [{ label: 'Total', value: sData.vendasQtd || 0 }]
               break
+            case 'sind-itens-qtd':
+              rawData = [{ label: 'Total', value: sData.totalItems || 0 }]
+              break
+
+            // --- Gráficos de séries/categorias ---
+            case 'sind-evolucao-diaria':
+              rawData = (sData.dailySales || []).map((d: any) => ({
+                label: d.label || d.date || '',
+                value: d.value || 0
+              }))
+              break
+            case 'sind-top-produtos':
+              rawData = (sData.topProducts || []).map((d: any) => ({
+                label: d.label || d.name || '',
+                value: d.value || 0
+              }))
+              break
+            case 'sind-formas-pagamento':
+              rawData = (sData.paymentMethods || []).map((d: any) => ({
+                label: d.label || d.name || '',
+                name: d.name || d.label || '',
+                value: d.value || 0
+              }))
+              break
+            case 'sind-horarios':
+              rawData = (sData.hourlySales || []).map((d: any) => ({
+                label: d.label || d.name || '',
+                value: d.value || 0
+              }))
+                .sort((a: ChartDataPoint, b: ChartDataPoint) => b.value - a.value)
+                .slice(0, 4)  // Top 4 horários de pico
+              break
+
             default:
               // Tenta mapear outras se houver
               rawData = []
@@ -397,7 +434,7 @@ export function useMetricsBuilder(
     } finally {
       setLoading(false)
     }
-  }, [query, financialContext])
+  }, [query, financialContext, sindicoData])
 
   useEffect(() => { buildData() }, [buildData])
 

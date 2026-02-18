@@ -28,7 +28,7 @@ export interface FilterConfig {
 
 export interface UseExplorarDataParams {
   cardId?: string // ID do card para persistência
-  metricContext: 'crm' | 'financeiro' | 'formularios' | 'vendas' | 'geral' | 'filas'
+  metricContext: 'crm' | 'financeiro' | 'formularios' | 'vendas' | 'geral' | 'filas' | 'sindico'
   filters: FilterConfig[]
   sortColumn: string | null
   sortDirection: 'asc' | 'desc'
@@ -52,7 +52,7 @@ export interface UseExplorarDataResult {
 }
 
 // Configuração das colunas por contexto (mock inicial)
-export const MOCK_COLUMNS: Record<MetricContext | 'report' | 'csv', ColumnConfig[]> = {
+export const MOCK_COLUMNS: Record<string, ColumnConfig[]> = {
   csv: [
     { key: 'id', label: 'ID', type: 'string', sortable: true },
     { key: 'movimento', label: 'Movimento', type: 'string', sortable: true },
@@ -138,6 +138,11 @@ export const MOCK_COLUMNS: Record<MetricContext | 'report' | 'csv', ColumnConfig
     { key: 'faixaMargem', label: 'Faixa Margem', type: 'string', sortable: true },
     { key: 'oferta', label: 'Em Oferta', type: 'boolean', sortable: true },
   ],
+  filas: [
+    { key: 'id', label: 'ID', type: 'string', sortable: true },
+    { key: 'nome', label: 'Nome', type: 'string', sortable: true },
+    { key: 'status', label: 'Status', type: 'string', sortable: true },
+  ]
 }
 
 // Dados mock removidos para garantir uso de dados reais
@@ -318,13 +323,14 @@ export function useExplorarData(params: UseExplorarDataParams): UseExplorarDataR
 
     // Se for Síndico (Definição de Colunas Dinâmica)
     if (metricId?.startsWith('sind-')) {
-      if (metricId.includes('vendas') || metricId.includes('faturamento') || metricId.includes('qtd') || metricId.includes('sales')) {
+      if (metricId.includes('vendas') || metricId.includes('faturamento') || metricId.includes('qtd') || metricId.includes('sales') || metricId.includes('evolucao') || metricId.includes('top') || metricId.includes('formas') || metricId.includes('horarios')) {
         return [
           { key: 'id', label: 'ID', type: 'string', sortable: true },
           { key: 'data', label: 'Data', type: 'date', sortable: true },
           { key: 'unidade', label: 'Unidade', type: 'string', sortable: true },
           { key: 'descricao', label: 'Produtos / Descrição', type: 'string', sortable: true },
           { key: 'valor', label: 'Valor Total', type: 'currency', sortable: true },
+          { key: 'forma_pagamento', label: 'Forma Pagamento', type: 'string', sortable: true },
           { key: 'status', label: 'Status', type: 'string', sortable: true },
         ]
       }
@@ -423,7 +429,7 @@ export function useExplorarData(params: UseExplorarDataParams): UseExplorarDataR
           // vamos confiar que 'externalData' foi passado OU vamos adicionar useSindicoData no topo do hook.
           // Para editar este arquivo de forma limpa, vamos adicionar a lógica de obtenção no topo e usar aqui.
           if (sindicoHookData) {
-            if (metricId.includes('vendas') || metricId.includes('faturamento') || metricId.includes('qtd') || metricId.includes('sales')) {
+            if (metricId.includes('vendas') || metricId.includes('faturamento') || metricId.includes('qtd') || metricId.includes('sales') || metricId.includes('evolucao') || metricId.includes('top') || metricId.includes('formas') || metricId.includes('horarios')) {
               allData = (sindicoHookData.registrosVendas || []).map((r: any) => ({
                 id: String(r.id),
                 data: r.dataEfetivacao || r.dataInicio || r.dataHoraVenda,
@@ -431,6 +437,7 @@ export function useExplorarData(params: UseExplorarDataParams): UseExplorarDataR
                 unidade: r.unidadeNome || r.unidadeId,
                 descricao: r.produtos?.map((p: any) => p.descricaoReduzida).join(', ') || `Venda ${r.id}`,
                 status: r.nfceSituacaoNome || (r.cancelado ? 'Cancelado' : 'Concluído'),
+                forma_pagamento: r.finalizadoras?.map((f: any) => f.descricao || f.formaPagamentoDescricao).join(', ') || 'N/A',
                 // Manter dados originais
                 ...r
               }))
@@ -454,10 +461,7 @@ export function useExplorarData(params: UseExplorarDataParams): UseExplorarDataR
         }
         else {
           switch (metricContext) {
-            case 'financeiro':
-              // Fallback to legacy reports or other financeiro data if not CSV
-              allData = getMockData(metricContext)
-              break
+
             default:
               // Usar dados mock para outros contextos (Fallback apenas)
               allData = getMockData(metricContext)

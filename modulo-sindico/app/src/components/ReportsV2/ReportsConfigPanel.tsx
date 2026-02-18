@@ -141,8 +141,8 @@ export function ReportsConfigPanel() {
                                                                 key={m}
                                                                 onClick={() => toggleMonthVisibility(year, m)}
                                                                 className={`text-xs px-2 py-1 rounded border transition-colors flex items-center justify-between ${isVisible
-                                                                        ? 'bg-blue-50 border-blue-100 text-blue-700'
-                                                                        : 'bg-gray-100 border-gray-200 text-gray-400 line-through'
+                                                                    ? 'bg-blue-50 border-blue-100 text-blue-700'
+                                                                    : 'bg-gray-100 border-gray-200 text-gray-400 line-through'
                                                                     }`}
                                                             >
                                                                 <span className="capitalize">{monthName}</span>
