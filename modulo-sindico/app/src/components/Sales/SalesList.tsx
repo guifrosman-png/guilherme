@@ -45,12 +45,11 @@ const STATUS_CONFIG: Record<SalesStatus, { color: string; border: string }> = {
 };
 
 // Função para adaptar dados da API para o formato de exibição
-const adaptSaleToDisplay = (apiSale: MercatusSale): SaleDisplay => {
+const adaptSaleToDisplay = (apiSale: any): SaleDisplay => {
     const totalItems = apiSale.produtos?.reduce((acc: number, curr: any) => acc + curr.quantidade, 0) || 0;
 
-    // Cálculo real somando os itens e subtraindo descontos
-    const calculatedTotal = apiSale.produtos?.reduce((acc: number, curr: any) => acc + (curr.valorTotal || 0), 0) || 0;
-    const finalTotal = calculatedTotal - (apiSale.valorDesconto || 0);
+    // Use o valor líquido direto da API para maior precisão (evita erro se produtos não vierem)
+    const finalTotal = apiSale.valorLiquido ?? 0;
 
     // apiSale.dataInicio format: "2024-03-20 14:30:00"
     const [datePart, timePart] = (apiSale.dataInicio || "").split(' ');
@@ -384,13 +383,16 @@ export function SalesList({ onSelectSale, activeFilter = 'todas', onCountsChange
                 quantidade: LIMIT
             });
 
-            const newRawSales = data.registros || [];
+            const newRawSales = (data.registros || []).filter(sale => (sale.valorLiquido || sale.valorTotal || 0) > 0);
             const newAdaptedSales: SaleDisplay[] = newRawSales.map(adaptSaleToDisplay);
 
             React.startTransition(() => {
                 setSales(newAdaptedSales);
                 if (data.paginacao) {
-                    setTotalPages(data.paginacao.qtdTotalPaginas || 1);
+                    const totalRecs = data.paginacao.qtdTotalRegistros || 0;
+                    const calculatedPages = Math.ceil(totalRecs / LIMIT);
+                    const apiPages = (data.paginacao as any).qtdTotalPaginas;
+                    setTotalPages(apiPages || calculatedPages || 1);
                 }
             });
 
@@ -415,7 +417,7 @@ export function SalesList({ onSelectSale, activeFilter = 'todas', onCountsChange
                 quantidade: 1000 // Aumentamos para pegar o volume real do mês
             });
 
-            const allRaw = data.registros || [];
+            const allRaw = (data.registros || []).filter(sale => (sale.valorLiquido || sale.valorTotal || 0) > 0);
             const allAdapted = allRaw.map(adaptSaleToDisplay);
 
             React.startTransition(() => {

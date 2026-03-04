@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LayoutDashboard, CreditCard, FileBarChart, FileText, Users, FolderPlus, ShoppingBag, Search, Filter, LayoutGrid, FileCheck, LifeBuoy, TrendingUp, DollarSign } from 'lucide-react';
+import { LayoutDashboard, CreditCard, FileBarChart, FileText, Users, FolderPlus, ShoppingBag, Search, Filter, LayoutGrid, FileCheck, LifeBuoy, TrendingUp, DollarSign, FolderOpen } from 'lucide-react';
 import { clsx } from 'clsx';
 import { Header } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -23,6 +23,7 @@ import { SindicoDataProvider } from './components/MiniCardsGrid/context/SindicoD
 import { SalesView } from './components/Sales/SalesView';
 
 import { UnitSupportTab } from './components/UnitSupport/UnitSupportTab';
+import { DocumentsTab } from './components/Documents/DocumentsTab';
 import { useSindicoDashboard } from './hooks/useSindicoDashboard';
 import { MetricaConfig } from './components/MiniCardsGrid/types';
 
@@ -305,6 +306,7 @@ function AppContent() {
     { id: 'home', icon: LayoutDashboard, label: 'Dashboard' },
     { id: 'kanban', icon: ShoppingBag, label: 'Vendas' },
     { id: 'results', icon: FileCheck, label: 'Fechamentos' },
+    { id: 'documents', icon: FolderOpen, label: 'Documentos' },
     { id: 'support', icon: LifeBuoy, label: 'Suporte' }
   ];
 
@@ -312,6 +314,7 @@ function AppContent() {
     { id: 'home', icon: LayoutDashboard, label: 'Dashboard' },
     { id: 'kanban', icon: ShoppingBag, label: 'Vendas' },
     { id: 'results', icon: FileCheck, label: 'Fechamentos' },
+    { id: 'documents', icon: FolderOpen, label: 'Docs' },
     { id: 'support', icon: LifeBuoy, label: 'Suporte' }
   ];
 
@@ -339,11 +342,11 @@ function AppContent() {
             />
 
             <main className={`
-          h-screen overflow-auto pt-24 px-8 pb-8
+          h-screen overflow-auto pt-24 px-4 pb-4
           transition-all duration-300 ease-out
           ${cardsPanelOpen
-                ? 'pr-[336px]'
-                : sidebarCollapsed ? 'pr-40' : 'pr-84'
+                ? 'pr-[320px]'
+                : sidebarCollapsed ? 'pr-32' : 'pr-80'
               }
         `}>
               <div className="w-full min-h-full">
@@ -448,7 +451,14 @@ function AppContent() {
                   </ManagedFeature>
                 </div>
 
-                {/* 4. SUPORTE */}
+                {/* 4. DOCUMENTOS */}
+                <div className={clsx("w-full h-full", currentPage !== 'documents' && "hidden")}>
+                  <ManagedFeature id="documents" label="Aba de Documentos" className="h-full">
+                    <DocumentsTab />
+                  </ManagedFeature>
+                </div>
+
+                {/* 5. SUPORTE */}
                 <div className={clsx("w-full h-full", currentPage !== 'support' && "hidden")}>
                   <ManagedFeature id="support" label="Aba de Suporte" className="h-full">
                     <UnitSupportTab />
@@ -560,7 +570,7 @@ function AppContent() {
               setCurrentPage('results');
             }}
           />
-          <PermissionsPanel activeTab={currentPage === 'kanban' ? 'sales' : currentPage === 'results' ? 'closing' : 'dashboard'} />
+          <PermissionsPanel activeTab={currentPage === 'kanban' ? 'sales' : currentPage === 'results' ? 'closing' : currentPage === 'documents' ? 'documents' : 'dashboard'} />
         </div>
       </FinancialDataProvider>
     </SindicoDataProvider>

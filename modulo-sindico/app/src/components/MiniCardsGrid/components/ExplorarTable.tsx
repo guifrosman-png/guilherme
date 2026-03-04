@@ -131,23 +131,26 @@ export function ExplorarTable({
       <table className="w-full border-collapse min-w-max">
         <thead className={`${colors.header} sticky top-0 z-10`}>
           <tr>
-            {displayColumns.map(col => (
-              <th
-                key={col.key}
-                onClick={() => col.sortable && onSort(col.key)}
-                className={`
-                  px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider
-                  border-b ${colors.border}
-                  ${col.sortable ? 'cursor-pointer select-none group' : ''}
-                  ${sortColumn === col.key ? 'bg-blue-100/50' : ''}
-                `}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span>{col.label}</span>
-                  {renderSortIcon(col)}
-                </div>
-              </th>
-            ))}
+            {displayColumns.map(col => {
+              const isNumeric = col.type === 'number' || col.type === 'currency'
+              return (
+                <th
+                  key={col.key}
+                  onClick={() => col.sortable && onSort(col.key)}
+                  className={`
+                    px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider
+                    border-b ${colors.border} text-left
+                    ${col.sortable ? 'cursor-pointer select-none group' : ''}
+                    ${sortColumn === col.key ? 'bg-blue-100/50' : ''}
+                  `}
+                >
+                  <div className="flex items-center justify-start gap-1.5">
+                    <span>{col.label}</span>
+                    {renderSortIcon(col)}
+                  </div>
+                </th>
+              )
+            })}
           </tr>
         </thead>
         <tbody>
@@ -160,8 +163,7 @@ export function ExplorarTable({
                 <td
                   key={col.key}
                   className={`
-                    px-4 py-3 text-sm text-gray-700 border-b ${colors.border}
-                    ${col.type === 'number' || col.type === 'currency' ? 'text-right font-mono' : ''}
+                    px-4 py-3 text-sm text-gray-700 border-b ${colors.border} text-left font-mono
                   `}
                 >
                   {col.key === 'id' && onRecordClick ? (

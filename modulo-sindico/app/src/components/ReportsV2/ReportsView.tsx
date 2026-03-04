@@ -72,7 +72,7 @@ export function ReportsView() {
                     status: repasseInfo?.status || 'OPEN',
                     grossSales: apiTotals.grossSales,
                     contractRate: repasseInfo?.valor_comissao || 5.0,
-                    netValue: (apiTotals.grossSales * (repasseInfo?.valor_comissao || 5.0)) / 100,
+                    netValue: ((apiTotals.grossSales - apiTotals.cancellations) * (repasseInfo?.valor_comissao || 5.0)) / 100,
                     paymentDate: repasseInfo?.data_processamento ? new Date(repasseInfo.data_processamento).toLocaleDateString() : null,
                     documents: {
                         reportPdfUrl: repasseInfo?.arquivo_comprovante ? `/docs/${repasseInfo.arquivo_comprovante}` : null,

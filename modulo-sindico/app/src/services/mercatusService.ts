@@ -56,9 +56,12 @@ export const mercatusService = {
     /**
      * Método genérico para buscar vendas (compatível com o dashboard antigo)
      */
-    async getSales(params: { unidadeId: number; dataInicial: string; dataFinal: string; portalSindico: string }) {
+    async getSales(params: { unidadeId: number; dataInicial: string; dataFinal: string; portalSindico: string; pagina?: number; quantidade?: number }) {
         try {
-            const response = await fetch(`${API_URL}?pagina=1&quantidade=1000`, {
+            const page = params.pagina || 1;
+            const limit = params.quantidade || 1000;
+
+            const response = await fetch(`${API_URL}?pagina=${page}&quantidade=${limit}`, {
                 method: 'POST',
                 headers: HEADERS,
                 body: JSON.stringify({

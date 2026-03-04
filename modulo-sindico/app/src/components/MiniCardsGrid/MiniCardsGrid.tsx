@@ -1448,6 +1448,7 @@ export function MiniCardsGrid({
                   </p>
                   {/* Botão Criar Novo Card + Caixa de Pesquisa */}
                   <div className="space-y-2">
+                    {/* 
                     <ManagedFeature id="dashboard.actions.add_card" label="Botão Criar Card">
                       <button
                         onClick={() => setIsCreatingNewCard(true)}
@@ -1456,7 +1457,8 @@ export function MiniCardsGrid({
                         <Plus className="h-4 w-4" />
                         Criar novo card
                       </button>
-                    </ManagedFeature>
+                    </ManagedFeature> 
+                    */}
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <input
@@ -2161,6 +2163,7 @@ function SortableMetricCard({
         )}
         {!readOnly && (
           <>
+            {/* 
             {onEdit && (
               <button
                 onClick={(e) => {
@@ -2172,7 +2175,8 @@ function SortableMetricCard({
               >
                 <Pencil className="h-3 w-3" />
               </button>
-            )}
+            )} 
+            */}
             {onRemove && (
               <button
                 onClick={(e) => {

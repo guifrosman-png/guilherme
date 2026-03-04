@@ -288,8 +288,8 @@ export function ExplorarModal({
         onClick={onClose}
       />
 
-      {/* Modal */}
-      <div className="relative w-[94vw] h-[92vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[10000]">
+      {/* Modal - DYNAMIC WIDTH BASED ON CONTENT */}
+      <div className={`relative ${visibleColumns.length > 3 ? 'w-[94vw]' : 'max-w-4xl w-full'} h-[80vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden z-[10000] transition-all duration-300`}>
         {/* Header */}
         <div className={`px-6 py-4 ${colors.bg} border-b ${colors.border} flex items-center justify-between`}>
           <div className="flex items-center gap-3">

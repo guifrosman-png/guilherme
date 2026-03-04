@@ -323,7 +323,28 @@ export function useExplorarData(params: UseExplorarDataParams): UseExplorarDataR
 
     // Se for Síndico (Definição de Colunas Dinâmica)
     if (metricId?.startsWith('sind-')) {
-      if (metricId.includes('vendas') || metricId.includes('faturamento') || metricId.includes('qtd') || metricId.includes('sales') || metricId.includes('evolucao') || metricId.includes('top') || metricId.includes('formas') || metricId.includes('horarios')) {
+      if (metricId.includes('top-produtos') || metricId === 'sind-top-produtos') {
+        return [
+          { key: 'produto', label: 'Produto', type: 'string', sortable: true },
+          { key: 'quantidade', label: 'Qtd Total', type: 'number', sortable: true },
+          { key: 'valor', label: 'Valor Total', type: 'currency', sortable: true },
+        ]
+      }
+      else if (metricId.includes('formas-pagamento') || metricId === 'sind-formas-pagamento') {
+        return [
+          { key: 'forma_pagamento', label: 'Forma de Pagamento', type: 'string', sortable: true },
+          { key: 'qtd_transacoes', label: 'Qtd Transações', type: 'number', sortable: true },
+          { key: 'valor', label: 'Valor Total', type: 'currency', sortable: true },
+        ]
+      }
+      else if (metricId.includes('horarios') || metricId === 'sind-horarios') {
+        return [
+          { key: 'hora', label: 'Horário', type: 'string', sortable: true },
+          { key: 'qtd_vendas', label: 'Qtd Vendas', type: 'number', sortable: true },
+          { key: 'valor', label: 'Valor Total', type: 'currency', sortable: true },
+        ]
+      }
+      else if (metricId.includes('vendas') || metricId.includes('faturamento') || metricId.includes('qtd') || metricId.includes('sales') || metricId.includes('evolucao')) {
         return [
           { key: 'id', label: 'ID', type: 'string', sortable: true },
           { key: 'data', label: 'Data', type: 'date', sortable: true },
@@ -429,8 +450,98 @@ export function useExplorarData(params: UseExplorarDataParams): UseExplorarDataR
           // vamos confiar que 'externalData' foi passado OU vamos adicionar useSindicoData no topo do hook.
           // Para editar este arquivo de forma limpa, vamos adicionar a lógica de obtenção no topo e usar aqui.
           if (sindicoHookData) {
-            if (metricId.includes('vendas') || metricId.includes('faturamento') || metricId.includes('qtd') || metricId.includes('sales') || metricId.includes('evolucao') || metricId.includes('top') || metricId.includes('formas') || metricId.includes('horarios')) {
-              allData = (sindicoHookData.registrosVendas || []).map((r: any) => ({
+            const rawSales = sindicoHookData.registrosVendas || []
+
+            // === 1. TOP PRODUTOS (AGRUPADO) ===
+            if (metricId.includes('top-produtos') || metricId === 'sind-top-produtos') {
+              const productMap = new Map<string, { qtd: number, valor: number }>()
+
+              rawSales.forEach((r: any) => {
+                if (r.cancelado) return
+                const itens = r.produtos || r.itens || []
+                itens.forEach((item: any) => {
+                  const name = item.descricaoReduzida || item.descricaoComercial || item.produto || 'Indefinido'
+                  const current = productMap.get(name) || { qtd: 0, valor: 0 }
+                  productMap.set(name, {
+                    qtd: current.qtd + Number(item.quantidade || 0),
+                    valor: current.valor + Number(item.valorTotal || 0)
+                  })
+                })
+              })
+
+              allData = Array.from(productMap.entries()).map(([name, stats], idx) => ({
+                id: `PROD-${idx}`,
+                produto: name,
+                quantidade: stats.qtd,
+                valor: stats.valor
+              })).sort((a, b) => (b.valor as number) - (a.valor as number)) as unknown as ExplorarRecord[]
+            }
+            // === 2. FORMAS DE PAGAMENTO (AGRUPADO) ===
+            else if (metricId.includes('formas-pagamento') || metricId === 'sind-formas-pagamento') {
+              const payMap = new Map<string, { qtd: number, valor: number }>()
+
+              rawSales.forEach((r: any) => {
+                if (r.cancelado) return
+                if (r.finalizadoras && Array.isArray(r.finalizadoras)) {
+                  r.finalizadoras.forEach((fin: any) => {
+                    let desc = fin.descricao?.toUpperCase() || fin.formaPagamentoDescricao?.toUpperCase() || 'OUTROS'
+                    // Simplificar
+                    if (desc.includes('PIX')) desc = 'PIX'
+                    else if (desc.includes('CREDITO') || desc.includes('CRÉDITO')) desc = 'CRÉDITO'
+                    else if (desc.includes('DEBITO') || desc.includes('DÉBITO')) desc = 'DÉBITO'
+                    else if (desc.includes('VOUCHER') || desc.includes('ALIMENTACAO') || desc.includes('REFEICAO')) desc = 'VOUCHER'
+
+                    const current = payMap.get(desc) || { qtd: 0, valor: 0 }
+                    payMap.set(desc, {
+                      qtd: current.qtd + 1, // Contamos ocorrências ou transações? Aqui conta uso da forma.
+                      valor: current.valor + Number(fin.valorPago || 0)
+                    })
+                  })
+                }
+              })
+
+              allData = Array.from(payMap.entries()).map(([method, stats], idx) => ({
+                id: `PAY-${idx}`,
+                forma_pagamento: method,
+                qtd_transacoes: stats.qtd,
+                valor: stats.valor
+              })).sort((a, b) => (b.valor as number) - (a.valor as number)) as unknown as ExplorarRecord[]
+            }
+            // === 3. HORÁRIOS DE PICO (AGRUPADO) ===
+            else if (metricId.includes('horarios') || metricId === 'sind-horarios') {
+              const hourMap = new Map<number, { qtd: number, valor: number }>()
+              // Inicializar 0-23
+              for (let i = 0; i < 24; i++) hourMap.set(i, { qtd: 0, valor: 0 })
+
+              rawSales.forEach((r: any) => {
+                if (r.cancelado) return
+                const dStr = r.dataInicio || r.dataEfetivacao || r.dataMovimento
+                if (!dStr) return
+                const date = new Date(dStr.replace(' ', 'T'))
+                if (!isNaN(date.getTime())) {
+                  const h = date.getHours()
+                  const current = hourMap.get(h)!
+                  hourMap.set(h, {
+                    qtd: current.qtd + 1,
+                    valor: current.valor + Number(r.valorTotal || 0)
+                  })
+                }
+              })
+
+              allData = Array.from(hourMap.entries())
+                .filter(([_, stats]) => stats.qtd > 0) // Mostrar apenas horas com movimento
+                .map(([h, stats]) => ({
+                  id: `HOUR-${h}`,
+                  hora: `${String(h).padStart(2, '0')}:00 - ${String((h + 1) % 24).padStart(2, '0')}:00`,
+                  qtd_vendas: stats.qtd,
+                  valor: stats.valor,
+                  _hourSort: h // Helper for sorting
+                }))
+                .sort((a, b) => a._hourSort - b._hourSort) as unknown as ExplorarRecord[]
+            }
+            // === 4. LISTAGEM ANALÍTICA (Vendas, Evolução, Faturamento) ===
+            else if (metricId.includes('vendas') || metricId.includes('faturamento') || metricId.includes('qtd') || metricId.includes('sales') || metricId.includes('evolucao')) {
+              allData = rawSales.map((r: any) => ({
                 id: String(r.id),
                 data: r.dataEfetivacao || r.dataInicio || r.dataHoraVenda,
                 valor: r.valorTotal,

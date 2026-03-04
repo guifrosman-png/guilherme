@@ -30,13 +30,16 @@ import {
     CreditCard,
     ChevronRight,
     History,
-    PanelLeft
+    PanelLeft,
+    FolderOpen,
+    Upload,
+    ArrowDownToLine
 } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export function PermissionsPanel({ activeTab = 'dashboard' }: { activeTab?: 'dashboard' | 'sales' | 'closing' }) {
+export function PermissionsPanel({ activeTab = 'dashboard' }: { activeTab?: 'dashboard' | 'sales' | 'closing' | 'documents' }) {
     const { isOwnerView } = useViewMode();
     const { togglePermission, getPermission } = usePermissions();
     const [isOpen, setIsOpen] = useState(false);
@@ -226,6 +229,7 @@ export function PermissionsPanel({ activeTab = 'dashboard' }: { activeTab?: 'das
                             <TabsTrigger value="dashboard" className="flex-1 text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 text-slate-500">Dashboard</TabsTrigger>
                             <TabsTrigger value="sales" className="flex-1 text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 text-slate-500">Vendas</TabsTrigger>
                             <TabsTrigger value="closing" className="flex-1 text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 text-slate-500">Fechamento</TabsTrigger>
+                            <TabsTrigger value="documents" className="flex-1 text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 text-slate-500">Docs</TabsTrigger>
                         </TabsList>
                     </div>
 
@@ -405,8 +409,8 @@ export function PermissionsPanel({ activeTab = 'dashboard' }: { activeTab?: 'das
                                                         <button
                                                             onClick={() => toggleYearVisibility(year)}
                                                             className={`p-1.5 rounded-md transition-all shadow-sm active:scale-95 ${reportPerms.inbox.years[year].visible !== false
-                                                                    ? 'bg-blue-100 text-blue-600 hover:bg-blue-200 ring-1 ring-blue-200'
-                                                                    : 'bg-slate-200 text-slate-400 hover:bg-slate-300 ring-1 ring-slate-300'
+                                                                ? 'bg-blue-100 text-blue-600 hover:bg-blue-200 ring-1 ring-blue-200'
+                                                                : 'bg-slate-200 text-slate-400 hover:bg-slate-300 ring-1 ring-slate-300'
                                                                 }`}
                                                             title={reportPerms.inbox.years[year].visible !== false ? "Ocultar Ano Inteiro" : "Mostrar Ano Inteiro"}
                                                         >
@@ -493,6 +497,52 @@ export function PermissionsPanel({ activeTab = 'dashboard' }: { activeTab?: 'das
                                 <ReportPermissionItem label="Status" checked={reportPerms.history.columns.status} onChange={(c) => updatePermission('history.columns.status', c)} />
                                 <ReportPermissionItem label="Atualização" checked={reportPerms.history.columns.updatedAt} onChange={(c) => updatePermission('history.columns.updatedAt', c)} />
                                 <ReportPermissionItem label="Criado em" checked={reportPerms.history.columns.createdAt} onChange={(c) => updatePermission('history.columns.createdAt', c)} />
+                            </AccordionSection>
+
+                        </TabsContent>
+
+                        {/* --- DOCUMENTS TAB --- */}
+                        <TabsContent value="documents" className="space-y-4 pb-10 mt-4">
+
+                            <AccordionSection
+                                id="doc_upload"
+                                title="Envio de Documentos"
+                                icon={Upload}
+                                isOpen={salesAccordions.inbox}
+                                onToggle={() => toggleAccordion('inbox')}
+                                count={3}
+                            >
+                                <p className="text-[10px] text-slate-400 mb-3">Controle o que o síndico pode enviar.</p>
+                                <PermissionItem id="documents.upload.contas" label="Upload de Contas" icon={FileText} description="Luz, água, gás..." />
+                                <PermissionItem id="documents.upload.comprovantes" label="Upload de Comprovantes" icon={Receipt} description="PIX, transferência, boleto..." />
+                                <PermissionItem id="documents.upload.outros" label="Upload de Outros" icon={FolderOpen} description="Recibos, notas fiscais..." />
+                            </AccordionSection>
+
+                            <AccordionSection
+                                id="doc_list"
+                                title="Lista de Documentos"
+                                icon={List}
+                                isOpen={salesAccordions.list}
+                                onToggle={() => toggleAccordion('list')}
+                                count={3}
+                            >
+                                <p className="text-[10px] text-slate-400 mb-3">Defina quais informações ficam visíveis na lista.</p>
+                                <PermissionItem id="documents.list.visible" label="Exibir Lista" icon={LayoutGrid} description="Mostra/oculta toda a listagem" />
+                                <PermissionItem id="documents.list.delete" label="Permitir Exclusão" icon={Eye} description="Síndico pode remover documentos" />
+                                <PermissionItem id="documents.list.filter" label="Filtros de Mês/Ano" icon={Filter} description="Permite filtrar por período" />
+                            </AccordionSection>
+
+                            <AccordionSection
+                                id="doc_repasses"
+                                title="Comprovantes de Repasse"
+                                icon={ArrowDownToLine}
+                                isOpen={salesAccordions.details}
+                                onToggle={() => toggleAccordion('details')}
+                                count={2}
+                            >
+                                <p className="text-[10px] text-slate-400 mb-3">Controle a visibilidade dos comprovantes de repasse.</p>
+                                <PermissionItem id="documents.repasses.visible" label="Exibir Aba Repasses" icon={Receipt} description="Mostra a seção de comprovantes" />
+                                <PermissionItem id="documents.repasses.download" label="Permitir Download" icon={ArrowDownToLine} description="Síndico pode baixar comprovantes" />
                             </AccordionSection>
 
                         </TabsContent>

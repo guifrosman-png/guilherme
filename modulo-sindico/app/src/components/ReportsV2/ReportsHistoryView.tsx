@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from 'react';
-import { Calendar, Search, Filter, History, Clock, FileCheck, FileWarning, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Search, History, ChevronRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";

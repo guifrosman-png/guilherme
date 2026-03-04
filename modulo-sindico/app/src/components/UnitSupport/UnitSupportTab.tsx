@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Wrench, Package, Sparkles, Phone, FileText, ChevronRight, Clock, CheckCircle2, AlertCircle, X, Info, Send, Camera, Eye, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { Wrench, Package, Sparkles, ChevronRight, Clock, CheckCircle2, AlertCircle, X, Send, Camera } from 'lucide-react';
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
